@@ -1,0 +1,9 @@
+<stack>
+  <description brief="cob_calibration">cob_calibration</description>
+  <author>Maintained by Sebastian Haug</author>
+  <license></license>  
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/cob_calibration</url>
+  <depend stack="ros" />
+
+</stack>
