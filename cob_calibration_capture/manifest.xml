@@ -1,0 +1,22 @@
+<package>
+  <description brief="cob_calibration_capture">
+
+     cob_calibration_capture
+
+  </description>
+  <author>Sebastian Haug</author>
+  <license>LGPL</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/cob_calibration_capture</url>
+
+  <depend package='rospy'/>
+  <depend package='smach'/>
+  <depend package='smach_ros'/>
+  <depend package='tf'/>
+  <depend package='sensor_msgs'/> 
+ 
+  <depend package='cob_script_server'/>
+  <depend package='cob_image_capture'/>
+  <!--depend package='cob_generic_states'/--> 
+
+</package>
