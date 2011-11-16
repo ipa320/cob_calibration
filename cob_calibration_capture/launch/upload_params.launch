@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+	<!-- send script_server parameters for calibration to parameter server -->
+	<rosparam command="load" ns="/script_server/arm" file="$(find cob_calibration_capture)/config/arm_joint_configurations.yaml"/>
+	<rosparam command="load" ns="/script_server/sdh" file="$(find cob_calibration_capture)/config/sdh_joint_configurations.yaml"/>
+	<rosparam command="load" ns="/script_server/torso" file="$(find cob_calibration_capture)/config/torso_joint_configurations.yaml"/>
+</launch>
