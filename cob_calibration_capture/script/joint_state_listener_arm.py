@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-PKG  = 'cob_calibration_executive'
+PKG  = 'cob_calibration_capture'
 NODE = 'joint_state_listener_arm'
 import roslib; roslib.load_manifest(PKG)
 import rospy
