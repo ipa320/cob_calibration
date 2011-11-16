@@ -45,7 +45,8 @@ def main():
     # create goal pose and query ik server
     goal_pose = PoseStamped()
     goal_pose.header.frame_id = "base_link"
-    goal_pose.pose.position.x = t[0]
+    # move 1cm in x direction
+    goal_pose.pose.position.x = t[0] + 0.01
     goal_pose.pose.position.y = t[1]
     goal_pose.pose.position.z = t[2]
     goal_pose.pose.orientation.x = q[0]
