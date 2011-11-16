@@ -16,11 +16,15 @@ def main():
 
     # movements
     print "==> starting movements"
-    print "--> moving arm pregrasp"
+    
+    print "--> moving arm to pregrasp"
     sss.move("arm", "pregrasp")
     
-    print "--> moving sdh calib"
+    print "--> moving arm to calib"
     sss.move("arm", "calib")
+    
+    print "--> moving arm to 'calib' via 'pregrasp'"
+    sss.move("arm", ["pregrasp", "calib"])
     
 if __name__ == '__main__':
     main()
