@@ -8,7 +8,6 @@ import yaml
 from simple_script_server import simple_script_server
 from cob_image_capture.srv import CaptureImages
 
-NUM_SAMPLES=10
 OUT_FOLDER="/tmp/"
 
 def capturePosition(listener, sample_id):
@@ -39,9 +38,12 @@ def main():
     # init
     print "--> initializing sss"
     sss = simple_script_server()
-    #sss.init("base")
-    #sss.init("torso")
-    #sss.init("head")
+    sss.init("base")
+    sss.init("torso")
+    sss.init("head")
+    sss.recover("base")
+    sss.recover("torso")
+    sss.recover("head")
 
     print "--> setting up tf listener"
     listener = tf.TransformListener()
