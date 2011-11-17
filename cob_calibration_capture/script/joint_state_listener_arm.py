@@ -3,9 +3,7 @@ PKG  = 'cob_calibration_capture'
 NODE = 'joint_state_listener_arm'
 import roslib; roslib.load_manifest(PKG)
 import rospy
-
 import sensor_msgs.msg
-import numpy as np
 
 '''
 Print joint states for cob arm.
@@ -18,7 +16,14 @@ def main():
     print "==> %s started " % NODE
     
     # get joint names for arm from parameter server
-    joint_names = rospy.get_param("arm_controller/joint_names");
+    joint_names = None
+    try: joint_names = rospy.get_param("arm_controller/joint_names") # real hardware
+    except KeyError: pass
+    try: joint_names = rospy.get_param("arm_controller/joints")      # simulation
+    except KeyError: pass
+    if joint_names == None:
+        print "Could not get joint names from parameter server. exiting..."
+        exit(-1)
     print joint_names
 
     while not rospy.is_shutdown():
@@ -35,8 +40,7 @@ def main():
             for name in joint_names:
                 angles.append(msg.position[msg.name.index(name)])
             # nicely print joint angles with 5 digits
-            np.set_printoptions(precision=5, suppress=True)
-            print np.array(angles)
+            print "[" + ", ".join(["%0.5f" % i for i in angles]) + "]"
 
 if __name__ == '__main__':
     main()
