@@ -19,24 +19,18 @@ def main():
     print "--> moving torso home"
     sss.move("torso", "home")
     
-#    print "--> moving torso calib_front"
-#    sss.move("torso", "calib_front")
-#    print "--> moving torso calib_back"
-#    sss.move("torso", "calib_back")
-
-#    print "--> moving torso calib_back_left2"
-#    sss.move("torso", "calib_back_left2")
-#    print "--> moving torso calib_back_right2"
-#    sss.move("torso", "calib_back_right2")
-
-    print "--> moving torso calib_front_left2"
-    sss.move("torso", "calib_front_left2")
-    print "--> moving torso calib_front_left"
-    sss.move("torso", "calib_front_left")
-    print "--> moving torso calib_front_right"
-    sss.move("torso", "calib_front_right")
-    print "--> moving torso calib_front_right2"
-    sss.move("torso", "calib_front_right2")
+    # moving to all calibration positions
+    positions = ["calib_front_left2", "calib_front_left", "calib_front", "calib_front_right", "calib_front_right2", 
+                 "calib_right2", "calib_right", "home", "calib_left", "calib_left2",
+                 "calib_back_left2", "calib_back_left", "calib_back", "calib_back_right", "calib_back_right2"]
+    for i in range(len(positions)):
+        print "--> moving torso %s" % positions[i]
+        sss.move("torso", positions[i])
+        #sss.sleep(0.5)
+    
+    # move back home
+    print "--> moving torso home"
+    sss.move("torso", "home")
     
 if __name__ == '__main__':
     main()
