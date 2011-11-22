@@ -3,6 +3,7 @@ PKG  = 'cob_calibration_capture'
 NODE = 'arm_ik_node'
 import roslib; roslib.load_manifest(PKG)
 import rospy
+import yaml
 from math import pi, sqrt
 
 from simple_script_server import simple_script_server
@@ -60,9 +61,15 @@ def getIk(arm_ik, (t, q), link):
 
 def tadd(t1, t2):
     '''
-    Shortcut functionto add two translations t1 and t2
+    Shortcut function to add two translations t1 and t2
     '''
     return map(lambda (t1x, t2x): t1x+t2x, zip(t1, t2))
+
+def qmult(q1, q2):
+    '''
+    Shortcut function to multiply two quaternions q1 and q2
+    '''
+    return tuple(tf.transformations.quaternion_multiply(q1, q2))
     
 def rpy2q(r, p, y, axes=None):
     '''
@@ -91,17 +98,49 @@ def main():
     t_calib = (-0.73, 0.0, 1.05)
     q_calib = (0, 0, sqrt(2), -sqrt(2))
     
-    # list of poses
+    # define translations
+    t_c  = tadd(t_calib, ( 0.20,  0.00,  0.00)) # closer
+    t_cr = tadd(t_calib, ( 0.15, -0.07,  0.00)) # closer right
+    t_f  = tadd(t_calib, (-0.05,  0.00,  0.00)) # further
+    t_f1 = tadd(t_calib, (-0.10,  0.00,  0.00)) # further more
+    t_r  = tadd(t_calib, ( 0.00, -0.05,  0.00)) # right
+    t_l  = tadd(t_calib, ( 0.00,  0.05,  0.00)) # left
+    t_t  = tadd(t_calib, ( 0.00,  0.00,  0.15)) # top
+    t_b  = tadd(t_calib, ( 0.00,  0.00, -0.15)) # bottom
+    t_tr = tadd(t_calib, ( 0.00, -0.15,  0.15)) # top right
+    t_tl = tadd(t_calib, ( 0.00,  0.10,  0.15)) # top left
+    t_br = tadd(t_calib, ( 0.00, -0.15, -0.15)) # bottom right
+    t_bl = tadd(t_calib, ( 0.00,  0.10, -0.13)) # bottom left
+    
+    # define quaternions
+    q_a    = qmult(q_calib, rpy2q( pi/6,  0,     0)) # tilt away
+    q_as1  = qmult(q_calib, rpy2q( pi/10, pi/10, 0)) # tilt away side 1
+    q_as2  = qmult(q_calib, rpy2q( pi/8, -pi/8,  0)) # tilt away side 2
+    q_as2m = qmult(q_calib, rpy2q( pi/8, -pi/4,  0)) # tilt away side 2 more
+    q_n    = qmult(q_calib, rpy2q(-pi/6,  0,     0)) # tilt near
+    q_ns1  = qmult(q_calib, rpy2q(-pi/8,  pi/10, 0)) # tilt near side 1
+    q_ns2  = qmult(q_calib, rpy2q(-pi/8, -pi/8,  0)) # tilt near side 2
+    q_ns2m = qmult(q_calib, rpy2q(-pi/6, -pi/8,  0)) # tilt near side 2 more
+    
+    # generate poses from defined translations and positions
     poses = {}
-    poses["right"]        = (tadd(t_calib, (0.00,  0.16,  0.00)), q_calib)
-    poses["left"]         = (tadd(t_calib, (0.00, -0.16,  0.00)), q_calib)
-    poses["top"]          = (tadd(t_calib, (0.00,  0.00,  0.16)), q_calib)
-    poses["bottom"]       = (tadd(t_calib, (0.00,  0.00, -0.16)), q_calib)
-    poses["top_right"]    = (tadd(t_calib, (0.00,  0.15,  0.15)), q_calib)
-    poses["top_left"]     = (tadd(t_calib, (0.00, -0.15,  0.15)), q_calib)
-    poses["bottom_left"]  = (tadd(t_calib, (0.00,  0.15, -0.15)), q_calib)
-    poses["bottom_right"] = (tadd(t_calib, (0.00, -0.15, -0.15)), q_calib)
-    poses["center"]       = (tadd(t_calib, (0.00,  0.00,  0.00)), q_calib)
+    poses["center"] = (t_calib, q_calib) # center
+    poses["stereo_00"]  = poses["center"]
+
+    poses["stereo_01"]  = (t_r, q_as1)
+    poses["stereo_02"]  = (t_l, q_as2)
+    poses["stereo_03"]  = (t_calib, q_ns1)
+    poses["stereo_04"]  = (t_calib, q_ns2)
+    
+    poses["stereo_05"]  = (t_c, q_a)
+    poses["stereo_06"]  = (t_cr, q_n)
+    poses["stereo_07"]  = (t_f1, q_as2m)
+    poses["stereo_08"]  = (t_f, q_ns2m)
+    
+    poses["stereo_09"]  = (t_tr, q_as1)
+    poses["stereo_10"]  = (t_tl, q_as2)
+    poses["stereo_11"]  = (t_bl, q_as2)
+    poses["stereo_12"]  = (t_br, q_as1)
     
     # converting to joint_positions
     print "==> converting poses to joint_states" 
@@ -113,11 +152,20 @@ def main():
         if joint_positions != None:
             arm_states[key] = [joint_positions]
         else: print "--> ERROR no IK solution was found..."
+    
+    # echo joint pos
+    print "==> echo joint_positions"
+    for key in sorted(arm_states.keys()):
+        tmp = ["%.10f" %s for s in arm_states[key][0]]
+        print "%s: [%s]" % (key, tmp)
+    print '''stereo: ["stereo_00", "stereo_01", "stereo_02", "stereo_03", "stereo_04", "stereo_05", "stereo_06", "stereo_07", "stereo_08", "stereo_09", "stereo_10", "stereo_11", "stereo_12]'''
 
-#    # move arm
-#    print "==> moving arm" 
-#    sss.move("arm", arm_states["top"])
-#    sss.move("arm", arm_states["tilt_center"])
+    # move arm
+    print "==> moving arm"
+    for key in sorted(arm_states.keys()):
+        print "--> moving to '%s'" % key
+        sss.move("arm", arm_states[key])
+        sss.sleep(0.5)
     
 if __name__ == '__main__':
     main()
