@@ -13,6 +13,16 @@ from geometry_msgs.msg import PoseStamped
 import tf
 
 def getIk(arm_ik, (t, q), link):
+    '''
+    query arm_ik server for joint_position which put arm_7_link to pose (t, q)
+    
+    @param arm_ik: arm_ik service proxy
+    @param t: translation
+    @param q: rotation as quaternion
+    @param link: frame in which pose (t, q) is defined
+    
+    @return: tuple of joint_positions or None if ik was not found
+    '''
     # get joint names for arm from parameter server
     joint_names = None
     try: joint_names = rospy.get_param("arm_controller/joint_names") # real hardware
@@ -86,7 +96,6 @@ def main():
     print "==> started " + NODE
     
     # init
-    sss = simple_script_server()
     arm_ik = rospy.ServiceProxy('/arm_kinematics/get_ik', GetPositionIK)
 
 #    # get current pose of arm
@@ -160,12 +169,13 @@ def main():
         print "%s: [%s]" % (key, tmp)
     print '''stereo: ["stereo_00", "stereo_01", "stereo_02", "stereo_03", "stereo_04", "stereo_05", "stereo_06", "stereo_07", "stereo_08", "stereo_09", "stereo_10", "stereo_11", "stereo_12]'''
 
-    # move arm
-    print "==> moving arm"
-    for key in sorted(arm_states.keys()):
-        print "--> moving to '%s'" % key
-        sss.move("arm", arm_states[key])
-        sss.sleep(0.5)
+#    # move arm
+#    sss = simple_script_server()
+#    print "==> moving arm"
+#    for key in sorted(arm_states.keys()):
+#        print "--> moving to '%s'" % key
+#        sss.move("arm", arm_states[key])
+#        sss.sleep(0.5)
     
 if __name__ == '__main__':
     main()
