@@ -3,7 +3,7 @@ PKG  = 'cob_calibration_capture'
 NODE = 'arm_ik_node'
 import roslib; roslib.load_manifest(PKG)
 import rospy
-import math
+from math import pi, sqrt
 
 from simple_script_server import simple_script_server
 from kinematics_msgs.srv import GetPositionIK, GetPositionIKRequest
@@ -58,6 +58,21 @@ def getIk(arm_ik, (t, q), link):
         print "Inverse kinematics request failed with error code", resp.error_code.val
         return None
 
+def tadd(t1, t2):
+    '''
+    Shortcut functionto add two translations t1 and t2
+    '''
+    return map(lambda (t1x, t2x): t1x+t2x, zip(t1, t2))
+    
+def rpy2q(r, p, y, axes=None):
+    '''
+    Shortcut function to convert rpy to quaternion
+    '''
+    if axes == None:
+        return tuple(tf.transformations.quaternion_from_euler(r, p, y))
+    else:
+        return tuple(tf.transformations.quaternion_from_euler(r, p, y, axes))
+
 # main
 def main():
     rospy.init_node(NODE)
@@ -74,33 +89,36 @@ def main():
     
     # translation and rotation for main calibration position
     t_calib = (-0.73, 0.0, 1.05)
-    q_calib = (0, 0, math.sqrt(2.0), -math.sqrt(2.0))
+    q_calib = (0, 0, sqrt(2), -sqrt(2))
     
-    # list of relative translations to t_calib
-    t_deltas = []
-    t_deltas.append(( 0.00,  0.16,  0.00)) # left
-    t_deltas.append(( 0.00, -0.16,  0.00)) # right
-    t_deltas.append(( 0.00,  0.00,  0.16)) # top
-    t_deltas.append(( 0.00,  0.00, -0.16)) # bottom
-    t_deltas.append(( 0.00,  0.15,  0.15)) # top_left
-    t_deltas.append(( 0.00, -0.15,  0.15)) # top_right
-    t_deltas.append(( 0.00,  0.15, -0.15)) # bottom_left
-    t_deltas.append(( 0.00, -0.15, -0.15)) # bottom_right
-    t_deltas.append(( 0.00,  0.00,  0.00)) 
+    # list of poses
+    poses = {}
+    poses["right"]        = (tadd(t_calib, (0.00,  0.16,  0.00)), q_calib)
+    poses["left"]         = (tadd(t_calib, (0.00, -0.16,  0.00)), q_calib)
+    poses["top"]          = (tadd(t_calib, (0.00,  0.00,  0.16)), q_calib)
+    poses["bottom"]       = (tadd(t_calib, (0.00,  0.00, -0.16)), q_calib)
+    poses["top_right"]    = (tadd(t_calib, (0.00,  0.15,  0.15)), q_calib)
+    poses["top_left"]     = (tadd(t_calib, (0.00, -0.15,  0.15)), q_calib)
+    poses["bottom_left"]  = (tadd(t_calib, (0.00,  0.15, -0.15)), q_calib)
+    poses["bottom_right"] = (tadd(t_calib, (0.00, -0.15, -0.15)), q_calib)
+    poses["center"]       = (tadd(t_calib, (0.00,  0.00,  0.00)), q_calib)
     
-    # create list of translations
-    ts = []
-    for t_delta in t_deltas:
-        ts.append(map(lambda (x, y): x+y, zip(t_calib, t_delta)))
-    
-    # converting to joint states
-    for t in ts:
-        print "--> calling getIk for t:", ["%.3f" %s for s in t]
-        js = getIk(arm_ik, (t, q_calib), "base_link")
-        if js != None: sss.move("arm", [js])
+    # converting to joint_positions
+    print "==> converting poses to joint_states" 
+    arm_states = {}
+    for key in sorted(poses.keys()):
+        print "--> calling getIk for '%s'" % key
+        joint_positions = getIk(arm_ik, poses[key], "base_link")
+        #print ["%.3f" %s for s in joint_positions]
+        if joint_positions != None:
+            arm_states[key] = [joint_positions]
         else: print "--> ERROR no IK solution was found..."
-        sss.sleep(1)
 
+#    # move arm
+#    print "==> moving arm" 
+#    sss.move("arm", arm_states["top"])
+#    sss.move("arm", arm_states["tilt_center"])
+    
 if __name__ == '__main__':
     main()
     print "==> done exiting"
