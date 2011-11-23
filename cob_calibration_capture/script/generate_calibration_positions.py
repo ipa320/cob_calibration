@@ -3,6 +3,7 @@ PKG  = 'cob_calibration_capture'
 NODE = 'arm_ik_node'
 import roslib; roslib.load_manifest(PKG)
 import rospy
+import numpy as np
 import yaml
 from math import pi, sqrt
 
@@ -108,8 +109,8 @@ def main():
     q_calib = (0, 0, sqrt(2), -sqrt(2))
     
     # define translations
-    t_c  = tadd(t_calib, ( 0.20,  0.00,  0.00)) # closer
-    t_cr = tadd(t_calib, ( 0.15, -0.07,  0.00)) # closer right
+    t_c  = tadd(t_calib, ( 0.12,  0.00,  0.00)) # closer
+    t_cr = tadd(t_calib, ( 0.10, -0.05,  0.00)) # closer right
     t_f  = tadd(t_calib, (-0.05,  0.00,  0.00)) # further
     t_f1 = tadd(t_calib, (-0.10,  0.00,  0.00)) # further more
     t_r  = tadd(t_calib, ( 0.00, -0.05,  0.00)) # right
@@ -123,7 +124,7 @@ def main():
     
     # define quaternions
     q_a    = qmult(q_calib, rpy2q( pi/6,  0,     0)) # tilt away
-    q_as1  = qmult(q_calib, rpy2q( pi/10, pi/10, 0)) # tilt away side 1
+    q_as1  = qmult(q_calib, rpy2q( pi/12, pi/10, 0)) # tilt away side 1
     q_as2  = qmult(q_calib, rpy2q( pi/8, -pi/8,  0)) # tilt away side 2
     q_as2m = qmult(q_calib, rpy2q( pi/8, -pi/4,  0)) # tilt away side 2 more
     q_n    = qmult(q_calib, rpy2q(-pi/6,  0,     0)) # tilt near
@@ -157,16 +158,16 @@ def main():
     for key in sorted(poses.keys()):
         print "--> calling getIk for '%s'" % key
         joint_positions = getIk(arm_ik, poses[key], "base_link")
-        #print ["%.3f" %s for s in joint_positions]
         if joint_positions != None:
             arm_states[key] = [joint_positions]
         else: print "--> ERROR no IK solution was found..."
     
-    # echo joint pos
+    # echo joint positions
     print "==> echo joint_positions"
     for key in sorted(arm_states.keys()):
-        tmp = ["%.10f" %s for s in arm_states[key][0]]
-        print "%s: [%s]" % (key, tmp)
+        # set prcision to 5 digits
+        tmp = map(lambda x: "%.5f"%x, arm_states[key][0])
+        print "%s: [[%s]]" % (key, ', '.join(tmp))
     print '''stereo: ["stereo_00", "stereo_01", "stereo_02", "stereo_03", "stereo_04", "stereo_05", "stereo_06", "stereo_07", "stereo_08", "stereo_09", "stereo_10", "stereo_11", "stereo_12]'''
 
 #    # move arm
@@ -179,4 +180,5 @@ def main():
     
 if __name__ == '__main__':
     main()
+    rospy.signal_shutdown(rospy.Time.now())
     print "==> done exiting"

@@ -23,8 +23,8 @@ def main():
     print "--> moving arm to calib"
     sss.move("arm", "calib")
     
-#    print "--> moving arm to 'calib' via 'pregrasp'"
-#    sss.move("arm", ["pregrasp", "calib"])
+#    print "--> moving arm to all stereo"
+#    sss.move("arm", "stereo")
     
 if __name__ == '__main__':
     main()
