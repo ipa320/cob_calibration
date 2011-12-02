@@ -13,7 +13,7 @@ from sensor_msgs.msg import JointState
 from geometry_msgs.msg import PoseStamped
 import tf
 
-def getIk(arm_ik, (t, q), link):
+def getIk(arm_ik, (t, q), link, seed=None):
     '''
     query arm_ik server for joint_position which put arm_7_link to pose (t, q)
     
@@ -21,6 +21,7 @@ def getIk(arm_ik, (t, q), link):
     @param t: translation
     @param q: rotation as quaternion
     @param link: frame in which pose (t, q) is defined
+    @param seed: initial joint positions for ik calculation, in None current joint pos of arm is used.
     
     @return: tuple of joint_positions or None if ik was not found
     '''
@@ -34,24 +35,26 @@ def getIk(arm_ik, (t, q), link):
         print "Could not get arm joint_names from parameter server."
         return None
         
-    # get current joint angles from arm as seed position
-    current_joint_angles = []
-    for tries in range(20):
-        try: msg = rospy.wait_for_message("/joint_states", JointState)
-        except rospy.exceptions.ROSInterruptException: pass
-        if joint_names[0] in msg.name:
-            # message is from arm, save current angles
-            for name in joint_names: current_joint_angles.append(msg.position[msg.name.index(name)])
-            break
-    if current_joint_angles == []:
-        print "Could not get /joint_states message from arm controller. "
-        return None
+    # if seed == None get current joint angles from arm as seed position
+    if seed == None:
+        seed = []
+        for tries in range(20):
+            try: msg = rospy.wait_for_message("/joint_states", JointState)
+            except rospy.exceptions.ROSInterruptException: pass
+            if joint_names[0] in msg.name:
+                # message is from arm, save current angles
+                for name in joint_names: seed.append(msg.position[msg.name.index(name)])
+                break
+        if seed == []:
+            print "Could not get /joint_states message from arm controller. "
+            return None
+    assert len(seed) == len(joint_names)
     
     # create and send ik request
     req = GetPositionIKRequest()
     req.timeout = rospy.Duration(1.0)
     req.ik_request.ik_link_name = "arm_7_link"
-    req.ik_request.ik_seed_state.joint_state.position = current_joint_angles
+    req.ik_request.ik_seed_state.joint_state.position = seed
     req.ik_request.ik_seed_state.joint_state.name = joint_names
     req.ik_request.pose_stamped.header.frame_id = link
     req.ik_request.pose_stamped.pose.position.x = t[0]
@@ -61,13 +64,19 @@ def getIk(arm_ik, (t, q), link):
     req.ik_request.pose_stamped.pose.orientation.y = q[1]
     req.ik_request.pose_stamped.pose.orientation.z = q[2]
     req.ik_request.pose_stamped.pose.orientation.w = q[3]
-    resp = arm_ik(req)
     
+    # try to get inverse kinecmatics for at least 3 times
+    for i in range(3):
+        resp = arm_ik(req)
+        if resp.error_code.val == resp.error_code.SUCCESS:
+            break
+    
+    # report sucess or return None on error
     if resp.error_code.val == resp.error_code.SUCCESS:
         result = list(resp.solution.joint_state.position)
         return result
     else:
-        print "Inverse kinematics request failed with error code", resp.error_code.val
+        print "Inverse kinematics request failed with error code", resp.error_code.val, ", seed was", seed
         return None
 
 def tadd(t1, t2):
@@ -155,12 +164,22 @@ def main():
     # converting to joint_positions
     print "==> converting poses to joint_states" 
     arm_states = {}
+    prev_state = None
     for key in sorted(poses.keys()):
         print "--> calling getIk for '%s'" % key
-        joint_positions = getIk(arm_ik, poses[key], "base_link")
-        if joint_positions != None:
-            arm_states[key] = [joint_positions]
-        else: print "--> ERROR no IK solution was found..."
+        
+        # query ik server for ik solution:
+        # use previous joint angles as inital seed, if this fails 
+        # use current arm position and finally try zero position
+        for seed in [prev_state, None, [0,0,0,0,0,0,0]]:
+            joint_positions = getIk(arm_ik, poses[key], "base_link", seed)
+            if joint_positions != None:
+                arm_states[key] = [joint_positions]
+                # remember current position as prev positions for next ik call
+                prev_state = joint_positions
+                break
+        else: 
+            print "--> ERROR no IK solution was found..."
     
     # echo joint positions
     print "==> echo joint_positions"
@@ -170,14 +189,7 @@ def main():
         print "%s: [[%s]]" % (key, ', '.join(tmp))
     print '''stereo: ["stereo_00", "stereo_01", "stereo_02", "stereo_03", "stereo_04", "stereo_05", "stereo_06", "stereo_07", "stereo_08", "stereo_09", "stereo_10", "stereo_11", "stereo_12]'''
 
-#    # move arm
-#    sss = simple_script_server()
-#    print "==> moving arm"
-#    for key in sorted(arm_states.keys()):
-#        print "--> moving to '%s'" % key
-#        sss.move("arm", arm_states[key])
-#        sss.sleep(0.5)
-    
+   
 if __name__ == '__main__':
     main()
     rospy.signal_shutdown(rospy.Time.now())
