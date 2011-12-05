@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<launch>
+
+	<!-- run image_capture -->
+	<node name="image_capture" pkg="cob_image_capture" type="image_capture.py" args="" output="screen">
+	        
+        <!-- set to 2 cameras -->
+	<param name="number_of_cameras" value="2" />
+
+        <!-- configure cameras -->
+        <param name="camera0"       value="/stereo/left/image_raw" />
+        <param name="file_prefix0"  value="left_" />
+
+        <param name="camera1"       value="/stereo/right/image_raw" />
+        <param name="file_prefix1"  value="right_" />
+
+        <!-- set output folder -->
+        <param name="output_folder" value="/tmp" />
+	</node>
+	
+</launch>
