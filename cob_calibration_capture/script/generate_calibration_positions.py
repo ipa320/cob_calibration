@@ -143,7 +143,7 @@ def main():
     
     # generate poses from defined translations and positions
     poses = {}
-    poses["center"] = (t_calib, q_calib) # center
+    poses["center"] = (t_calib, q_calib) # center, IMPORTANT: adjust prev_state if changed
     poses["stereo_00"]  = poses["center"]
 
     poses["stereo_01"]  = (t_r, q_as1)
@@ -161,10 +161,13 @@ def main():
     poses["stereo_11"]  = (t_bl, q_as2)
     poses["stereo_12"]  = (t_br, q_as1)
     
+    # stable seed for center position
+    # IMPORTANT: adjust this is you cange center position
+    prev_state = [0.13771, -1.61107, 1.60103, -0.90346, 2.30279, -1.28408, -0.93369]
+    
     # converting to joint_positions
     print "==> converting poses to joint_states" 
     arm_states = {}
-    prev_state = None
     for key in sorted(poses.keys()):
         print "--> calling getIk for '%s'" % key
         
@@ -181,14 +184,25 @@ def main():
         else: 
             print "--> ERROR no IK solution was found..."
     
-    # echo joint positions
-    print "==> echo joint_positions"
+    # convert to yaml_string manually (easier to achieve compact notation)
+    yaml_string = ""
     for key in sorted(arm_states.keys()):
         # set prcision to 5 digits
         tmp = map(lambda x: "%.5f"%x, arm_states[key][0])
-        print "%s: [[%s]]" % (key, ', '.join(tmp))
-    print '''stereo: ["stereo_00", "stereo_01", "stereo_02", "stereo_03", "stereo_04", "stereo_05", "stereo_06", "stereo_07", "stereo_08", "stereo_09", "stereo_10", "stereo_11", "stereo_12]'''
+        yaml_string += "%s: [[%s]]\n" % (key, ', '.join(tmp))
+    yaml_string += '''stereo: ["stereo_00", "stereo_01", "stereo_02", "stereo_03", "stereo_04", "stereo_05", "stereo_06", "stereo_07", "stereo_08", "stereo_09", "stereo_10", "stereo_11", "stereo_12]'''
+    
+    # print joint angles
+    print "==> RESULT: joint_positions, please add to config/arm_joint_configurations.yaml"
+    print yaml_string
 
+#    # DEBUG move arm
+#    sss = simple_script_server()
+#    print "==> moving arm"
+#    for key in sorted(arm_states.keys()):
+#        print "--> moving to '%s'" % key
+#        sss.move("arm", arm_states[key])
+#        sss.sleep(5)
    
 if __name__ == '__main__':
     main()
