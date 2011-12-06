@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<launch>
+   	<!-- run move_arm -->
+	<node name="move_arm_calib" pkg="cob_calibration_capture" type="move_arm.py" args="" respawn="false" output="screen"/>
+
+	<!-- send script_server parameters for calibration to parameter server -->
+	<include file="$(find cob_calibration_capture)/launch/upload_params.launch"/>
+	
+</launch>
