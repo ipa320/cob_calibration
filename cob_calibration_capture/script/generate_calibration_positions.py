@@ -143,6 +143,7 @@ def main():
     
     # generate poses from defined translations and positions
     poses = {}
+    poses["calib_old"] = ((-0.777, -0.016, 1.006), q_calib)
     poses["center"] = (t_calib, q_calib) # center, IMPORTANT: adjust prev_state if changed
     poses["stereo_00"]  = poses["center"]
 
@@ -190,7 +191,7 @@ def main():
         # set prcision to 5 digits
         tmp = map(lambda x: "%.5f"%x, arm_states[key][0])
         yaml_string += "%s: [[%s]]\n" % (key, ', '.join(tmp))
-    yaml_string += '''stereo: ["stereo_00", "stereo_01", "stereo_02", "stereo_03", "stereo_04", "stereo_05", "stereo_06", "stereo_07", "stereo_08", "stereo_09", "stereo_10", "stereo_11", "stereo_12]'''
+    yaml_string += '''stereo: ["stereo_00", "stereo_01", "stereo_02", "stereo_03", "stereo_04", "stereo_05", "stereo_06", "stereo_07", "stereo_08", "stereo_09", "stereo_10", "stereo_11", "stereo_12"]'''
     
     # print joint angles
     print "==> RESULT: joint_positions, please add to config/arm_joint_configurations.yaml"
