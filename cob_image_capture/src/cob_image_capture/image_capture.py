@@ -47,7 +47,7 @@ class ImageCaptureNode():
         
         # Wait for image messages
         for id in range(self.numCams):
-            rospy.wait_for_message(self.camera[id], Image, 1)
+            rospy.wait_for_message(self.camera[id], Image, 5)
         
         # Report
         rospy.loginfo("started capture process...")
@@ -90,7 +90,7 @@ class ImageCaptureNode():
         for id in range(self.numCams):
             if self.image[id].header.stamp > rospy.Time(0):
                 localImages.append(self.image[id])
-                rospy.loginfo("   header.stamp of cam %d:" % id, self.image[id].header.stamp)
+                rospy.loginfo("   header.stamp of cam %d: %s" % (id, str(self.image[id].header.stamp)))
         
         if len(localImages) == 0:
             rospy.loginfo("No sample captured, no image in queue.")
