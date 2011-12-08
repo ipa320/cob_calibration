@@ -114,8 +114,9 @@ def main():
 #    (t, q) = tf_listener.lookupTransform("base_link", "arm_7_link", rospy.Time())
     
     # translation and rotation for main calibration position
-    t_calib = (-0.73, 0.0, 1.05)
-    q_calib = (0, 0, sqrt(2), -sqrt(2))
+    t_calib         = (-0.73, 0.0, 1.05)
+    t_calib_handeye = (-0.777, -0.016, 1.006)
+    q_calib         = (0, 0, sqrt(2), -sqrt(2))
     
     # define translations
     t_c  = tadd(t_calib, ( 0.12,  0.00,  0.00)) # closer
@@ -143,28 +144,28 @@ def main():
     
     # generate poses from defined translations and positions
     poses = {}
-    poses["calib_old"] = ((-0.777, -0.016, 1.006), q_calib)
-    poses["center"] = (t_calib, q_calib) # center, IMPORTANT: adjust prev_state if changed
-    poses["stereo_00"]  = poses["center"]
-
+    # stable seed for center position
+    # IMPORTANT: adjust this to somethin reasonable if you cange calib position
+    prev_state = [0.13771, -1.61107, 1.60103, -0.90346, 2.30279, -1.28408, -0.93369]
+    poses["calib"] = (t_calib, q_calib)
+    
+    # hand eye calibration pose
+    poses["hand_eye"] = (t_calib_handeye, q_calib)
+    
+    # stereo camera calibration poses
+    poses["stereo_00"]  = poses["calib"]
     poses["stereo_01"]  = (t_r, q_as1)
     poses["stereo_02"]  = (t_l, q_as2)
     poses["stereo_03"]  = (t_calib, q_ns1)
     poses["stereo_04"]  = (t_calib, q_ns2)
-    
     poses["stereo_05"]  = (t_c, q_a)
     poses["stereo_06"]  = (t_cr, q_n)
     poses["stereo_07"]  = (t_f1, q_as2m)
     poses["stereo_08"]  = (t_f, q_ns2m)
-    
     poses["stereo_09"]  = (t_tr, q_as1)
     poses["stereo_10"]  = (t_tl, q_as2)
     poses["stereo_11"]  = (t_bl, q_as2)
     poses["stereo_12"]  = (t_br, q_as1)
-    
-    # stable seed for center position
-    # IMPORTANT: adjust this is you cange center position
-    prev_state = [0.13771, -1.61107, 1.60103, -0.90346, 2.30279, -1.28408, -0.93369]
     
     # converting to joint_positions
     print "==> converting poses to joint_states" 
