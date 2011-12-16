@@ -11,19 +11,18 @@ from cv_bridge import CvBridge, CvBridgeError
 
 class ImageCaptureNode():
     '''
-    Captures Images from 1 or more cameras (Image message topics) to files.
+    Captures Images from one or more cameras (Image message topics) to files.
     Number of cameras, output folder and file names are configurable via ROS parameters.
     
     After starting this node call "~capture_images" ROS service to dump images of all 
     cameras to output folder.
     '''
-    def __init__(self, numCams=1): 
+    def __init__(self): 
         '''
         Initializes storage, gets parameters from parameter server and logs to rosinfo
         '''
         rospy.init_node(NODE)
-        self.numCams = numCams
-        self.bridge = CvBridge()
+        self.bridge = CvBridge() 
         self.counter = 0
                
         # Get params from ros parameter server or use default
@@ -59,13 +58,25 @@ class ImageCaptureNode():
     def _imageCallback(self, data, id):
         '''
         Copy image message to local storage
+        
+        @param data: Currently received image message
+        @type  data: Ros Image() message
+        @param id: Id of camera from which the image was received
+        @type  id: integer 
         '''
         #print "cb executed"
         self.image[id] = data
     
     def _convertAndSaveImage(self, rosImage, filenamePrefix, counter):
         '''
-        Convert image to cvImage and store to file as jpg Image.
+        Convert image to cvImage and store to file as jpg image.
+        
+        @param rosImage: Image
+        @type  rosImage: Ros Image() message
+        @param filenamePrefix: Prefix to be prepended to image filename
+        @type  filenamePrefix: string
+        @param counter: Number to be appended to image filename
+        @type  counter: integer
         '''   
         # save image
         cvImage = cv.CreateImage((1,1), 1 , 3)
@@ -84,6 +95,11 @@ class ImageCaptureNode():
         '''
         Service handle for "CaptureImages" Service
         Grabs images, converts them and saves them to files
+        
+        @param req: service request
+        @type  req: CaptureImagesRequest() message
+        
+        @return: CaptureImagesResponse() message
         '''
         # grab image messages 
         localImages = []
