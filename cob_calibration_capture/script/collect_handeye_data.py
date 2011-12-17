@@ -12,8 +12,7 @@ OUT_FOLDER="/tmp/"
 
 def capturePosition(listener, sample_id):
     try:
-        time = rospy.Time(0)
-        (trans, quat) = listener.lookupTransform('/base_link', '/head_axis_link', time)
+        (trans, quat) = listener.lookupTransform('/base_link', '/head_axis_link', rospy.Time())
     except (tf.LookupException, tf.ConnectivityException):
         print "TF exception"
         return False
@@ -47,7 +46,7 @@ def main():
 
     print "--> setting up tf listener"
     listener = tf.TransformListener()
-    listener.waitForTransform('/base_link', '/head_color_camera_r_link', rospy.Time(), rospy.Time(1.0))
+    listener.waitForTransform('/base_link', '/head_color_camera_r_link', rospy.Time(), rospy.Time(2.0))
     
     print "--> setup care-o-bot for capture"
     sss.move("head", "back")
