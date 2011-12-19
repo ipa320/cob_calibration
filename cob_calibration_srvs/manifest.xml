@@ -1,0 +1,14 @@
+<package>
+  <description brief="cob_calibration_srvs">
+
+     cob_calibration_srvs
+
+  </description>
+  <author>Sebastian Haug</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/cob_calibration_srvs</url>
+
+</package>
+
+
