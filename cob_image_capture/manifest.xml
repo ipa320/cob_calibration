@@ -11,10 +11,10 @@
 
   <depend package="opencv2"/>
   <depend package="cv_bridge"/>
-
   <depend package="sensor_msgs"/>
-  <depend package="std_msgs"/>
   <depend package="message_filters"/>
+
+  <depend package="cob_calibration_srvs"/>
 
   <rosdep name="opencv2.3"/>
 </package>

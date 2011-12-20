@@ -6,7 +6,7 @@ import rospy
 
 import cv
 from sensor_msgs.msg import Image
-from cob_image_capture.srv import *
+from cob_calibration_srvs.srv import Capture, CaptureResponse
 from cv_bridge import CvBridge, CvBridgeError
 
 class ImageCaptureNode():
@@ -91,15 +91,15 @@ class ImageCaptureNode():
         f.writelines(str(rosImage.header))
         f.close()
             
-    def _captureImagesHandle(self, req):
+    def _captureHandle(self, req):
         '''
-        Service handle for "CaptureImages" Service
+        Service handle for "Capture" Service
         Grabs images, converts them and saves them to files
         
         @param req: service request
-        @type  req: CaptureImagesRequest() message
+        @type  req: CaptureRequest() message
         
-        @return: CaptureImagesResponse() message
+        @return: CaptureResponse() message
         '''
         # grab image messages 
         localImages = []
@@ -110,7 +110,7 @@ class ImageCaptureNode():
         
         if len(localImages) == 0:
             rospy.loginfo("No sample captured, no image in queue.")
-            return CaptureImagesResponse(False)
+            return CaptureResponse(False)
         
         # convert and save
         for id in range(self.numCams):
@@ -121,12 +121,12 @@ class ImageCaptureNode():
         rospy.loginfo("-> %s sample(s) captured | captured %d set(s) of samples in total" % (self.numCams, self.counter))
         
         # return service response
-        return CaptureImagesResponse(True)
+        return CaptureResponse(True)
         
     def run(self):
         # Start service
-        srv = rospy.Service('~capture_images', CaptureImages, self._captureImagesHandle)
-        rospy.loginfo("service of type 'CaptureImages' started, waiting for requests...")
+        srv = rospy.Service('~capture_images', Capture, self._captureHandle)
+        rospy.loginfo("service of type 'Capture' started, waiting for requests...")
         rospy.spin()
 
 if __name__ == '__main__':
