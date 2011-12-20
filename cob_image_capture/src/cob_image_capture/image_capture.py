@@ -11,12 +11,13 @@ from cv_bridge import CvBridge, CvBridgeError
 
 class ImageCaptureNode():
     '''
-    Captures Images from one or more cameras (Image message topics) to files.
-    Number of cameras, output folder and file names are configurable via ROS parameters.
+    @summary: Captures Images from one or more cameras (Image message topics) to files.
     
-    After starting this node call "~capture_images" ROS service to dump images of all 
+    Number of cameras, output folder and file names are configurable via ROS parameters.
+    After startup call "~capture_images" ROS service to save images of all 
     cameras to output folder.
     '''
+
     def __init__(self): 
         '''
         Initializes storage, gets parameters from parameter server and logs to rosinfo
@@ -60,7 +61,7 @@ class ImageCaptureNode():
         Copy image message to local storage
         
         @param data: Currently received image message
-        @type  data: Ros Image() message
+        @type  data: ROS Image() message
         @param id: Id of camera from which the image was received
         @type  id: integer 
         '''
@@ -72,7 +73,7 @@ class ImageCaptureNode():
         Convert image to cvImage and store to file as jpg image.
         
         @param rosImage: Image
-        @type  rosImage: Ros Image() message
+        @type  rosImage: ROS Image() message
         @param filenamePrefix: Prefix to be prepended to image filename
         @type  filenamePrefix: string
         @param counter: Number to be appended to image filename
@@ -118,7 +119,7 @@ class ImageCaptureNode():
         self.counter = self.counter + 1
         
         # log infos
-        rospy.loginfo("-> %s sample(s) captured | captured %d set(s) of samples in total" % (self.numCams, self.counter))
+        rospy.loginfo("-> %s image(s) captured | captured %d set(s) of images in total" % (self.numCams, self.counter))
         
         # return service response
         return CaptureResponse(True)
@@ -128,6 +129,7 @@ class ImageCaptureNode():
         srv = rospy.Service('~capture_images', Capture, self._captureHandle)
         rospy.loginfo("service of type 'Capture' started, waiting for requests...")
         rospy.spin()
+
 
 if __name__ == '__main__':
     node = ImageCaptureNode()
