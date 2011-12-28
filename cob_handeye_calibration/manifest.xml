@@ -1,0 +1,14 @@
+<package>
+  <description brief="cob_handeye_calibration">
+
+     cob_handeye_calibration
+
+  </description>
+  <author>Sebastian Haug</author>
+  <license>LGPL</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/cob_handeye_calibration</url>
+
+</package>
+
+
