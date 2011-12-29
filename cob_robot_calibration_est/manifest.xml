@@ -1,0 +1,25 @@
+<package>
+  <description brief="cob_robot_calibration_est">
+
+     cob_robot_calibration_est
+
+  </description>
+  <author>Vijay Pradeep, Sebastian Haug</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/cob_robot_calibration_est</url>
+
+  <depend package="rospy"/>
+  <depend package="rostest"/>
+
+  <depend package="sensor_msgs"/>
+  <depend package="calibration_msgs"/>
+  <depend package="visualization_msgs"/>
+
+  <rosdep name="python-scipy" />
+  <rosdep name="ipython" />
+  <rosdep name="python-tk" />
+
+</package>
+
+
