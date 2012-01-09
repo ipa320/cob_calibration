@@ -44,7 +44,7 @@
 
 from numpy import reshape, array, zeros, matrix, diag, real
 
-import roslib; roslib.load_manifest('pr2_calibration_estimation')
+import roslib; roslib.load_manifest('cob_robot_calibration_est')
 import rospy
 import numpy
 

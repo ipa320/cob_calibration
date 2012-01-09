@@ -33,7 +33,7 @@
 
 # author: Vijay Pradeep
 
-import roslib; roslib.load_manifest('pr2_calibration_estimation')
+import roslib; roslib.load_manifest('cob_robot_calibration_est')
 
 import sys
 import rospy
@@ -49,9 +49,9 @@ import os
 
 from numpy import matrix
 
-from pr2_calibration_estimation.robot_params import RobotParams
-from pr2_calibration_estimation.sensors.multi_sensor import MultiSensor
-from pr2_calibration_estimation.opt_runner import opt_runner
+from cob_robot_calibration_est.robot_params import RobotParams
+from cob_robot_calibration_est.sensors.multi_sensor import MultiSensor
+from cob_robot_calibration_est.opt_runner import opt_runner
 
 def usage():
     rospy.logerr("Not enough arguments")

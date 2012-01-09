@@ -31,7 +31,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import roslib; roslib.load_manifest('pr2_calibration_estimation')
+import roslib; roslib.load_manifest('cob_robot_calibration_est')
 
 import sys
 import unittest
@@ -39,7 +39,7 @@ import rospy
 import time
 import numpy
 
-from pr2_calibration_estimation.checkerboard import Checkerboard
+from cob_robot_calibration_est.checkerboard import Checkerboard
 from numpy import *
 
 class TestCheckerboard(unittest.TestCase):
@@ -94,4 +94,4 @@ class TestCheckerboard(unittest.TestCase):
 
 if __name__ == '__main__':
     import rostest
-    rostest.unitrun('pr2_calibration_estimation', 'test_Checkerboard', TestCheckerboard, coverage_packages=['pr2_calibration_estimation.checkerboard'])
+    rostest.unitrun('cob_robot_calibration_est', 'test_Checkerboard', TestCheckerboard, coverage_packages=['cob_robot_calibration_est.checkerboard'])

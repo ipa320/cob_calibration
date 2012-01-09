@@ -32,7 +32,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 
-import roslib; roslib.load_manifest('pr2_calibration_estimation')
+import roslib; roslib.load_manifest('cob_robot_calibration_est')
 
 import sys
 import unittest
@@ -40,7 +40,7 @@ import rospy
 import time
 import numpy
 
-from pr2_calibration_estimation.tilting_laser import TiltingLaser
+from cob_robot_calibration_est.tilting_laser import TiltingLaser
 from numpy import *
 
 class TestTiltingLaser(unittest.TestCase):
@@ -169,5 +169,5 @@ class TestTiltingLaser(unittest.TestCase):
 
 if __name__ == '__main__':
     import rostest
-    rostest.unitrun('pr2_calibration_estimation', 'test_TiltingLaser', TestTiltingLaser, coverage_packages=['pr2_calibration_estimation.tilting_laser'])
+    rostest.unitrun('cob_robot_calibration_est', 'test_TiltingLaser', TestTiltingLaser, coverage_packages=['cob_robot_calibration_est.tilting_laser'])
 

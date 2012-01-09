@@ -33,7 +33,7 @@
 import numpy
 from numpy import matrix, vsplit, sin, cos, reshape
 import rospy
-from pr2_calibration_estimation.single_transform import SingleTransform
+from cob_robot_calibration_est.single_transform import SingleTransform
 
 # Primitive used to model PR2's tilting laser platform. Consists of 2 fixed transforms.
 # One before the joint, and one after. The joint axis is the x-axis after the first transform

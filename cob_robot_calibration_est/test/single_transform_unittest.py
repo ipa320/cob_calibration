@@ -32,7 +32,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 
-import roslib; roslib.load_manifest('pr2_calibration_estimation')
+import roslib; roslib.load_manifest('cob_robot_calibration_est')
 
 import sys
 import unittest
@@ -40,7 +40,7 @@ import rospy
 import time
 import numpy
 
-from pr2_calibration_estimation.single_transform import SingleTransform
+from cob_robot_calibration_est.single_transform import SingleTransform
 from numpy import *
 
 
@@ -155,5 +155,5 @@ class TestSingleTransform(unittest.TestCase):
 
 if __name__ == '__main__':
     import rostest
-    rostest.unitrun('pr2_calibration_estimation', 'test_SingleTransform', TestSingleTransform, coverage_packages=['pr2_calibration_estimation.single_transform'])
+    rostest.unitrun('cob_robot_calibration_est', 'test_SingleTransform', TestSingleTransform, coverage_packages=['cob_robot_calibration_est.single_transform'])
 

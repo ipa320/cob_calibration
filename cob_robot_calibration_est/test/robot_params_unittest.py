@@ -32,14 +32,14 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 
-import roslib; roslib.load_manifest('pr2_calibration_estimation')
+import roslib; roslib.load_manifest('cob_robot_calibration_est')
 
 import sys
 import unittest
 import rospy
 import numpy
 import yaml
-from pr2_calibration_estimation.robot_params import RobotParams
+from cob_robot_calibration_est.robot_params import RobotParams
 from numpy import *
 
 def loadConfigDict():
@@ -247,4 +247,4 @@ class TestRobotParams(unittest.TestCase):
 
 if __name__ == '__main__':
     import rostest
-    rostest.unitrun('pr2_calibration_estimation', 'test_RobotParams', TestRobotParams, coverage_packages=['pr2_calibration_estimation.robot_params'])
+    rostest.unitrun('cob_robot_calibration_est', 'test_RobotParams', TestRobotParams, coverage_packages=['cob_robot_calibration_est.robot_params'])

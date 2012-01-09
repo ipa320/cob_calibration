@@ -32,7 +32,7 @@
 
 # author: Vijay Pradeep
 
-from pr2_calibration_estimation.sensors import tilting_laser_sensor, chain_sensor, camera_chain_sensor
+from cob_robot_calibration_est.sensors import tilting_laser_sensor, chain_sensor, camera_chain_sensor
 from numpy import concatenate
 from numpy import zeros, cumsum, matrix, array
 

@@ -32,10 +32,10 @@
 
 # author: Vijay Pradeep
 
-import roslib; roslib.load_manifest('pr2_calibration_estimation')
+import roslib; roslib.load_manifest('cob_robot_calibration_est')
 
-from pr2_calibration_estimation.robot_params import RobotParams
-from pr2_calibration_estimation.single_transform import SingleTransform
+from cob_robot_calibration_est.robot_params import RobotParams
+from cob_robot_calibration_est.single_transform import SingleTransform
 import numpy
 from numpy import array, matrix, zeros, cumsum, concatenate, reshape
 import scipy.optimize

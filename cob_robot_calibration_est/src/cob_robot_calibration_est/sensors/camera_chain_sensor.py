@@ -44,9 +44,9 @@
 import numpy
 from numpy import matrix, reshape, array, zeros, diag, real
 
-import roslib; roslib.load_manifest('pr2_calibration_estimation')
+import roslib; roslib.load_manifest('cob_robot_calibration_est')
 import rospy
-from pr2_calibration_estimation.full_chain import FullChainRobotParams
+from cob_robot_calibration_est.full_chain import FullChainRobotParams
 from sensor_msgs.msg import JointState
 
 class CameraChainBundler:

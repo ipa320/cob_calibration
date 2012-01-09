@@ -32,16 +32,16 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 
-import roslib; roslib.load_manifest('pr2_calibration_estimation')
+import roslib; roslib.load_manifest('cob_robot_calibration_est')
 
 import sys
 import unittest
 import rospy
 import numpy
 from sensor_msgs.msg import JointState
-from pr2_calibration_estimation.full_chain import FullChainCalcBlock
-from pr2_calibration_estimation.single_transform import SingleTransform
-from pr2_calibration_estimation.dh_chain import DhChain
+from cob_robot_calibration_est.full_chain import FullChainCalcBlock
+from cob_robot_calibration_est.single_transform import SingleTransform
+from cob_robot_calibration_est.dh_chain import DhChain
 
 from numpy import *
 import numpy
@@ -86,4 +86,4 @@ class TestFullChainCalcBlock(unittest.TestCase):
 
 if __name__ == '__main__':
     import rostest
-    rostest.unitrun('pr2_calibration_estimation', 'test_FullChainCalcBlock',   TestFullChainCalcBlock,   coverage_packages=['pr2_calibration_estimation.full_chain'])
+    rostest.unitrun('cob_robot_calibration_est', 'test_FullChainCalcBlock',   TestFullChainCalcBlock,   coverage_packages=['cob_robot_calibration_est.full_chain'])
