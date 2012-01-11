@@ -183,8 +183,8 @@ if __name__ == '__main__':
     # f = open(bag_filename)
     bag = rosbag.Bag(bag_filename)
     multisensors = []
-    for topic, msg, t in bag.read_messages(topics=['robot_measurement']):
-        if topic == "robot_measurement":
+    for topic, msg, t in bag.read_messages(topics=['/robot_measurement', 'robot_measurement']):
+        if topic == "robot_measurement" or topic == "/robot_measurement":
             msg_count+=1
     bag.close()
 
@@ -225,12 +225,12 @@ if __name__ == '__main__':
         # f = open(bag_filename)
         bag = rosbag.Bag(bag_filename)
         multisensors = []
-        for topic, msg, t in bag.read_messages(topics=['robot_measurement']):
-            if topic == "robot_measurement":
+        for topic, msg, t in bag.read_messages(topics=['/robot_measurement', 'robot_measurement']):
+            if topic == "robot_measurement" or topic == "/robot_measurement":
                 # Hack to rename laser id
-                for cur_laser in msg.M_laser:
-                    if cur_laser.laser_id in ["tilt_laser_6x8", "tilt_laser_8x6", "tilt_laser_7x6", "tilt_laser_6x7"]:
-                        cur_laser.laser_id = "tilt_laser"
+#                for cur_laser in msg.M_laser:
+#                    if cur_laser.laser_id in ["tilt_laser_6x8", "tilt_laser_8x6", "tilt_laser_7x6", "tilt_laser_6x7"]:
+#                        cur_laser.laser_id = "tilt_laser"
                 ms = MultiSensor(cur_sensors)
                 ms.sensors_from_message(msg)
                 multisensors.append(ms)

@@ -102,7 +102,7 @@ class RobotParams:
         cur_index = 0
 
         self.dh_chains,      cur_index = init_primitive_dict(cur_index, config_dict["dh_chains"],      DhChain)
-        self.tilting_lasers, cur_index = init_primitive_dict(cur_index, config_dict["tilting_lasers"], TiltingLaser)
+#        self.tilting_lasers, cur_index = init_primitive_dict(cur_index, config_dict["tilting_lasers"], TiltingLaser)
         self.transforms,     cur_index = init_primitive_dict(cur_index, config_dict["transforms"],     SingleTransform)
         self.rectified_cams, cur_index = init_primitive_dict(cur_index, config_dict["rectified_cams"], RectifiedCamera)
         self.checkerboards,  cur_index = init_primitive_dict(cur_index, config_dict["checkerboards"],   Checkerboard)
@@ -114,7 +114,7 @@ class RobotParams:
         free_list = [0] * self.length
         #import code; code.interact(local=locals())
         update_primitive_free(free_list, self.dh_chains,      free_dict["dh_chains"])
-        update_primitive_free(free_list, self.tilting_lasers, free_dict["tilting_lasers"])
+#        update_primitive_free(free_list, self.tilting_lasers, free_dict["tilting_lasers"])
         update_primitive_free(free_list, self.transforms,     free_dict["transforms"])
         update_primitive_free(free_list, self.rectified_cams, free_dict["rectified_cams"])
         update_primitive_free(free_list, self.checkerboards,  free_dict["checkerboards"])
@@ -124,7 +124,7 @@ class RobotParams:
         assert(self.length == param_vec.size)
         config_dict = dict()
         config_dict["dh_chains"]      = primitive_params_to_config(param_vec, self.dh_chains)
-        config_dict["tilting_lasers"] = primitive_params_to_config(param_vec, self.tilting_lasers)
+#        config_dict["tilting_lasers"] = primitive_params_to_config(param_vec, self.tilting_lasers)
         config_dict["transforms"]     = primitive_params_to_config(param_vec, self.transforms)
         config_dict["rectified_cams"] = primitive_params_to_config(param_vec, self.rectified_cams)
         config_dict["checkerboards"]  = primitive_params_to_config(param_vec, self.checkerboards)
@@ -134,7 +134,7 @@ class RobotParams:
         assert(self.length == param_vec.size)
 
         inflate_primitive_dict(param_vec, self.dh_chains)
-        inflate_primitive_dict(param_vec, self.tilting_lasers)
+#        inflate_primitive_dict(param_vec, self.tilting_lasers)
         inflate_primitive_dict(param_vec, self.transforms)
         inflate_primitive_dict(param_vec, self.rectified_cams)
         inflate_primitive_dict(param_vec, self.checkerboards)
@@ -142,7 +142,7 @@ class RobotParams:
     def deflate(self):
         param_vec = numpy.matrix( numpy.zeros((self.length,1), float))
         deflate_primitive_dict(param_vec, self.dh_chains)
-        deflate_primitive_dict(param_vec, self.tilting_lasers)
+#        deflate_primitive_dict(param_vec, self.tilting_lasers)
         deflate_primitive_dict(param_vec, self.transforms)
         deflate_primitive_dict(param_vec, self.rectified_cams)
         deflate_primitive_dict(param_vec, self.checkerboards)

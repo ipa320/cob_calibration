@@ -65,13 +65,13 @@ class MultiSensor:
     def sensors_from_message(self, msg):
         sensors = []
 
-        sensor_type = 'tilting_lasers'
-        if sensor_type in self._sensor_configs.keys():
-            cur_bundler = tilting_laser_sensor.TiltingLaserBundler( self._sensor_configs[sensor_type] )
-            cur_sensors = cur_bundler.build_blocks(msg)
-            sensors.extend(cur_sensors)
-        else:
-            print "[%s] section doesn't exist. Skipping"
+#        sensor_type = 'tilting_lasers'
+#        if sensor_type in self._sensor_configs.keys():
+#            cur_bundler = tilting_laser_sensor.TiltingLaserBundler( self._sensor_configs[sensor_type] )
+#            cur_sensors = cur_bundler.build_blocks(msg)
+#            sensors.extend(cur_sensors)
+#        else:
+#            print "[%s] section doesn't exist. Skipping"
 
         sensor_type = 'chains'
         if sensor_type in self._sensor_configs.keys():
