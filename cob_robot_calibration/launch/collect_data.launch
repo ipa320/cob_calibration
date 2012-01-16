@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<launch>
+  
+  	<!-- node that collects and publishes to robot_measurement -->
+  	<node type="collect_data.py" pkg="cob_auto_calibrate" name="$(anon collect_data)" output="screen" />
+  
+	<!-- record bagfile -->
+ 	<node type="record" pkg="rosbag" name="record" output="screen"
+	args="--output-name /tmp/cal/cal_measurements /robot_measurement /robot_measurement_image_left /robot_measurement_image_right /robot_measurement_image_kinect_rgb /robot_description">
+    	<!-- Hack to create the directory -->
+    	<param name="mkdir_tmp" command="mkdir -m 777 -p /tmp/cal" />
+ 	</node>
+ 
+</launch>
+
+

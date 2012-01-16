@@ -1,0 +1,14 @@
+<package>
+  <description brief="cob_robot_calibration">
+
+     cob_robot_calibration
+
+  </description>
+  <author>Sebastian Haug</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/cob_robot_calibration</url>
+
+</package>
+
+

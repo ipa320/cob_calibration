@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<launch>
+
+    <node pkg="cob_auto_calibrate" type="multi_step_cov_estimator.py" name="cal_cov_estimator_v0" output="screen" launch-prefix="time"
+        args="/tmp/cal/cal_cob_rect_2012-01-16.bag /tmp/cal/v0" respawn="False"/>
+        <!-- $(find cob_auto_calibrate)/bagfiles/0cal_measurement_cb33.bag -->
+        <!-- /tmp/cal/cal_measurements_2011-12-13.bag -->
+        <!-- /tmp/cal/cal_cob_2012-01-09.bag -->
+        <!-- /tmp/cal/cal_cob_he+st_2012-01-12.bag -->
+        <!-- /tmp/cal/cal_cob_he+st_rl_2012-01-12.bag -->
+		<!-- /tmp/cal/cal_cob_he+st_rl+kinect_2012-01-13.bag -->
+		<!-- /tmp/cal/cal_cob_rect_2012-01-16.bag -->
+
+    <group ns="calibration_config" clear_params="true">´
+        <!-- sensors -->
+        <group ns="sensors">
+            <param name="all" textfile="$(find cob_auto_calibrate)/config/params_v0/sensors.yaml" />
+        </group>
+
+        <!-- initial system for first calibration step -->s
+        <param name="initial_system" textfile="$(find cob_auto_calibrate)/config/params_v0/system.yaml" />
+
+        <!-- calibration steps -->
+        <group ns="cal_steps">
+	        <group ns="step0">
+                <param name="free_params" textfile="$(find cob_auto_calibrate)/config/params_v0/free_0.yaml" />
+                <param name="use_cov" type="bool" value="True" />
+                <rosparam>
+                  sensors:
+                  - arm_chain
+                  - kinect_rgb
+                  - left
+                  - right
+                </rosparam>
+                <param name="output_filename" type="string" value="result_step_1" />
+            </group>
+	        <group ns="step1">
+                <param name="free_params" textfile="$(find cob_auto_calibrate)/config/params_v0/free_1.yaml" />
+                <param name="use_cov" type="bool" value="True" />
+                <rosparam>
+                  sensors:
+                  - arm_chain
+                  - kinect_rgb
+                  - left
+                  - right
+                </rosparam>
+                <param name="output_filename" type="string" value="result_step_2" />
+            </group>
+ 	        <group ns="step2">
+                <param name="free_params" textfile="$(find cob_auto_calibrate)/config/params_v0/free_2.yaml" />
+                <param name="use_cov" type="bool" value="True" />
+                <rosparam>
+                  sensors:
+                  - arm_chain
+                  - kinect_rgb
+                  - left
+                  - right
+                </rosparam>
+                <param name="output_filename" type="string" value="result_step_3" />
+            </group>
+        </group>
+    </group>
+
+</launch>
