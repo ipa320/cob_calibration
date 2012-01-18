@@ -3,7 +3,7 @@
 #NODE = ''
 #import roslib; roslib.load_manifest(PKG)
 
-from xml.dom import minidom, Node
+from xml.dom import minidom
 
 class CalibrationUrdfUpdater():
     '''
