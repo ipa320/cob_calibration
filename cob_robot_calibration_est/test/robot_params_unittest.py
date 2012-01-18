@@ -104,11 +104,11 @@ def loadParamVec():
                  -10, 0, 0, 0,
                    0, 0, 0, 0,
                    0, 0,
-               # Tilting Lasers
-                 # Laser A
-                   0,20, 0, 0, 0, 0,
-                   0, 0,30, 0, 0, 0,
-                   1,
+#               # Tilting Lasers
+#                 # Laser A
+#                   0,20, 0, 0, 0, 0,
+#                   0, 0,30, 0, 0, 0,
+#                   1,
                # Transforms
                  # transformA
                   40, 0, 0, 0, 0, 0,
@@ -169,8 +169,8 @@ class TestRobotParams(unittest.TestCase):
 
         robot_params.configure(loadConfigDict())
 
-        print "laser start: %u" % robot_params.tilting_lasers["laserA"].start
-        print "laser end:   %u" % robot_params.tilting_lasers["laserA"].end
+#        print "laser start: %u" % robot_params.tilting_lasers["laserA"].start
+#        print "laser end:   %u" % robot_params.tilting_lasers["laserA"].end
 
         print "transform start: %u" % robot_params.transforms["transformA"].start
         print "transform end:   %u" % robot_params.transforms["transformA"].end
@@ -186,20 +186,20 @@ class TestRobotParams(unittest.TestCase):
         self.assertEqual(robot_params.dh_chains["chain2"].end,   15)
 
         # ****** Tilting Lasers ******
-        self.assertEqual(robot_params.tilting_lasers["laserA"].start, 25)
-        self.assertEqual(robot_params.tilting_lasers["laserA"].end,   38)
+#        self.assertEqual(robot_params.tilting_lasers["laserA"].start, 25)
+#        self.assertEqual(robot_params.tilting_lasers["laserA"].end,   38)
 
         # ****** Transforms ******
-        self.assertEqual(robot_params.transforms["transformA"].start, 38)
-        self.assertEqual(robot_params.transforms["transformA"].end,   44)
+        self.assertEqual(robot_params.transforms["transformA"].start, 25)
+        self.assertEqual(robot_params.transforms["transformA"].end,   31)
 
         # ****** Rectified Cams ******
-        self.assertEqual(robot_params.rectified_cams["camA"].start, 44)
-        self.assertEqual(robot_params.rectified_cams["camA"].end,   48)
+        self.assertEqual(robot_params.rectified_cams["camA"].start, 31)
+        self.assertEqual(robot_params.rectified_cams["camA"].end,   35)
 
         # ****** Checkerboards ******
-        self.assertEqual(robot_params.checkerboards["boardA"].start, 48)
-        self.assertEqual(robot_params.checkerboards["boardA"].end,   50)
+        self.assertEqual(robot_params.checkerboards["boardA"].start, 35)
+        self.assertEqual(robot_params.checkerboards["boardA"].end,   37)
 
     def test_inflate(self):
         robot_params = RobotParams()
@@ -208,8 +208,8 @@ class TestRobotParams(unittest.TestCase):
 
         self.assertEqual(robot_params.dh_chains["chain1"]._config[0,0], -10)
         self.assertEqual(robot_params.dh_chains["chain2"]._config[1,1],  10)
-        self.assertEqual(robot_params.tilting_lasers["laserA"]._before_joint.transform[1,3], 20)
-        self.assertEqual(robot_params.tilting_lasers["laserA"]._after_joint.transform[2,3],  30)
+#        self.assertEqual(robot_params.tilting_lasers["laserA"]._before_joint.transform[1,3], 20)
+#        self.assertEqual(robot_params.tilting_lasers["laserA"]._after_joint.transform[2,3],  30)
         self.assertEqual(robot_params.transforms["transformA"].transform[0,3],  40)
         self.assertEqual(robot_params.rectified_cams["camA"]._config['baseline_shift'],  4)
         self.assertEqual(robot_params.checkerboards["boardA"]._spacing_x,  30)
@@ -220,7 +220,7 @@ class TestRobotParams(unittest.TestCase):
         config = robot_params.params_to_config(loadParamVec())
         self.assertAlmostEqual(config["dh_chains"]["chain2"]['dh'][1][1], 10, 6)
         self.assertAlmostEqual(config["rectified_cams"]["camA"]["baseline_shift"], 4, 6)
-        self.assertAlmostEqual(config["tilting_lasers"]["laserA"]["before_joint"][1], 20, 6)
+#        self.assertAlmostEqual(config["tilting_lasers"]["laserA"]["before_joint"][1], 20, 6)
         self.assertAlmostEqual(config["checkerboards"]["boardA"]["spacing_y"], 40)
 
 
