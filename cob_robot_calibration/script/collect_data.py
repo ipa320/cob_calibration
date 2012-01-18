@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-PKG  = 'cob_auto_calibrate'
+PKG  = 'cob_robot_calibration'
 NODE = 'collect_data_node'
 import roslib
 roslib.load_manifest(PKG)

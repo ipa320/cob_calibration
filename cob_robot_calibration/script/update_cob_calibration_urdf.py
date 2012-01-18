@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-PKG  = 'cob_auto_calibrate'
+PKG  = 'cob_robot_calibration'
 NODE = 'update_cob_calibration_urdf'
 import roslib; roslib.load_manifest(PKG)
 
@@ -17,7 +17,7 @@ import single_transform
 DEFAULT_CALIB_URDF_XACRO_IN  = "/tmp/cal/calibration.urdf.xacro"
 DEFAULT_CALIB_URDF_XACRO_OUT = "/tmp/cal/calibration.urdf.xacro_updated" 
 DEFAULT_YAML_CALIB_SYSTEM    = "/tmp/cal/v0/result_step_3.yaml"
-DEFAULT_YAML_INITIAL_SYSTEM  = "/home/fmw-sh/git/cob_calibration/cob_auto_calibrate/config/params_v0/system.yaml"
+DEFAULT_YAML_INITIAL_SYSTEM  = "/home/fmw-sh/git/cob_calibration/cob_robot_calibration/config/params_v0/system.yaml"
 ENABLE_DEBUG_OUTPUT = False
 
 class CalibrationUrdfUpdater():
