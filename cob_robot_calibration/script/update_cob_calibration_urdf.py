@@ -12,6 +12,7 @@ from math import pi
 from xml.dom import minidom, Node
 
 from cob_robot_calibration_est import single_transform
+from cob_robot_calibration import calibration_urdf_updater
 
  # Default values for files and debug output
 DEFAULT_CALIB_URDF_XACRO_IN  = "/tmp/cal/calibration.urdf.xacro"
@@ -20,7 +21,7 @@ DEFAULT_YAML_CALIB_SYSTEM    = "/tmp/cal/v0/result_step_3.yaml"
 DEFAULT_YAML_INITIAL_SYSTEM  = "/home/fmw-sh/git/cob_calibration/cob_robot_calibration/config/params_v0/system.yaml"
 ENABLE_DEBUG_OUTPUT = False
 
-class CalibrationUrdfUpdater():
+class UpdateCobCalibrationUrdf():
     '''
     @summary: Updates calibration urdf file with calibration results
     
@@ -106,42 +107,8 @@ class CalibrationUrdfUpdater():
                 attributes2update[segment] = new_value
                 
         # update calibration xml based on attributes2update dict
-        self._update_calibration_xml(attributes2update)
-    
-    def _update_calibration_xml(self, attributes2update):
-        '''
-        Read urdf xml file (self.file_urdf_in) and replace values according to attributes2update dictionary.
-        Save results to urdf xml file (self.file_urdf_out)
-        
-        @param attributes2update: names of arguments (of property tags) in urdf xml file which need to be updated -> new values
-        @type  attributes2update: dictionary
-        '''
-        # parse xml file to dom
-        print "--> loading calibration xml file from '%s'" % self.file_urdf_in
-        xml_dom = minidom.parse(file(self.file_urdf_in))
-        
-        # get all property elements
-        for node in xml_dom.getElementsByTagName("property"):
-            # sanity check, all property elements need name and value attributes
-            assert node.hasAttribute("name") and node.hasAttribute("value")
-            attr_name  = node.getAttribute("name")
-            attr_value = node.getAttribute("value")    
-            
-            # if attributes name is in attributes2update dict, update attributes value to new value (attributes2update[name])
-            if attr_name in attributes2update:
-                attr_value_new = attributes2update[attr_name]
-                node.setAttribute("value", str(attr_value_new))
-                if self.debug:
-                    print "Updating '%s' from '%s' to '%s'" % (attr_name, attr_value, attr_value_new)
-    
-        # convert changed dom to pretty xml string
-        xml_string = xml_dom.toprettyxml(indent="", newl="")
-        
-        # save string to xml_out
-        print "--> saving results to calibration xml file '%s'" % self.file_urdf_out
-        f = open(self.file_urdf_out, "w")
-        f.writelines(xml_string) 
-        f.close()
+        urdf_updater = calibration_urdf_updater.CalibrationUrdfUpdater(self.file_urdf_in, self.file_urdf_out, self.debug)
+        urdf_updater.update(attributes2update)
         
     def _convert_transform(self, t):
         ''' 
@@ -161,8 +128,8 @@ class CalibrationUrdfUpdater():
 
 if __name__ == "__main__":
     # start main
-    cal_urdf_updater = CalibrationUrdfUpdater()
-    cal_urdf_updater.run()
+    updateUrdf = UpdateCobCalibrationUrdf()
+    updateUrdf.run()
     
     # shutdown
     rospy.signal_shutdown(rospy.Time.now())
