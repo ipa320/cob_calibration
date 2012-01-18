@@ -3,8 +3,6 @@ PKG = 'cob_robot_calibration'
 import roslib; roslib.load_manifest(PKG)
 import unittest
 
-import numpy as np
-import filecmp
 from  cob_robot_calibration import calibration_urdf_updater 
 
 FILE_IN = "test/data/test_calibration.urdf.xacro"
@@ -23,7 +21,7 @@ class TestCalibrationUrdfUpdater(unittest.TestCase):
         updater.update(attributes2update)
         
         # compare with correct results
-        self.assertTrue(filecmp.cmp(FILE_OUT1, FILE_OUT_RES1))
+        self.assertTrue(self._cmp_files(FILE_OUT1, FILE_OUT_RES1))
         
     def test_update_one_param_string(self):
         # define params to update
@@ -34,7 +32,7 @@ class TestCalibrationUrdfUpdater(unittest.TestCase):
         updater.update(attributes2update)
         
         # compare with correct results
-        self.assertTrue(filecmp.cmp(FILE_OUT1, FILE_OUT_RES1))
+        self.assertTrue(self._cmp_files(FILE_OUT1, FILE_OUT_RES1))
         
     def test_update_all_params(self):
         # define params to update
@@ -47,7 +45,7 @@ class TestCalibrationUrdfUpdater(unittest.TestCase):
         updater.update(attributes2update)
         
         # compare with correct results
-        self.assertTrue(filecmp.cmp(FILE_OUT2, FILE_OUT_RES2))
+        self.assertTrue(self._cmp_files(FILE_OUT2, FILE_OUT_RES2))
         
     def test_update_all_params_string(self):
         # define params to update
@@ -60,7 +58,10 @@ class TestCalibrationUrdfUpdater(unittest.TestCase):
         updater.update(attributes2update)
         
         # compare with correct results
-        self.assertTrue(filecmp.cmp(FILE_OUT2, FILE_OUT_RES2))
+        self.assertTrue(self._cmp_files(FILE_OUT2, FILE_OUT_RES2))
+
+    def _cmp_files(self, f1, f2):
+        return open(f1).read() == open(f2).read()
 
 if __name__ == '__main__':
     import rosunit
