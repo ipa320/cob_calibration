@@ -20,6 +20,8 @@
   <depend package="cob_script_server"/>
   <depend package="cob_calibrate_camera"/>
 
+  <depend package="rostest"/>
+
 </package>
 
 
