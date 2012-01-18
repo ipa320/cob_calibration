@@ -1,16 +1,18 @@
 <stack>
   <description brief="cob_calibration">cob_calibration</description>
   <author>Maintained by Sebastian Haug</author>
-  <license>LGPL</license>  
+  <license>BSD,LGPL</license>  
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/cob_calibration</url>
-  <depend stack="cob_calibration" /> <!-- cob_image_capture -->
+  <url>http://ros.org/wiki/cob_calibration_gh</url>
+  <depend stack="arm_navigation" /> <!-- kinematics_msgs -->
+  <depend stack="cob_calibration" /> <!-- cob_calibrate_camera -->
   <depend stack="cob_command_tools" /> <!-- cob_script_server -->
-  <depend stack="common_msgs" /> <!-- geometry_msgs, sensor_msgs -->
+  <depend stack="common_msgs" /> <!-- geometry_msgs, sensor_msgs, visualization_msgs -->
   <depend stack="executive_smach" /> <!-- smach_ros, smach -->
   <depend stack="geometry" /> <!-- tf -->
+  <depend stack="pr2_calibration" /> <!-- calibration_msgs -->
   <depend stack="ros" />
-  <depend stack="ros_comm" /> <!-- std_msgs, rospy, message_filters -->
+  <depend stack="ros_comm" /> <!-- std_msgs, rostest, rospy, message_filters -->
   <depend stack="vision_opencv" /> <!-- opencv2, cv_bridge -->
 
 </stack>
