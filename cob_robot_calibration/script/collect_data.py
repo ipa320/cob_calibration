@@ -1,20 +1,16 @@
 #!/usr/bin/env python
 PKG  = 'cob_robot_calibration'
 NODE = 'collect_data_node'
-import roslib
-roslib.load_manifest(PKG)
-#roslib.load_manifest('pr2_calibration_executive')
-#roslib.load_manifest('cob_script_server')
-import rospy
-import message_filters
+import roslib; roslib.load_manifest(PKG)
 
+import rospy
+
+import message_filters
 from sensor_msgs.msg import *
 from calibration_msgs.msg import *
-from cob_image_capture.srv import *
-
 from cv_bridge import CvBridge, CvBridgeError
-from simple_script_server import simple_script_server
 
+from cob_calibration_srvs.srv import *
 from cob_calibrate_camera import calibrate, cv2util
 
 class DataCollector():
@@ -55,6 +51,19 @@ class DataCollector():
         # CvBridge
         self.bridge = CvBridge() 
         
+        # initialize private storage
+        self._arm_joint_msg_received = False
+        self._arm_joint_msg = None
+        self._torso_joint_msg_received = False
+        self._torso_joint_msg = None
+        self._left = {}
+        self._left_received = False
+        self._right = {}
+        self._right_received = False
+        self._kinect_rgb = {}
+        self._kinect_rgb_received = False
+        self.counter = 1
+
         #  init publisher / subscriber
         self._robot_measurement_pub = rospy.Publisher("/robot_measurement", RobotMeasurement)
         self._image_pub_left        = rospy.Publisher("/robot_measurement_image_left",  Image) #DEBUG
@@ -86,21 +95,6 @@ class DataCollector():
         self._sub_kinect_rgb              = message_filters.TimeSynchronizer([self._sub_kinect_rgb_info, 
                                                                         self._sub_kinect_rgb_image_color], 15)
         self._sub_kinect_rgb.registerCallback(self._callback_kinect_rgb)
-        
-        # initialize private members
-        self._arm_joint_msg_received = False
-        self._arm_joint_msg = None
-        self._torso_joint_msg_received = False
-        self._torso_joint_msg = None
-        
-        self._left = {}
-        self._left_received = False
-        self._right = {}
-        self._right_received = False
-        self._kinect_rgb = {}
-        self._kinect_rgb_received = False
-        
-        self.counter = 1
         print "==> done with initialization"
 
     def _callback_left(self, camera_info, image_color, image_rect):
@@ -111,6 +105,8 @@ class DataCollector():
         self._left["camera_info"] = camera_info
         self._left["image_color"] = image_color
         self._left["image_rect"] = image_rect
+#        if self._left_received == False:
+#            print "--> left sample received (this only prints once!)"
         self._left_received = True
         
     def _callback_right(self, camera_info, image_color, image_rect):
@@ -121,6 +117,8 @@ class DataCollector():
         self._right["camera_info"] = camera_info
         self._right["image_color"] = image_color
         self._right["image_rect"] = image_rect
+#        if self._right_received == False:
+#            print "--> right sample received (this only prints once!)"
         self._right_received = True
 
     def _callback_kinect_rgb(self, camera_info, image_color):
@@ -130,6 +128,8 @@ class DataCollector():
         #print "DEBUG: callback kinect_rgb"
         self._kinect_rgb["camera_info"] = camera_info
         self._kinect_rgb["image_color"] = image_color
+#        if self._kinect_rgb_received == False:
+#            print "--> kinect sample received (this only prints once!)"
         self._kinect_rgb_received = True
     
     def _callback_joints(self, msg):
@@ -153,6 +153,8 @@ class DataCollector():
             
             # safe joint state msg
             self._torso_joint_msg = joint_msg
+ #           if self._torso_joint_msg_received == False:
+ #               print "--> torso joint state received (this only prints once!)"
             self._torso_joint_msg_received = True
         
         # arm
@@ -170,6 +172,8 @@ class DataCollector():
             
             # safe joint state msg
             self._arm_joint_msg = joint_msg
+ #           if self._arm_joint_msg_received == False:
+ #               print "--> arm joint state received (this only prints once!)"
             self._arm_joint_msg_received = True
 
     def run(self):
@@ -179,7 +183,7 @@ class DataCollector():
         rospy.sleep(1)
         
         # Start service
-        srv = rospy.Service('/image_capture/capture_images', CaptureImages, self._collect)
+        srv = rospy.Service('/image_capture/capture_images', Capture, self._collect)
         rospy.loginfo("service of type 'CaptureImages' started under name '/image_capture/capture_images', waiting for requests...")
         rospy.spin()
 
@@ -190,7 +194,7 @@ class DataCollector():
         rospy.loginfo("capturing sample %.2i"%self.counter)
         res = self._capture_and_pub("sample%.2i"%self.counter, "cb_9x6", "arm_chain", (9,6))
         self.counter += 1
-        return res
+        return CaptureResponse(res)
 
     def _capture_and_pub(self, sample_id, target_id, chain_id, pattern_size):
         '''
@@ -214,16 +218,29 @@ class DataCollector():
         self._left_received = False
         self._right_received = False
         self._kinect_rgb_received = False
+        start_time = rospy.Time.now()
         while (not self._left_received or not self._right_received or not self._kinect_rgb_received):
             rospy.sleep(0.005)
+            # print warning every 2 seconds if one of the messages is still missing...
+            if start_time + rospy.Duration(2.0) < rospy.Time.now():
+                if not self._left_received: print "--> still waiting for sample from left"
+                if not self._right_received: print "--> still waiting for sample from right"
+                if not self._kinect_rgb_received: print "--> still waiting for sample from kinect"
+                start_time = rospy.Time.now()
         latest_left = self._left
         latest_right = self._right
         latest_kinect_rgb = self._kinect_rgb
         
         self._torso_joint_msg_received = False
         self._arm_joint_msg_received = False
+        start_time = rospy.Time.now()
         while (not self._torso_joint_msg_received or not self._arm_joint_msg_received):
             rospy.sleep(0.005)
+            # print warning every 2 seconds if one of the messages is still missing...
+            if start_time + rospy.Duration(2.0) < rospy.Time.now():
+                if not self._torso_joint_msg_received: print "--> still waiting for torso joint states"
+                if not self._arm_joint_msg_received: print "--> still waiting for srm joint states"
+                start_time = rospy.Time.now()
         latest_torso = self._torso_joint_msg
         latest_arm = self._arm_joint_msg
         

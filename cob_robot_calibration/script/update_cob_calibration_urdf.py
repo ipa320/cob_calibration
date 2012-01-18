@@ -11,7 +11,7 @@ import yaml
 from math import pi
 from xml.dom import minidom, Node
 
-import single_transform
+from cob_robot_calibration_est import single_transform
 
  # Default values for files and debug output
 DEFAULT_CALIB_URDF_XACRO_IN  = "/tmp/cal/calibration.urdf.xacro"
