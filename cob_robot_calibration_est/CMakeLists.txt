@@ -31,7 +31,6 @@ rosbuild_add_pyunit(test/tilting_laser_unittest.py)
 
 rosbuild_add_pyunit(test/chain_sensor_unittest.py)
 rosbuild_add_pyunit(test/camera_chain_sensor_unittest.py)
-rosbuild_add_pyunit(test/tilting_laser_sensor_unittest.py)
 
 #common commands for building c++ executables and libraries
 #rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
