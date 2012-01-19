@@ -102,6 +102,7 @@ class UpdateCobCalibrationUrdf():
                 initial_value = initial_system["dh_chains"][chain]["dh"][id][0] # get initial theta value of segment for current chain
                 calib_value   =   calib_system["dh_chains"][chain]["dh"][id][0] # get calibr. theta value of segment for current chain
                 new_value = float(calib_value) - float(eval(str(initial_value)))
+                new_value = round(new_value, 10)
                 
                 # add to attributes2update dict as "attribute name -> new_value" entries
                 attributes2update[segment] = new_value
