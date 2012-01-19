@@ -184,7 +184,7 @@ class DataCollector():
         
         # Start service
         srv = rospy.Service('/image_capture/capture_images', Capture, self._collect)
-        rospy.loginfo("service of type 'CaptureImages' started under name '/image_capture/capture_images', waiting for requests...")
+        rospy.loginfo("service of type 'Capture' started under name '/image_capture/capture_images', waiting for requests...")
         rospy.spin()
 
     def _collect(self, data):

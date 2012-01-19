@@ -6,7 +6,7 @@ import rospy
 import tf
 import yaml
 from simple_script_server import simple_script_server
-from cob_image_capture.srv import CaptureImages
+from cob_calibration_srvs.srv import Capture
 
 def main():
     rospy.init_node(NODE)
@@ -14,7 +14,7 @@ def main():
     
     # service client
     image_capture_service_name = "/image_capture/capture_images"
-    captureImage = rospy.ServiceProxy(image_capture_service_name, CaptureImages)
+    capture = rospy.ServiceProxy(image_capture_service_name, Capture)
     rospy.wait_for_service(image_capture_service_name, 1)
     print "--> service client for capture images initialized"
 
@@ -43,7 +43,7 @@ def main():
         sss.move("arm", pos)
         sss.sleep(1)
         print "--> capturing %s sample" % pos
-        captureImage()
+        capture()
     
 if __name__ == '__main__':
     main()

@@ -19,7 +19,7 @@
   <depend package='geometry_msgs'/>
  
   <depend package='cob_script_server'/>
-  <depend package='cob_image_capture'/>
+  <depend package='cob_calibration_srvs'/>
   <!--depend package='cob_generic_states'/--> 
 
 </package>
