@@ -24,11 +24,12 @@ def main(args):
 
     # movements
     print "==> starting movements"
-    
+    sss.sleep(1.0)   
+ 
     print "--> moving arm to pregrasp"
     sss.move("arm", "pregrasp")
     
-    print "--> moving arm to %s", pos
+    print "--> moving arm to %s" % pos
     sss.move("arm", pos)
     
 if __name__ == '__main__':
