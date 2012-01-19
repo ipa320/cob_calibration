@@ -12,7 +12,8 @@ OUT_FOLDER="/tmp/"
 
 def capturePosition(listener, sample_id):
     try:
-        (trans, quat) = listener.lookupTransform('/base_link', '/head_axis_link', rospy.Time())
+        time = rospy.Time()
+        (trans, quat) = listener.lookupTransform('/base_link', '/head_axis_link', time)
     except (tf.LookupException, tf.ConnectivityException):
         print "TF exception"
         return False
