@@ -84,12 +84,12 @@ class UpdateCobCalibrationUrdf():
             (x, y, z, roll, pitch, yaw) = self._convert_transform(calib_system['transforms'][tf_name])
     
             # add to attributes2update dict as "attribute name -> new_value" entries
-            attributes2update[prefix+"x"]       = x
-            attributes2update[prefix+"y"]       = y
-            attributes2update[prefix+"z"]       = z
-            attributes2update[prefix+"roll"]    = roll
-            attributes2update[prefix+"pitch"]   = pitch
-            attributes2update[prefix+"yaw"]     = yaw
+            attributes2update[prefix+"x"]       = round(x, 10)
+            attributes2update[prefix+"y"]       = round(y, 10)
+            attributes2update[prefix+"z"]       = round(z, 10)
+            attributes2update[prefix+"roll"]    = round(roll, 10)
+            attributes2update[prefix+"pitch"]   = round(pitch, 10)
+            attributes2update[prefix+"yaw"]     = round(yaw, 10)
             
         # process dh chains
         for chain in self.chains2update:
