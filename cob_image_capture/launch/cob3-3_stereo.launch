@@ -2,7 +2,7 @@
 <launch>
 
 	<!-- run image_capture node -->
-	<node name="$image_capture" pkg="cob_image_capture" type="image_capture.py" args="" output="screen">
+	<node name="image_capture" pkg="cob_image_capture" type="image_capture.py" args="" output="screen">
 	    <!-- set to 2 cameras -->
 	    <param name="number_of_cameras" value="2" />
 
