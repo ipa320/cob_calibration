@@ -32,7 +32,7 @@ def main():
     # service client
     image_capture_service_name = "/image_capture/capture_images"
     capture = rospy.ServiceProxy(image_capture_service_name, Capture)
-    rospy.wait_for_service(image_capture_service_name, 1)
+    rospy.wait_for_service(image_capture_service_name, 5)
     print "--> service client for capture images initialized"
 
     # init
@@ -47,7 +47,7 @@ def main():
 
     print "--> setting up tf listener"
     listener = tf.TransformListener()
-    listener.waitForTransform('/base_link', '/head_color_camera_r_link', rospy.Time(), rospy.Time(2.0))
+    #listener.waitForTransform('/base_link', '/head_color_camera_l_link', rospy.Time(), rospy.Time(1.0))
     
     print "--> setup care-o-bot for capture"
     sss.move("head", "back")
