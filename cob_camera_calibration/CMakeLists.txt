@@ -21,6 +21,10 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #uncomment if you have defined services
 #rosbuild_gensrv()
 
+rosbuild_add_pyunit(${PROJECT_SOURCE_DIR}/test/test_calibration_data.py)
+rosbuild_add_pyunit(${PROJECT_SOURCE_DIR}/test/test_calibration_object.py)
+rosbuild_add_pyunit(${PROJECT_SOURCE_DIR}/test/test_calibration_object_detector.py)
+
 #common commands for building c++ executables and libraries
 #rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
 #target_link_libraries(${PROJECT_NAME} another_library)
