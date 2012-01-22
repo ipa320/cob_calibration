@@ -1,0 +1,14 @@
+<package>
+  <description brief="cob_camera_calibration">
+
+     cob_camera_calibration
+
+  </description>
+  <author>Sebastian Haug</author>
+  <license>LGPL</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/cob_camera_calibration</url>
+
+</package>
+
+
