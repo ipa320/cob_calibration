@@ -9,6 +9,10 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/cob_camera_calibration</url>
 
+  <depend package="opencv2"/>
+  <depend package="cv_bridge"/>
+  <depend package="tf"/>
+
 </package>
 
 
