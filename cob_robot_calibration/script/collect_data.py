@@ -11,7 +11,12 @@ from calibration_msgs.msg import *
 from cv_bridge import CvBridge, CvBridgeError
 
 from cob_calibration_srvs.srv import *
-from cob_calibrate_camera import calibrate, cv2util
+from cob_camera_calibration import Checkerboard, CheckerboardDetector, cv2util
+
+CHECKERBOARD_PATTERN_SIZE = (9,6)
+CHECKERBOARD_SQUARE_SIZE = 0.03
+CHECKERBOARD_NAME = "cb_9x6"
+CHECKERBOARD_CHAIN = "arm_chain"
 
 class DataCollector():
     '''
@@ -192,11 +197,14 @@ class DataCollector():
         Executed on service call. Logs and calls _capture_and_pub
         '''
         rospy.loginfo("capturing sample %.2i"%self.counter)
-        res = self._capture_and_pub("sample%.2i"%self.counter, "cb_9x6", "arm_chain", (9,6))
+        res = self._capture_and_pub("sample%.2i"%self.counter, CHECKERBOARD_NAME,
+                                                               CHECKERBOARD_CHAIN,
+                                                               CHECKERBOARD_PATTERN_SIZE, 
+                                                               CHECKERBOARD_SQUARE_SIZE)
         self.counter += 1
         return CaptureResponse(res)
 
-    def _capture_and_pub(self, sample_id, target_id, chain_id, pattern_size):
+    def _capture_and_pub(self, sample_id, target_id, chain_id, pattern_size, square_size):
         '''
         Main capturing function. Gets a set of recent messages for all needed topics.
         Processes messages and creates RobotMeasuerment message which is published.
@@ -212,6 +220,9 @@ class DataCollector():
         
         @param pattern_size: Size of checkerboard pattern as defined by opencv (e.g. (9, 6))
         @type  pattern_size: tuple(x, y)
+        
+        @param square_size: Size of checkerboard sqaures (im m)
+        @type  square_size: float
         '''
         # capture measurements
         # --------------------
@@ -244,12 +255,17 @@ class DataCollector():
         latest_torso = self._torso_joint_msg
         latest_arm = self._arm_joint_msg
         
+        # set up checkerboard and checkerboard detector
+        # ---------------------------------------------
+        checkerboard = Checkerboard(pattern_size, square_size)
+        checkerboard_detector = CheckerboardDetector(checkerboard)
+        
         # detect cb left
         # --------------
         cvImage = self.bridge.imgmsg_to_cv(latest_left["image_rect"], "mono8")
         image = cv2util.cvmat2np(cvImage)
         
-        corners = calibrate._get_image_points(image, pattern_size)
+        corners = checkerboard_detector.detect_image_points(image, is_grayscale=True)
         if corners != None:
             print "cb found: left"
             img_points_left = []
@@ -258,7 +274,7 @@ class DataCollector():
         else:
             # cb not found
             return False
-           
+        
         # create camera msg left
         # ----------------------
         cam_msg_left = CameraMeasurement()
@@ -276,7 +292,7 @@ class DataCollector():
         cvImage = self.bridge.imgmsg_to_cv(latest_right["image_rect"], "mono8")
         image = cv2util.cvmat2np(cvImage)
         
-        corners = calibrate._get_image_points(image, pattern_size)
+        corners = checkerboard_detector.detect_image_points(image, is_grayscale=True)
         if corners != None:
             print "cb found: right"
             img_points_right = []
@@ -303,7 +319,7 @@ class DataCollector():
         cvImage = self.bridge.imgmsg_to_cv(latest_kinect_rgb["image_color"], "mono8")
         image = cv2util.cvmat2np(cvImage)
         
-        corners = calibrate._get_image_points(image, pattern_size)
+        corners = checkerboard_detector.detect_image_points(image, is_grayscale=True)
         if corners != None:
             print "cb found: kinect_rgb"
             img_points_kinect_rgb = []
