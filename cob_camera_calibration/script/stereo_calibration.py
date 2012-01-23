@@ -65,17 +65,17 @@ class StereoCalibrationNode():
         print "==> successfully calibrated, stereo reprojection RMS (in pixels):", rms_stereo
         
         # create CalibrationData object with results
-        camera_info_l                      = CalibrationData(self.camera_name_l, self.frame_id_l, w, h)
-        camera_info_l.camera_matrix        = camera_matrix_l
-        camera_info_l.rectification_matrix = rectification_matrix_l
-        camera_info_l.projection_matrix    = projection_matrix_l
-        camera_info_l.dist_coeffs          = dist_coeffs_l
+        camera_info_l                         = CalibrationData(self.camera_name_l, self.frame_id_l, w, h)
+        camera_info_l.camera_matrix           = camera_matrix_l
+        camera_info_l.rectification_matrix    = rectification_matrix_l
+        camera_info_l.projection_matrix       = projection_matrix_l
+        camera_info_l.distortion_coefficients = dist_coeffs_l
         
-        camera_info_r                      = CalibrationData(self.camera_name_r, self.frame_id_r, w, h)
-        camera_info_r.camera_matrix        = camera_matrix_r
-        camera_info_r.rectification_matrix = rectification_matrix_r
-        camera_info_r.projection_matrix    = projection_matrix_r
-        camera_info_r.dist_coeffs          = dist_coeffs_r
+        camera_info_r                         = CalibrationData(self.camera_name_r, self.frame_id_r, w, h)
+        camera_info_r.camera_matrix           = camera_matrix_r
+        camera_info_r.rectification_matrix    = rectification_matrix_r
+        camera_info_r.projection_matrix       = projection_matrix_r
+        camera_info_r.distortion_coefficients = dist_coeffs_r
         
         # save results
         camera_info_l.save_camera_yaml_file(self.output_file_l)
