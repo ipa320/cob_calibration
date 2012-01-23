@@ -9,7 +9,7 @@
         <param name="square_size"   value="0.03" />
 
         <param name="image_prefix"  value="kinect" />
-        <param name="camera_name"   value="cam3d" />
+        <param name="camera_name"   value="rgb_A00366909204046A" /> <!-- cob3-3 -->
         <param name="frame_id"      value="/head_cam3d" />
         <param name="output_file"   value="$(find cob_hardware_config)/$(env ROBOT)/config/cameras/kinect_rgb.yaml" />
 
