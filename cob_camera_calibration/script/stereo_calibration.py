@@ -5,9 +5,8 @@ import roslib; roslib.load_manifest(PKG)
 import rospy
 
 import numpy as np
-import yaml
 import tf
-from cob_camera_calibration import Checkerboard, CheckerboardDetector, StereoCalibrator, CalibrationData
+from cob_camera_calibration import Checkerboard, CheckerboardDetector, StereoCalibrator, CalibrationData, CalibrationUrdfUpdater
 
 class StereoCalibrationNode():
     '''
@@ -41,7 +40,8 @@ class StereoCalibrationNode():
         self.frame_id_r           = rospy.get_param('~frame_id_r',           "/right")
         self.output_file_r        = rospy.get_param('~output_file_r',        self.camera_name_r+".yaml")
         
-        self.output_file_baseline = rospy.get_param('~output_file_baseline', "baseline.yaml")
+        self.calibration_urdf_in  = rospy.get_param('~calibration_urdf_in',  "calibration.urdf.xacro")
+        self.calibration_urdf_out = rospy.get_param('~calibration_urdf_out', "calibration.urdf.xacro")
         
         self.alpha                = rospy.get_param('~alpha',                0.0)
         self.verbose              = rospy.get_param('~verbose',              False)
@@ -62,9 +62,6 @@ class StereoCalibrationNode():
         ((rms_l, rms_r, rms_stereo), camera_matrix_l, dist_coeffs_l, rectification_matrix_l, projection_matrix_l,
                                      camera_matrix_r, dist_coeffs_r, rectification_matrix_r, projection_matrix_r,
                                      (h, w), R, T) = calibrator.calibrate_stereo_camera(self.alpha)
-        # convert baseline
-        T = T.flatten().tolist() # T as list (x, y, z)
-        R = list(tf.transformations.euler_from_matrix(R)) # convert R to (roll, pitch, yaw)
         print "==> successfully calibrated, stereo reprojection RMS (in pixels):", rms_stereo
         
         # create CalibrationData object with results
@@ -87,13 +84,23 @@ class StereoCalibrationNode():
         camera_info_r.save_camera_yaml_file(self.output_file_r)
         print "==> saved right results to:", self.output_file_r
     
+        # convert baseline (invert transfrom as T and R bring right frame into left 
+        # and we need transform from left to right for urdf!)
+        M = np.matrix(np.vstack((np.hstack((R, T)), [0.0, 0.0, 0.0, 1.0]))) # 4x4 homogeneous matrix
+        M_inv = M.I
+        T_inv = np.array(M_inv[:3,3]).flatten().tolist() # T as list (x, y, z)
+        R_inv = list(tf.transformations.euler_from_matrix(M_inv[:3,:3])) # convert R to (roll, pitch, yaw)
+    
         # save baseline
-        baseline = {'camera_name_left': self.camera_name_l,
-                    'camera_name_right': self.camera_name_r,
-                    'R': R,
-                    'T': T}
-        yaml.dump(baseline, open(self.output_file_baseline, "w"))
-        print "==> saved baseline results to:", self.output_file_baseline
+        attributes2update = {'cam_r_x':     T_inv[0],
+                             'cam_r_y':     T_inv[1],
+                             'cam_r_z':     T_inv[2],
+                             'cam_r_roll':  R_inv[0],
+                             'cam_r_pitch': R_inv[1],
+                             'cam_r_yaw':   R_inv[2]}
+        urdf_updater = CalibrationUrdfUpdater(self.calibration_urdf_in, self.calibration_urdf_out, self.verbose)
+        urdf_updater.update(attributes2update)
+        print "==> updated baseline in:", self.calibration_urdf_out
         
         # verbose mode
         if self.verbose:
@@ -113,10 +120,10 @@ class StereoCalibrationNode():
             print "rectification matrix:\n", rectification_matrix_r
             print "projection matrix:\n", projection_matrix_r
             print 
-            print "baseline\n--------"
-            print "R (in rpy):\n", R
-            print "T (in xyz):\n", T
-        
+            print "baseline (transform from left to right camera)\n--------"
+            print "R (in rpy):\n", R_inv
+            print "T (in xyz):\n", T_inv
+
 if __name__ == '__main__':
     node = StereoCalibrationNode()
     node.run_stereo_calibration()
