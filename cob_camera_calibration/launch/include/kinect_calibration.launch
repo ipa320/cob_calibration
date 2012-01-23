@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<launch>
+
+    <!-- run mono calibration on kinect -->
+    <node type="mono_calibration.py" pkg="cob_camera_calibration" name="$(anon mono_calibration)" output="screen">
+
+         <param name="folder"        value="/tmp/cal/intrinsic" />
+        <param name="pattern_size"  value="9x6" />
+        <param name="square_size"   value="0.03" />
+
+        <param name="image_prefix"  value="kinect" />
+        <param name="camera_name"   value="cam3d" />
+        <param name="frame_id"      value="/head_cam3d" />
+        <param name="output_file"   value="$(find cob_hardware_config)/$(env ROBOT)/config/cameras/kinect_rgb.yaml" />
+
+        <param name="alpha"         value="0.0" />
+        <param name="verbose"       value="True" />
+
+    </node>
+
+</launch>

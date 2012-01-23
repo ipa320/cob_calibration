@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+
+    <include file="$(find cob_camera_calibration)/launch/kinect_calibration.launch"/>
+    <include file="$(find cob_camera_calibration)/launch/stereo_calibration.launch"/>
+
+</launch>
