@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 '''
-Provides helper functions to convert between opencv's cv and cv2 python interface data types.
+Provides helper functions to convert between opencv's cv and cv2 python interface data types
 '''
 def np2cvmat(np):
     '''

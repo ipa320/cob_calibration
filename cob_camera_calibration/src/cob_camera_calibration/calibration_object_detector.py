@@ -5,10 +5,10 @@ DEBUG_OUTPUT = True
 
 class CalibrationObjectDetector:
     '''
-    Base Class for calibration object detector.
+    Base Class for calibration object detector
     
-    A specific calibration calibration detector implementation can detect
-    the specific calibration object and calculate its 3D pose.
+    A specific calibration object detector implementation can detect the specific 
+    calibration object in images and calculate its 3D pose.
     '''
     
     def __init__(self, calibration_object):
@@ -57,11 +57,11 @@ class CheckerboardDetector(CalibrationObjectDetector):
     '''
     def detect_image_points(self, image, is_grayscale):
         '''
-        Detect the pixels at which the checkerboards corners are. Returns
-        list of (x,y) coordinates.
+        Detect the pixels at which the checkerboard's corners are. Returns
+        list of (x, y) coordinates.
         
-        @param image_raw: input image with checkerboard
-        @type  image_raw: cv2 compatible numpy image
+        @param image: input image with checkerboard
+        @type  image: cv2 compatible numpy image
         
         @param is_grayscale: set to true if image is grayscale
         @type  is_grayscale: bool

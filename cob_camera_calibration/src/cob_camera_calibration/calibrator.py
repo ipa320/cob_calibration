@@ -7,7 +7,7 @@ import cv2util
 
 class Calibrator:
     '''
-    Base class for specific camera calibrators.
+    Base class for specific camera calibrators
     '''
     def __init__(self):
         raise NotImplementedError("Instantiate either MonoCalibrator or StereoCalibrator!")
