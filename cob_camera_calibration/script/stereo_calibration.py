@@ -40,8 +40,8 @@ class StereoCalibrationNode():
         self.frame_id_r           = rospy.get_param('~frame_id_r',           "/right")
         self.output_file_r        = rospy.get_param('~output_file_r',        self.camera_name_r+".yaml")
         
-        self.calibration_urdf_in  = rospy.get_param('~calibration_urdf_in',  "calibration.urdf.xacro")
-        self.calibration_urdf_out = rospy.get_param('~calibration_urdf_out', "calibration.urdf.xacro")
+        self.calibration_urdf_in  = rospy.get_param('~calibration_urdf_in',  "")
+        self.calibration_urdf_out = rospy.get_param('~calibration_urdf_out', "")
         
         self.alpha                = rospy.get_param('~alpha',                0.0)
         self.verbose              = rospy.get_param('~verbose',              False)
@@ -92,15 +92,18 @@ class StereoCalibrationNode():
         R_inv = list(tf.transformations.euler_from_matrix(M_inv[:3,:3])) # convert R to (roll, pitch, yaw)
     
         # save baseline
-        attributes2update = {'cam_r_x':     T_inv[0],
-                             'cam_r_y':     T_inv[1],
-                             'cam_r_z':     T_inv[2],
-                             'cam_r_roll':  R_inv[0],
-                             'cam_r_pitch': R_inv[1],
-                             'cam_r_yaw':   R_inv[2]}
-        urdf_updater = CalibrationUrdfUpdater(self.calibration_urdf_in, self.calibration_urdf_out, self.verbose)
-        urdf_updater.update(attributes2update)
-        print "==> updated baseline in:", self.calibration_urdf_out
+        if (self.calibration_urdf_in != "" and self.calibration_urdf_out != ""):
+            attributes2update = {'cam_r_x':     T_inv[0],
+                                 'cam_r_y':     T_inv[1],
+                                 'cam_r_z':     T_inv[2],
+                                 'cam_r_roll':  R_inv[0],
+                                 'cam_r_pitch': R_inv[1],
+                                 'cam_r_yaw':   R_inv[2]}
+            urdf_updater = CalibrationUrdfUpdater(self.calibration_urdf_in, self.calibration_urdf_out, self.verbose)
+            urdf_updater.update(attributes2update)
+            print "==> updated baseline in:", self.calibration_urdf_out
+        else:
+            print "==> NOT saving baseline to urdf file! Parameters 'calibration_urdf_in' and/or 'calibration_urdf_out' are empty..."     
         
         # verbose mode
         if self.verbose:
