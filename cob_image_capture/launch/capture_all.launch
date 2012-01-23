@@ -17,7 +17,10 @@
 	    <param name="file_prefix2"  value="kinect_" />
 
 	    <!-- set output folder -->
-	    <param name="output_folder" value="/tmp" />
+	    <param name="output_folder" value="/tmp/cal/intrinsic" />
 	</node>
+
+	<!-- create tmp directory -->
+	<param name="mkdir_tmp" command="mkdir -m 777 -p /tmp/cal/intrinsic" />
 
 </launch>
