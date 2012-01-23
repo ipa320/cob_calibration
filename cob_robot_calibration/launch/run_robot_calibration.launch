@@ -2,14 +2,7 @@
 <launch>
 
     <node pkg="cob_robot_calibration_est" type="multi_step_cov_estimator.py" name="cal_cov_estimator_v0" output="screen" launch-prefix="time"
-        args="/tmp/cal/cal_cob_rect_2012-01-16.bag /tmp/cal/v0" respawn="False"/>
-        <!-- $(find cob_robot_calibration)/bagfiles/0cal_measurement_cb33.bag -->
-        <!-- /tmp/cal/cal_measurements_2011-12-13.bag -->
-        <!-- /tmp/cal/cal_cob_2012-01-09.bag -->
-        <!-- /tmp/cal/cal_cob_he+st_2012-01-12.bag -->
-        <!-- /tmp/cal/cal_cob_he+st_rl_2012-01-12.bag -->
-		<!-- /tmp/cal/cal_cob_he+st_rl+kinect_2012-01-13.bag -->
-		<!-- /tmp/cal/cal_cob_rect_2012-01-16.bag -->
+        args="/tmp/cal/cal_measurements.bag /tmp/cal" respawn="False"/>
 
     <group ns="calibration_config" clear_params="true">
         <!-- sensors -->
