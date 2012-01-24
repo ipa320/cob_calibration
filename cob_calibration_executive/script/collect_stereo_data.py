@@ -3,8 +3,7 @@ PKG  = 'cob_calibration_executive'
 NODE = 'collect_stereo_data_node'
 import roslib; roslib.load_manifest(PKG)
 import rospy
-import tf
-import yaml
+
 from simple_script_server import simple_script_server
 from cob_calibration_srvs.srv import Capture
 
@@ -30,20 +29,17 @@ def main():
     
     print "--> setup care-o-bot for capture"
     sss.move("head", "back")
-    sss.sleep(1)
     sss.move("torso", "home")
-    sss.sleep(1)
 
-    print "==> capturing positions and images"
-    positions = rospy.get_param("/script_server/arm/stereo")
-    print positions
+    print "==> capturing images"
+    positions = rospy.get_param("/script_server/arm/all_intrinsic")
     for pos in positions:
         print "--> moving arm to pos %s sample" % pos
-        sss.sleep(1)
         sss.move("arm", pos)
-        sss.sleep(1)
+        sss.sleep(1.5)
         print "--> capturing %s sample" % pos
-        capture()
+        res = capture()
+        if not res: print "--> ERROR during capture, skipping sample..."
     
 if __name__ == '__main__':
     main()
