@@ -10,8 +10,6 @@
   <url>http://ros.org/wiki/cob_calibration_executive</url>
 
   <depend package='rospy'/>
-  <depend package='smach'/>
-  <depend package='smach_ros'/>
   <depend package='tf'/>
   
   <depend package='sensor_msgs'/> 
@@ -20,6 +18,5 @@
  
   <depend package='cob_script_server'/>
   <depend package='cob_calibration_srvs'/>
-  <!--depend package='cob_generic_states'/--> 
 
 </package>
