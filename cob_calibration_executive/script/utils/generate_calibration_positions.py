@@ -107,18 +107,15 @@ def main():
     
     # init
     arm_ik = rospy.ServiceProxy('/arm_kinematics/get_ik', GetPositionIK)
-
-#    # get current pose of arm
-#    tf_listener = tf.TransformListener()
-#    tf_listener.waitForTransform("base_link", "arm_7_link", rospy.Time(), rospy.Duration(1))
-#    (t, q) = tf_listener.lookupTransform("base_link", "arm_7_link", rospy.Time())
     
     # translation and rotation for main calibration position
+    # ------------------------------------------------------
     t_calib         = (-0.73, 0.0, 1.05)
     t_calib_handeye = (-0.777, -0.016, 1.006)
     q_calib         = (0, 0, sqrt(2), -sqrt(2))
     
     # define translations
+    # -------------------
     t_c  = tadd(t_calib, ( 0.12,  0.00,  0.00)) # closer
     t_cr = tadd(t_calib, ( 0.10, -0.05,  0.00)) # closer right
     t_f  = tadd(t_calib, (-0.05,  0.00,  0.00)) # further
@@ -133,6 +130,7 @@ def main():
     t_bl = tadd(t_calib, ( 0.00,  0.10, -0.13)) # bottom left
     
     # define quaternions
+    # ------------------
     q_a    = qmult(q_calib, rpy2q( pi/6,  0,     0)) # tilt away
     q_as1  = qmult(q_calib, rpy2q( pi/12, pi/10, 0)) # tilt away side 1
     q_as2  = qmult(q_calib, rpy2q( pi/8, -pi/8,  0)) # tilt away side 2
@@ -143,32 +141,34 @@ def main():
     q_ns2m = qmult(q_calib, rpy2q(-pi/6, -pi/8,  0)) # tilt near side 2 more
     
     # generate poses from defined translations and positions
+    # ------------------------------------------------------
     poses = {}
-    # stable seed for center position
-    # IMPORTANT: adjust this to something reasonable if you change calib position
-    prev_state = [0.13771, -1.61107, 1.60103, -0.90346, 2.30279, -1.28408, -0.93369]
-    poses["calib"] = (t_calib, q_calib)
     
     # hand eye calibration pose
-    poses["hand_eye"] = (t_calib_handeye, q_calib)
+    poses["calibration"] = (t_calib_handeye, q_calib)
     
-    # stereo camera calibration poses
-    poses["stereo_00"]  = poses["calib"]
-    poses["stereo_01"]  = (t_r, q_as1)
-    poses["stereo_02"]  = (t_l, q_as2)
-    poses["stereo_03"]  = (t_calib, q_ns1)
-    poses["stereo_04"]  = (t_calib, q_ns2)
-    poses["stereo_05"]  = (t_c, q_a)
-    poses["stereo_06"]  = (t_cr, q_n)
-    poses["stereo_07"]  = (t_f1, q_as2m)
-    poses["stereo_08"]  = (t_f, q_ns2m)
-    poses["stereo_09"]  = (t_tr, q_as1)
-    poses["stereo_10"]  = (t_tl, q_as2)
-    poses["stereo_11"]  = (t_bl, q_as2)
-    poses["stereo_12"]  = (t_br, q_as1)
+    # stereo camera intrinsic calibration poses
+    poses["intrinsic_00"]  = (t_calib, q_calib)
+    poses["intrinsic_01"]  = (t_r, q_as1)
+    poses["intrinsic_02"]  = (t_l, q_as2)
+    poses["intrinsic_03"]  = (t_calib, q_ns1)
+    poses["intrinsic_04"]  = (t_calib, q_ns2)
+    poses["intrinsic_05"]  = (t_c, q_a)
+    poses["intrinsic_06"]  = (t_cr, q_n)
+    poses["intrinsic_07"]  = (t_f1, q_as2m)
+    poses["intrinsic_08"]  = (t_f, q_ns2m)
+    poses["intrinsic_09"]  = (t_tr, q_as1)
+    poses["intrinsic_10"]  = (t_tl, q_as2)
+    poses["intrinsic_11"]  = (t_bl, q_as2)
+    poses["intrinsic_12"]  = (t_br, q_as1)
     
     # converting to joint_positions
-    print "==> converting poses to joint_states" 
+    # -----------------------------
+    print "==> converting poses to joint_states"
+    # stable seed for center position
+    # IMPORTANT: adjust this to something reasonable if you change the main t_calib, q_calib position
+    prev_state = [0.13771, -1.61107, 1.60103, -0.90346, 2.30279, -1.28408, -0.93369]
+     
     arm_states = {}
     for key in sorted(poses.keys()):
         print "--> calling getIk for '%s'" % key
@@ -187,18 +187,20 @@ def main():
             print "--> ERROR no IK solution was found..."
     
     # convert to yaml_string manually (easier to achieve compact notation)
+    # --------------------------------------------------------------------
     yaml_string = ""
     for key in sorted(arm_states.keys()):
         # set prcision to 5 digits
         tmp = map(lambda x: "%.5f"%x, arm_states[key][0])
         yaml_string += "%s: [[%s]]\n" % (key, ', '.join(tmp))
-    yaml_string += '''stereo: ["stereo_00", "stereo_01", "stereo_02", "stereo_03", "stereo_04", "stereo_05", "stereo_06", "stereo_07", "stereo_08", "stereo_09", "stereo_10", "stereo_11", "stereo_12"]'''
+    yaml_string += '''all_intrinsic: ["intrinsic_00", "intrinsic_01", "intrinsic_02", "intrinsic_03", "intrinsic_04", "intrinsic_05", "intrinsic_06", "intrinsic_07", "intrinsic_08", "intrinsic_09", "intrinsic_10", "intrinsic_11", "intrinsic_12"]'''
     
     # print joint angles
     print "==> RESULT: joint_positions, please add to config/arm_joint_configurations.yaml"
     print yaml_string
 
 #    # DEBUG move arm
+#    # --------------
 #    sss = simple_script_server()
 #    print "==> moving arm"
 #    for key in sorted(arm_states.keys()):
