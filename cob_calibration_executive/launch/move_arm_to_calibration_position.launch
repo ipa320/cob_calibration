@@ -5,6 +5,6 @@
 	<include file="$(find cob_calibration_executive)/launch/upload_params.launch"/>
 
    	<!-- run move_arm -->
-	<node name="move_arm_calib" pkg="cob_calibration_executive" type="move_arm.py" args="hand_eye" respawn="false" output="screen"/>
+	<node name="move_arm_calib" pkg="cob_calibration_executive" type="move_arm_to_calibration_position.py" args="" respawn="false" output="screen"/>
 	
 </launch>
