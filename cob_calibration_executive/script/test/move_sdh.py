@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-PKG  = 'cob_calibration_capture'
-NODE = 'say_test'
+PKG  = 'cob_calibration_executive'
+NODE = 'move_sdh'
 import roslib; roslib.load_manifest(PKG)
 import rospy
 
@@ -15,10 +15,12 @@ def main():
     sss = simple_script_server()
 
     # movements
-    print "==> starting speech output"
-    sss.say(["Hello, my name is Care-o-Bot."])
-    sss.say(["Its sunny so I am happy today!"])
+    print "==> starting movements"
+    print "--> moving sdh home"
+    sss.move("sdh", "home")
     
+    print "--> moving sdh calib"
+    sss.move("sdh", "calib")
     
 if __name__ == '__main__':
     main()

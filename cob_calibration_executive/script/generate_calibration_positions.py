@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-PKG  = 'cob_calibration_capture'
+PKG  = 'cob_calibration_executive'
 NODE = 'arm_ik_node'
 import roslib; roslib.load_manifest(PKG)
 import rospy
@@ -145,7 +145,7 @@ def main():
     # generate poses from defined translations and positions
     poses = {}
     # stable seed for center position
-    # IMPORTANT: adjust this to somethin reasonable if you cange calib position
+    # IMPORTANT: adjust this to something reasonable if you change calib position
     prev_state = [0.13771, -1.61107, 1.60103, -0.90346, 2.30279, -1.28408, -0.93369]
     poses["calib"] = (t_calib, q_calib)
     

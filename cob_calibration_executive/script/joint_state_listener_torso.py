@@ -1,14 +1,14 @@
 #!/usr/bin/env python
-PKG  = 'cob_calibration_capture'
-NODE = 'joint_state_listener_arm'
+PKG  = 'cob_calibration_executive'
+NODE = 'joint_state_listener_torso'
 import roslib; roslib.load_manifest(PKG)
 import rospy
 import sensor_msgs.msg
 
 '''
-Print joint states for cob arm.
+Print joint states for cob torso.
 
-Listens to /joints_states topic for joint state messages from arm controller
+Listens to /joints_states topic for joint state messages from torso controller
 and prints them.
 '''
 def main():
@@ -17,9 +17,9 @@ def main():
     
     # get joint names for arm from parameter server
     joint_names = None
-    try: joint_names = rospy.get_param("arm_controller/joint_names") # real hardware
+    try: joint_names = rospy.get_param("torso_controller/joint_names") # real hardware
     except KeyError: pass
-    try: joint_names = rospy.get_param("arm_controller/joints")      # simulation
+    try: joint_names = rospy.get_param("torso_controller/joints")      # simulation
     except KeyError: pass
     if joint_names == None:
         print "Could not get joint names from parameter server. exiting..."

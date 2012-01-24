@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-PKG  = 'cob_calibration_capture'
+PKG  = 'cob_calibration_executive'
 NODE = 'move_arm'
 import roslib; roslib.load_manifest(PKG)
 import rospy

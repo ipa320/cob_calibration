@@ -1,13 +1,13 @@
 <package>
-  <description brief="cob_calibration_capture">
+  <description brief="cob_calibration_executive">
 
-     cob_calibration_capture
+     cob_calibration_executive
 
   </description>
   <author>Sebastian Haug</author>
   <license>LGPL</license>
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/cob_calibration_capture</url>
+  <url>http://ros.org/wiki/cob_calibration_executive</url>
 
   <depend package='rospy'/>
   <depend package='smach'/>

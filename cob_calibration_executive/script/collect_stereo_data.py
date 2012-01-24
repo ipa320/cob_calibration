@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-PKG  = 'cob_calibration_capture'
+PKG  = 'cob_calibration_executive'
 NODE = 'collect_stereo_data_node'
 import roslib; roslib.load_manifest(PKG)
 import rospy
