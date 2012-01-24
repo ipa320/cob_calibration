@@ -10,7 +10,7 @@ dh_chains:
     arm_chain:
         dh:
             # theta, alpha, a, d
-            - [ 1, 0, 0, 0 ] # joint arm_0_link -> arm_1_link
+            - [ 0, 0, 0, 0 ] # joint arm_0_link -> arm_1_link
             - [ 0, 0, 0, 0 ] # joint arm_1_link -> arm_2_link
             - [ 0, 0, 0, 0 ] # joint arm_2_link -> arm_3_link
             - [ 0, 0, 0, 0 ] # joint arm_3_link -> arm_4_link
