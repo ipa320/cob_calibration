@@ -42,6 +42,7 @@ class StereoCalibrationNode():
         
         self.calibration_urdf_in  = rospy.get_param('~calibration_urdf_in',  "")
         self.calibration_urdf_out = rospy.get_param('~calibration_urdf_out', "")
+        self.baseline_prop_prefix = rospy.get_param('~baseline_prop_prefix', "cam_r_")
         
         self.alpha                = rospy.get_param('~alpha',                0.0)
         self.verbose              = rospy.get_param('~verbose',              False)
@@ -93,12 +94,12 @@ class StereoCalibrationNode():
     
         # save baseline
         if (self.calibration_urdf_in != "" and self.calibration_urdf_out != ""):
-            attributes2update = {'cam_r_x':     T_inv[0],
-                                 'cam_r_y':     T_inv[1],
-                                 'cam_r_z':     T_inv[2],
-                                 'cam_r_roll':  R_inv[0],
-                                 'cam_r_pitch': R_inv[1],
-                                 'cam_r_yaw':   R_inv[2]}
+            attributes2update = {self.baseline_prop_prefix+'x':     T_inv[0],
+                                 self.baseline_prop_prefix+'y':     T_inv[1],
+                                 self.baseline_prop_prefix+'z':     T_inv[2],
+                                 self.baseline_prop_prefix+'roll':  R_inv[0],
+                                 self.baseline_prop_prefix+'pitch': R_inv[1],
+                                 self.baseline_prop_prefix+'yaw':   R_inv[2]}
             urdf_updater = CalibrationUrdfUpdater(self.calibration_urdf_in, self.calibration_urdf_out, self.verbose)
             urdf_updater.update(attributes2update)
             print "==> updated baseline in:", self.calibration_urdf_out
