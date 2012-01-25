@@ -129,6 +129,20 @@ def main():
     t_br = tadd(t_calib, ( 0.00, -0.15, -0.15)) # bottom right
     t_bl = tadd(t_calib, ( 0.00,  0.10, -0.13)) # bottom left
     
+    # define translations (robot calibration)
+    # ---------------------------------------
+    t_rob_tr = tadd(t_calib, ( 0.00, -0.10,  0.12)) # top right
+    t_rob_tl = tadd(t_calib, ( 0.00,  0.05,  0.12)) # top left
+    t_rob_br = tadd(t_calib, ( 0.00, -0.10, -0.12)) # bottom right
+    t_rob_bl = tadd(t_calib, ( 0.00,  0.05, -0.12)) # bottom left
+    
+    t_rob_rr  = tadd(t_calib, ( 0.05, -0.175, -0.02)) # right right
+    t_rob_ll  = tadd(t_calib, ( 0.05,  0.175, -0.02)) # left left
+    t_rob_brr = tadd(t_calib, ( 0.05, -0.125, -0.12)) # bottom right right
+    t_rob_bll = tadd(t_calib, ( 0.05,  0.125, -0.12)) # bottom left left
+    
+    t_rob_bb  = tadd(t_calib, ( 0.00,  0.0, -0.33)) # bottom bottom
+    
     # define quaternions
     # ------------------
     q_a    = qmult(q_calib, rpy2q( pi/6,  0,     0)) # tilt away
@@ -162,6 +176,35 @@ def main():
     poses["intrinsic_11"]  = (t_bl, q_as2)
     poses["intrinsic_12"]  = (t_br, q_as1)
     
+    # robot calibration poses
+    poses["robot_center_00"]  = (t_calib, q_calib)
+    poses["robot_center_01"]  = (t_r, q_as1)
+    poses["robot_center_02"]  = (t_l, q_as2)
+    poses["robot_center_03"]  = (t_calib, q_ns1)
+    poses["robot_center_04"]  = (t_calib, q_ns2)
+    poses["robot_center_05"]  = (t_c, q_a)
+    poses["robot_center_06"]  = (t_c, q_n)
+    poses["robot_center_07"]  = (t_f1, q_as2m)
+    poses["robot_center_08"]  = (t_f, q_ns2m)
+    poses["robot_center_09"]  = (t_rob_tr, q_as1)
+    poses["robot_center_10"]  = (t_rob_tl, q_as2)
+    poses["robot_center_11"]  = (t_rob_bl, q_as2)
+    poses["robot_center_12"]  = (t_rob_br, q_as1)
+    
+    # NOTE: in keys left and right are defined like the torso
+    poses["robot_right_00"]  = (t_rob_ll, q_calib)
+    poses["robot_right_01"]  = (t_rob_ll, q_as1)
+    poses["robot_right_02"]  = (t_rob_bll, q_as2)
+
+    poses["robot_left_00"]  = (t_rob_rr, q_calib)
+    poses["robot_left_01"]  = (t_rob_rr, q_as2)
+    poses["robot_left_02"]  = (t_rob_brr, q_as1)
+    
+    poses["robot_back_00"]  = (t_rob_bb, q_a)
+    poses["robot_back_01"]  = (t_rob_bb, q_as2)
+    poses["robot_back_02"]  = (t_rob_bb, q_as1)
+    
+    
     # converting to joint_positions
     # -----------------------------
     print "==> converting poses to joint_states"
@@ -193,8 +236,14 @@ def main():
         # set prcision to 5 digits
         tmp = map(lambda x: "%.5f"%x, arm_states[key][0])
         yaml_string += "%s: [[%s]]\n" % (key, ', '.join(tmp))
-    yaml_string += '''all_intrinsic: ["intrinsic_00", "intrinsic_01", "intrinsic_02", "intrinsic_03", "intrinsic_04", "intrinsic_05", "intrinsic_06", "intrinsic_07", "intrinsic_08", "intrinsic_09", "intrinsic_10", "intrinsic_11", "intrinsic_12"]'''
     
+    # manually add group trajectories
+    yaml_string += '''all_intrinsic: ["intrinsic_00", "intrinsic_01", "intrinsic_02", "intrinsic_03", "intrinsic_04", "intrinsic_05", "intrinsic_06", "intrinsic_07", "intrinsic_08", "intrinsic_09", "intrinsic_10", "intrinsic_11", "intrinsic_12"]\n'''
+    yaml_string += '''all_robot_center: ["robot_center_00", "robot_center_01", "robot_center_02", "robot_center_03", "robot_center_04", "robot_center_05", "robot_center_06", "robot_center_07", "robot_center_08", "robot_center_09", "robot_center_10", "robot_center_11", "robot_center_12"]\n'''
+    yaml_string += '''all_robot_left: ["robot_left_00", "robot_left_01", "robot_left_02"]\n'''
+    yaml_string += '''all_robot_right: ["robot_right_00", "robot_right_01", "robot_right_02"]\n'''
+    yaml_string += '''all_robot_back: ["robot_back_00", "robot_back_01", "robot_back_02"]\n'''
+
     # print joint angles
     print "==> RESULT: joint_positions, please add to config/arm_joint_configurations.yaml"
     print yaml_string
@@ -206,7 +255,7 @@ def main():
 #    for key in sorted(arm_states.keys()):
 #        print "--> moving to '%s'" % key
 #        sss.move("arm", arm_states[key])
-#        sss.sleep(5)
+#        sss.wait_for_input()
    
 if __name__ == '__main__':
     main()
