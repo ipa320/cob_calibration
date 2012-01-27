@@ -6,7 +6,7 @@ import rospy
 
 from cob_calibration_srvs.srv import Capture
 
-SERVICE="/image_capture/capture_images"
+SERVICE="/image_capture/capture"
 
 def main():
     rospy.init_node(NODE)

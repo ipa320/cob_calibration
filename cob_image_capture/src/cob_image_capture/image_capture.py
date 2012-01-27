@@ -27,12 +27,13 @@ class ImageCaptureNode():
         self.counter = 0
                
         # Get params from ros parameter server or use default
-        self.numCams = int(rospy.get_param("~number_of_cameras", "1"))
-        self.output_folder = rospy.get_param("~output_folder", "/tmp")
+        self.numCams       = int(rospy.get_param("~number_of_cameras", "1"))
+        self.output_folder     = rospy.get_param("~output_folder",     "/tmp")
+        self.save_header_stamp = rospy.get_param("~save_header_stamp", "False")
         self.camera = []
         self.file_prefix = []
         for id in range(self.numCams):
-            self.camera.append(rospy.get_param("~camera%d" % id, "/stereo/left/image_raw"))
+            self.camera.append(     rospy.get_param("~camera%d" % id,      "/stereo/left/image_raw"))
             self.file_prefix.append(rospy.get_param("~file_prefix%d" % id, "cam%d_" % id))
 
         # Init images
@@ -88,9 +89,10 @@ class ImageCaptureNode():
         cv.SaveImage(self.output_folder+'/'+filenamePrefix+'%05d.jpg' % counter, cvImage)
                   
         # save header
-        f = open(self.output_folder+'/'+filenamePrefix+'%05d_header.txt' % counter, "w")
-        f.writelines(str(rosImage.header))
-        f.close()
+        if self.save_header_stamp:
+            f = open(self.output_folder+'/'+filenamePrefix+'%05d_header.txt' % counter, "w")
+            f.writelines(str(rosImage.header))
+            f.close()
             
     def _captureHandle(self, req):
         '''
@@ -126,8 +128,8 @@ class ImageCaptureNode():
         
     def run(self):
         # Start service
-        srv = rospy.Service('~capture_images', Capture, self._captureHandle)
-        rospy.loginfo("service of type 'Capture' started, waiting for requests...")
+        srv = rospy.Service('/image_capture/capture', Capture, self._captureHandle)
+        rospy.loginfo("service '/image_capture/capture' started, waiting for requests...")
         rospy.spin()
 
 

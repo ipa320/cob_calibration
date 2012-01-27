@@ -34,7 +34,7 @@ def main():
     print "==> %s started " % NODE
     
     # service client
-    image_capture_service_name = "/image_capture/capture_images"
+    image_capture_service_name = "/collect_data/capture"
     capture = rospy.ServiceProxy(image_capture_service_name, Capture)
     rospy.wait_for_service(image_capture_service_name, 1)
     print "--> service client for capture images initialized"
