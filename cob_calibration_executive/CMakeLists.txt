@@ -21,6 +21,12 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 #uncomment if you have defined services
 #rosbuild_gensrv()
 
+rosbuild_add_roslaunch_check(${PROJECT_SOURCE_DIR}/launch/arm_ik.launch ROBOT=cob3-3)
+rosbuild_add_roslaunch_check(${PROJECT_SOURCE_DIR}/launch/collect_robot_calibration_data.launch ROBOT=cob3-3)
+rosbuild_add_roslaunch_check(${PROJECT_SOURCE_DIR}/launch/collect_stereo_data.launch ROBOT=cob3-3)
+rosbuild_add_roslaunch_check(${PROJECT_SOURCE_DIR}/launch/move_arm_to_calibration_position.launch ROBOT=cob3-3)
+rosbuild_add_roslaunch_check(${PROJECT_SOURCE_DIR}/launch/upload_params.launch ROBOT=cob3-3)
+
 #common commands for building c++ executables and libraries
 #rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
 #target_link_libraries(${PROJECT_NAME} another_library)

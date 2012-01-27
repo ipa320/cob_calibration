@@ -10,17 +10,18 @@
   <url>http://ros.org/wiki/cob_robot_calibration</url>
 
   <depend package="rospy"/>
+  <depend package="rostest"/>
+  <depend package="rosbag"/>
   <depend package="tf"/>
   <depend package="cv_bridge"/>
   <depend package="sensor_msgs"/>
   <depend package="calibration_msgs"/>
 
-  <depend package="cob_calibration_srvs"/>
-  <depend package="cob_robot_calibration_est"/>
   <depend package="cob_script_server"/>
-  <depend package="cob_camera_calibration"/>
 
-  <depend package="rostest"/>
+  <depend package="cob_calibration_srvs"/>
+  <depend package="cob_camera_calibration"/>
+  <depend package="cob_robot_calibration_est"/>
 
 </package>
 

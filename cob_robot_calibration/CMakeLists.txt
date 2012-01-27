@@ -24,6 +24,10 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 rosbuild_add_pyunit(${PROJECT_SOURCE_DIR}/test/test_calibration_urdf_updater.py)
 rosbuild_add_pyunit(${PROJECT_SOURCE_DIR}/test/test_camera_yaml_updater.py)
 
+rosbuild_add_roslaunch_check(${PROJECT_SOURCE_DIR}/launch/collect_data.launch ROBOT=cob3-3)
+rosbuild_add_roslaunch_check(${PROJECT_SOURCE_DIR}/launch/run_robot_calibration.launch ROBOT=cob3-3)
+rosbuild_add_roslaunch_check(${PROJECT_SOURCE_DIR}/launch/update_calibration_urdf.launch ROBOT=cob3-3)
+
 #common commands for building c++ executables and libraries
 #rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
 #target_link_libraries(${PROJECT_NAME} another_library)
