@@ -34,12 +34,15 @@ def main():
     print "==> capturing images"
     positions = rospy.get_param("/script_server/arm/all_intrinsic")
     for pos in positions:
-        print "--> moving arm to pos %s sample" % pos
+        print "--> moving arm to position '%s'" % pos
         sss.move("arm", pos)
         sss.sleep(1.5)
-        print "--> capturing %s sample" % pos
+        print "--> capturing '%s' sample" % pos
         res = capture()
         if not res: print "--> ERROR during capture, skipping sample..."
+        
+    print "==> capturing finished, moving are to 'calibration' position"
+    sss.move("arm", 'calibration')
     
 if __name__ == '__main__':
     main()
