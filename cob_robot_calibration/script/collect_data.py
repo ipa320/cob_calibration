@@ -7,7 +7,7 @@ import rospy
 
 import message_filters
 from sensor_msgs.msg import *
-from calibration_msgs.msg import *
+from cob_calibration_msgs.msg import *
 from cv_bridge import CvBridge, CvBridgeError
 
 from cob_calibration_srvs.srv import *

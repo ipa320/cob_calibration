@@ -15,11 +15,12 @@
   <depend package="tf"/>
   <depend package="cv_bridge"/>
   <depend package="sensor_msgs"/>
-  <depend package="calibration_msgs"/>
+
 
   <depend package="cob_script_server"/>
 
   <depend package="cob_calibration_srvs"/>
+  <depend package="cob_calibration_msgs"/>
   <depend package="cob_camera_calibration"/>
   <depend package="cob_robot_calibration_est"/>
 
