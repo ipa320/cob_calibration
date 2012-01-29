@@ -39,7 +39,7 @@ import rospy
 import numpy
 
 from cob_robot_calibration_est.dh_chain import DhChain
-from cob_robot_calibration_est.tilting_laser import TiltingLaser
+#from cob_robot_calibration_est.tilting_laser import TiltingLaser
 from cob_robot_calibration_est.single_transform import SingleTransform
 from cob_robot_calibration_est.camera import RectifiedCamera
 from cob_robot_calibration_est.checkerboard import Checkerboard

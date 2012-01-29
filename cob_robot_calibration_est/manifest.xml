@@ -13,12 +13,11 @@
   <depend package="rostest"/>
 
   <depend package="sensor_msgs"/>
-  <depend package="calibration_msgs"/>
   <depend package="visualization_msgs"/>
 
+  <depend package="cob_calibration_msgs"/>
+
   <rosdep name="python-scipy" />
-  <rosdep name="ipython" />
-  <rosdep name="python-tk" />
 
 </package>
 

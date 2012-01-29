@@ -46,13 +46,13 @@ from cob_robot_calibration_est.sensors.chain_sensor import ChainBundler, ChainSe
 
 
 
-from calibration_msgs.msg import *
+from cob_calibration_msgs.msg import *
 from sensor_msgs.msg import JointState, CameraInfo
 
 from cob_robot_calibration_est.single_transform import SingleTransform
 from cob_robot_calibration_est.dh_chain import DhChain
 from cob_robot_calibration_est.camera import RectifiedCamera
-from cob_robot_calibration_est.tilting_laser import TiltingLaser
+#from cob_robot_calibration_est.tilting_laser import TiltingLaser
 from cob_robot_calibration_est.full_chain import FullChainCalcBlock
 from cob_robot_calibration_est.checkerboard import Checkerboard
 
