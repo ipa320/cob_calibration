@@ -1,0 +1,14 @@
+<package>
+  <description brief="cob_calibration_msgs">
+
+     cob_calibration_msgs
+
+  </description>
+  <author>sebastian</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/cob_calibration_msgs</url>
+
+</package>
+
+
