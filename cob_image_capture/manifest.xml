@@ -1,0 +1,22 @@
+<package>
+  <description brief="cob_image_capture">
+
+     cob_image_capture
+
+  </description>
+  <author>Sebastian Haug</author>
+  <license>LGPL</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/cob_image_capture</url>
+
+  <depend package="opencv2"/>
+  <depend package="cv_bridge"/>
+  <depend package="sensor_msgs"/>
+  <depend package="message_filters"/>
+
+  <depend package="cob_calibration_srvs"/>
+
+  <rosdep name="opencv2.3"/>
+</package>
+
+

@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- ###### nodelet manager process ###### -->
+    <node pkg="nodelet" type="nodelet" name="stereo_camera_nodelet_manager" args="manager" />
+    
+    <group ns="stereo">
+        <!-- ###### stereo proc dispartity ###### -->
+        <node pkg="nodelet" type="nodelet" name="stereo_image_proc_disparity" args="load stereo_image_proc/disparity /stereo_camera_nodelet_manager" output="screen">
+            <param name="approximate_sync" value="True" />
+            
+            <remap from="left/image_rect" to="left/image_rect" />
+            <remap from="right/image_rect" to="right/image_rect" />
+        </node>
+
+        <!-- ###### stereo proc pointcloud2 ###### -->
+        <node pkg="nodelet" type="nodelet" name="stereo_image_proc_point_cloud2" args="load stereo_image_proc/point_cloud2 /stereo_camera_nodelet_manager" output="screen">
+            <param name="approximate_sync" value="True" />
+            
+            <remap from="left/image_rect" to="left/image_rect" />
+            <remap from="right/image_rect" to="right/image_rect" />
+        </node>
+    </group>
+</launch>
+

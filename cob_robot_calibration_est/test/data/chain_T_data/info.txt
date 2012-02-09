@@ -1,0 +1,14 @@
+For each test sample dh and joints are inputs.
+
+All angles are radians when applicible
+
+dh is a Nx4 matrix, Where the columns correspond the the
+dh parameters [theta, alpha, a, d]. Each row of dh
+corresponds to a link in the kinematic chain.
+
+joints is a Nx1 matrix, which stores the joint positions
+of the links in the chain
+
+output is a 4x4 transformation matrix corresponding to the
+pose of the chain's tip, given the specificied joint positions
+

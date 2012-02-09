@@ -1,0 +1,10 @@
+.project
+.cproject
+.pydevproject
+*.pyc
+bin
+lib
+build
+srv_gen
+msg_gen
+cmake_install.cmake

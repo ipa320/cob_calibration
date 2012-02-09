@@ -1,0 +1,17 @@
+<package>
+  <description brief="Messages used for robot calibration of Care-O-bot">
+     This package is a stripped down fork of the electric version of 
+     calibration_msgs. It defines messages for storing calibration 
+     samples to be used in full robot calibration procedures.
+  </description>
+  <author>Vijay Pradeep, Sebastian Haug</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/cob_calibration_msgs</url>
+
+  <depend package="geometry_msgs" />
+  <depend package="sensor_msgs" />
+
+</package>
+
+
