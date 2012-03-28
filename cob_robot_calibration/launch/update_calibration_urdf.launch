@@ -5,7 +5,7 @@
   	<node type="update_cob_calibration_urdf.py" pkg="cob_robot_calibration" name="$(anon update_cob_calibration_urdf)" output="screen">
   		<param name="urdf_in" value="$(find cob_hardware_config)/$(env ROBOT)/calibration/calibration.urdf.xacro" />
   		<param name="urdf_out" value="$(find cob_hardware_config)/$(env ROBOT)/calibration/calibration.urdf.xacro" />
-        <param name="initial_system" value="$(find cob_robot_calibration)/config/params_v0/system.yaml" />
+        <param name="initial_system" value="$(find cob_robot_calibration)/config/$(env ROBOT)/system.yaml" />
         <param name="calib_system" value="/tmp/cal/result_step_3.yaml" />
         
         <!-- set to True for debug output -->

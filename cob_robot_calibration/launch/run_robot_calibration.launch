@@ -7,16 +7,16 @@
     <group ns="calibration_config" clear_params="true">
         <!-- sensors -->
         <group ns="sensors">
-            <param name="all" textfile="$(find cob_robot_calibration)/config/params_v0/sensors.yaml" />
+            <param name="all" textfile="$(find cob_robot_calibration)/config/$(env ROBOT)/sensors.yaml" />
         </group>
 
         <!-- initial system for first calibration step -->
-        <param name="initial_system" textfile="$(find cob_robot_calibration)/config/params_v0/system.yaml" />
+        <param name="initial_system" textfile="$(find cob_robot_calibration)/config/$(env ROBOT)/system.yaml" />
 
         <!-- calibration steps -->
         <group ns="cal_steps">
 	        <group ns="step0">
-                <param name="free_params" textfile="$(find cob_robot_calibration)/config/params_v0/free_0.yaml" />
+                <param name="free_params" textfile="$(find cob_robot_calibration)/config/$(env ROBOT)/free_0.yaml" />
                 <param name="use_cov" type="bool" value="True" />
                 <rosparam>
                   sensors:
@@ -28,7 +28,7 @@
                 <param name="output_filename" type="string" value="result_step_1" />
             </group>
 	        <group ns="step1">
-                <param name="free_params" textfile="$(find cob_robot_calibration)/config/params_v0/free_1.yaml" />
+                <param name="free_params" textfile="$(find cob_robot_calibration)/config/$(env ROBOT)/free_1.yaml" />
                 <param name="use_cov" type="bool" value="True" />
                 <rosparam>
                   sensors:
@@ -40,7 +40,7 @@
                 <param name="output_filename" type="string" value="result_step_2" />
             </group>
  	        <group ns="step2">
-                <param name="free_params" textfile="$(find cob_robot_calibration)/config/params_v0/free_2.yaml" />
+                <param name="free_params" textfile="$(find cob_robot_calibration)/config/$(env ROBOT)/free_2.yaml" />
                 <param name="use_cov" type="bool" value="True" />
                 <rosparam>
                   sensors:
