@@ -300,7 +300,7 @@ def main():
     yaml_string += '''all_robot_back: ["robot_back_00", "robot_back_01", "robot_back_02"]\n'''
 
     # print joint angles
-    print "==> RESULT: joint_positions, please add to config/arm_joint_configurations.yaml"
+    print "==> RESULT: joint_positions, please add to config/ROBOT/arm_joint_configurations.yaml"
     print yaml_string
 
 #    # DEBUG move arm

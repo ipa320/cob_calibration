@@ -70,8 +70,8 @@ from cob_robot_calibration import calibration_urdf_updater
  # Default values for files and debug output
 DEFAULT_CALIB_URDF_XACRO_IN  = "/tmp/cal/calibration.urdf.xacro"
 DEFAULT_CALIB_URDF_XACRO_OUT = "/tmp/cal/calibration.urdf.xacro_updated" 
-DEFAULT_YAML_CALIB_SYSTEM    = "/tmp/cal/v0/result_step_3.yaml"
-DEFAULT_YAML_INITIAL_SYSTEM  = "/home/fmw-sh/git/cob_calibration/cob_robot_calibration/config/params_v0/system.yaml"
+DEFAULT_YAML_CALIB_SYSTEM    = "/tmp/cal/result_step_3.yaml"
+DEFAULT_YAML_INITIAL_SYSTEM  = "/home/fmw-sh/git/cob_calibration/cob_robot_calibration/config/cob3-3/system.yaml"
 ENABLE_DEBUG_OUTPUT = False
 
 class UpdateCobCalibrationUrdf():
