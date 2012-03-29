@@ -16,8 +16,8 @@
   <depend package="cv_bridge"/>
   <depend package="sensor_msgs"/>
 
-
   <depend package="cob_script_server"/>
+  <depend package='cob_hardware_config'/>
 
   <depend package="cob_calibration_srvs"/>
   <depend package="cob_calibration_msgs"/>
