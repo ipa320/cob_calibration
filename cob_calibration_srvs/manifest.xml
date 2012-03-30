@@ -1,7 +1,8 @@
 <package>
   <description brief="cob_calibration_srvs">
 
-     cob_calibration_srvs
+     The cob_calibration_srvs package contains Care-O-bot calibration specific
+     service definitions.
 
   </description>
   <author>Sebastian Haug</author>
