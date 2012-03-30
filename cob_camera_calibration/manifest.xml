@@ -1,7 +1,9 @@
 <package>
   <description brief="cob_camera_calibration">
 
-     cob_camera_calibration
+     The cob_camera_calibration package implements automatic mono and stereo calibration
+     for Care-O-bot. All calibration results are automatically converted to the correct
+     format and saved in the cob_hardware_config package. No manual steps are required.
 
   </description>
   <author>Sebastian Haug</author>

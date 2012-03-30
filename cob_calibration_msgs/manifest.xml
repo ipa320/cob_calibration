@@ -1,8 +1,10 @@
 <package>
-  <description brief="Messages used for robot calibration of Care-O-bot">
-     This package is a stripped down fork of the electric version of 
-     calibration_msgs. It defines messages for storing calibration 
-     samples to be used in full robot calibration procedures.
+  <description brief="cob_calibration_msgs">
+
+     This package is a slightly modified version of the electric version of calibration_msgs.
+     It contains message definitions for storing calibration samples and was created
+     because the calibration_msgs api in electric is unstable.
+
   </description>
   <author>Vijay Pradeep, Sebastian Haug</author>
   <license>BSD</license>

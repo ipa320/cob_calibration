@@ -1,7 +1,9 @@
 <package>
   <description brief="cob_robot_calibration_est">
 
-     cob_robot_calibration_est
+     The cob_robot_calibration_est package is adapted from the electric version of
+     pr2_calibration_estimation. It runs optimizations to estimate kinematic parameters
+     of Care-O-bot.
 
   </description>
   <author>Vijay Pradeep, Sebastian Haug</author>

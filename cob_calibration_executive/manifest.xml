@@ -1,7 +1,8 @@
 <package>
   <description brief="cob_calibration_executive">
 
-     cob_calibration_executive
+     The cob_calibration_executive package provides scripts to prepare Care-O-bot
+     and to collect samples for the calibration steps.
 
   </description>
   <author>Sebastian Haug</author>

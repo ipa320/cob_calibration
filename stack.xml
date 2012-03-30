@@ -1,5 +1,10 @@
 <stack>
-  <description brief="cob_calibration">cob_calibration</description>
+  <description brief="cob_calibration">
+
+    The cob_calibration stack provides tools to automatically calibrate
+    the cameras and kinematic chains of Care-O-bot.
+
+  </description>
   <author>Maintained by Sebastian Haug</author>
   <license>BSD,LGPL</license>  
   <review status="unreviewed" notes=""/>

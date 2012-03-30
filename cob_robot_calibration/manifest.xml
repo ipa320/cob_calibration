@@ -1,7 +1,9 @@
 <package>
   <description brief="cob_robot_calibration">
 
-     cob_robot_calibration
+     The cob_robot_calibration package contains necessary configuration files, scripts 
+     and launch files to perform  automatic kinematic calibration of Care-O-bot.
+     The cob_robot_calibration_est package is used to perform the estimation steps.
 
   </description>
   <author>Sebastian Haug</author>
