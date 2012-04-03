@@ -11,11 +11,11 @@
   <url>http://ros.org/wiki/cob_calibration</url>
   <depend stack="arm_navigation" /> <!-- kinematics_msgs -->
   <depend stack="cob_command_tools" /> <!-- cob_script_server -->
-  <depend stack="cob_robots" /> <!-- cob_default_robot_config -->
-  <depend stack="common_msgs" /> <!-- sensor_msgs, geometry_msgs, visualization_msgs -->
+  <depend stack="cob_robots" /> <!-- cob_default_robot_config, cob_hardware_config -->
+  <depend stack="common_msgs" /> <!-- geometry_msgs, sensor_msgs, visualization_msgs -->
   <depend stack="geometry" /> <!-- tf -->
   <depend stack="ros" />
-  <depend stack="ros_comm" /> <!-- rospy, rostest, std_msgs, rosbag, message_filters -->
-  <depend stack="vision_opencv" /> <!-- opencv2, cv_bridge -->
+  <depend stack="ros_comm" /> <!-- std_msgs, rosbag, rostest, rospy, message_filters -->
+  <depend stack="vision_opencv" /> <!-- cv_bridge -->
 
 </stack>
