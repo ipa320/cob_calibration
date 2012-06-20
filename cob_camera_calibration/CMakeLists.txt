@@ -25,8 +25,7 @@ rosbuild_add_pyunit(${PROJECT_SOURCE_DIR}/test/test_calibration_data.py)
 rosbuild_add_pyunit(${PROJECT_SOURCE_DIR}/test/test_calibration_object.py)
 rosbuild_add_pyunit(${PROJECT_SOURCE_DIR}/test/test_calibration_object_detector.py)
 
-rosbuild_add_roslaunch_check(${PROJECT_SOURCE_DIR}/launch/calibrate_kinect_rgb.launch ROBOT=cob3-3)
-rosbuild_add_roslaunch_check(${PROJECT_SOURCE_DIR}/launch/calibrate_stereo.launch ROBOT=cob3-3)
+rosbuild_add_roslaunch_check(launch ROBOT=cob3-3)
 
 #common commands for building c++ executables and libraries
 #rosbuild_add_library(${PROJECT_NAME} src/example.cpp)

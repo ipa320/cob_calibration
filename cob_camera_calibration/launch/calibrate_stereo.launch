@@ -11,15 +11,15 @@
         <param name="image_prefix_l"        value="left" />
         <param name="camera_name_l"         value="left" />
         <param name="frame_id_l"            value="/head_color_camera_l_link" />
-        <param name="output_file_l"         value="$(find cob_hardware_config)/$(env ROBOT)/calibration/cameras/left.yaml" />
+        <param name="output_file_l"         value="$(find cob_calibration_data)/$(env ROBOT)/calibration/cameras/left.yaml" />
 
         <param name="image_prefix_r"        value="right" />
         <param name="camera_name_r"         value="right" />
         <param name="frame_id_r"            value="/head_color_camera_l_link" />
-        <param name="output_file_r"         value="$(find cob_hardware_config)/$(env ROBOT)/calibration/cameras/right.yaml" />
+        <param name="output_file_r"         value="$(find cob_calibration_data)/$(env ROBOT)/calibration/cameras/right.yaml" />
 
-        <param name="calibration_urdf_in"  value="$(find cob_hardware_config)/$(env ROBOT)/calibration/calibration.urdf.xacro" />
-        <param name="calibration_urdf_out" value="$(find cob_hardware_config)/$(env ROBOT)/calibration/calibration.urdf.xacro" />
+        <param name="calibration_urdf_in"  value="$(find cob_calibration_data)/$(env ROBOT)/calibration/calibration.urdf.xacro" />
+        <param name="calibration_urdf_out" value="$(find cob_calibration_data)/$(env ROBOT)/calibration/calibration.urdf.xacro" />
 
         <param name="alpha"                 value="0.0" />
         <param name="verbose"               value="True" />

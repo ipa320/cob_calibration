@@ -11,7 +11,7 @@
         <param name="image_prefix"  value="kinect" />
         <param name="camera_name"   value="rgb_A00366909204046A" /> <!-- cob3-3 -->
         <param name="frame_id"      value="/head_cam3d_link" />
-        <param name="output_file"   value="$(find cob_hardware_config)/$(env ROBOT)/calibration/cameras/kinect_rgb.yaml" />
+        <param name="output_file"   value="$(find cob_calibration_data)/$(env ROBOT)/calibration/cameras/kinect_rgb.yaml" />
 
         <param name="alpha"         value="0.0" />
         <param name="verbose"       value="True" />

@@ -269,6 +269,8 @@ class StereoCalibrator(Calibrator):
         (image_points_r, object_points_r) = self._detect_points(images_r, is_grayscale=True)
     
         # sanity checks for image and object points
+        print "image_points_l = " + str(len(image_points_l)) + ", image_points_r = " + str(len(image_points_r))
+        print "object_points_l = " + str(len(object_points_l)) + ", object_points_r = " + str(len(object_points_r))
         assert (len(image_points_l) == len(image_points_r))
         assert (len(object_points_l) == len(object_points_r))
         object_points = object_points_l
