@@ -17,7 +17,7 @@
 
   <depend package="cob_calibration_srvs"/>
 
-  <rosdep name="opencv2.3"/>
+  <rosdep name="opencv2"/>
 </package>
 
 
