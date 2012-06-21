@@ -100,7 +100,7 @@ class CalibrationObjectDetector:
         object_points = self.calibration_object.get_pattern_points()
         
         # get object pose in raw image (not yet distortion corrected)
-        (rvec, tvec) = cv2.solvePnP(object_points, image_points, camera_matrix, dist_coeffs)
+        (retval, rvec, tvec) = cv2.solvePnP(object_points, image_points, camera_matrix, dist_coeffs)
         
         # convert rvec to rotation matrix
         rmat = cv2.Rodrigues(rvec)[0]
