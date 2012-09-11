@@ -27,6 +27,8 @@
   <depend package="cob_camera_calibration"/>
   <depend package="cob_robot_calibration_est"/>
 
+  <depend package="pr2_controllers_msgs"/>
+
 </package>
 
 
