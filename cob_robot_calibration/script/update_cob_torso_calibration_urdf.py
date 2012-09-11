@@ -17,11 +17,11 @@
 #   ROS package name: cob_robot_calibration
 #
 # \author
-#   Author: Sebastian Haug, email:sebhaug@gmail.com
+#   Author: Jannik Abbenseth, email:jannik.abbenseth@gmail.com
 # \author
 #   Supervised by: Florian Weisshardt, email:florian.weisshardt@ipa.fhg.de
 #
-# \date Date of creation: January 2012
+# \date Date of creation: September 2012
 #
 #################################################################
 #
