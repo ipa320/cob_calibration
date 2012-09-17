@@ -98,13 +98,15 @@ class CalibrationObjectDetector:
         # get image and object points
         image_points = self.detect_image_points(image_raw, is_grayscale)
         object_points = self.calibration_object.get_pattern_points()
+
         
         # get object pose in raw image (not yet distortion corrected)
-        (retval, rvec, tvec) = cv2.solvePnP(object_points, image_points, camera_matrix, dist_coeffs)
+        #(retval, rvec, tvec) = cv2.solvePnP(object_points, image_points, camera_matrix, dist_coeffs)
+        (rvec,tvec)= cv2.solvePnP(object_points, image_points, camera_matrix, dist_coeffs)
         
         # convert rvec to rotation matrix
         rmat = cv2.Rodrigues(rvec)[0]
-        return (rmat, tvec)
+        return (image_points[1],rmat, tvec)
 
 class CheckerboardDetector(CalibrationObjectDetector):
     '''
