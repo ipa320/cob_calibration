@@ -58,20 +58,30 @@ NODE= 'torso_pitch_calibration_node'
 import roslib; roslib.load_manifest(PKG)
 import rospy
 
+import math
+
 import numpy as np
 import cv2
+
+from os import system
 
 from sensor_msgs.msg import CameraInfo, Image
 from cob_camera_calibration import Checkerboard, CheckerboardDetector, cv2util
 from cv_bridge import CvBridge, CvBridgeError
 from simple_script_server import simple_script_server
 
+from torso_state_calculation import TorsoState
+from update_cob_torso_calibration_urdf import UpdateCobTorsoCalibrationUrdf
+
+
+
+
 def prettyprint(array):
 	print '*'*20
 	for row in array:
 		print row
 
-class TorsoPitchCalibration():
+class TorsoCalibration():
 	
 	
 	def __init__(self):
@@ -83,17 +93,14 @@ class TorsoPitchCalibration():
 		print "==> started " + NODE
 		
 		# get parameter from parameter server or set defaults
-		self.folder        = rospy.get_param('~folder',             ".")
 		self.pattern_size  = rospy.get_param('~pattern_size',       "9x6")
 		self.square_size   = rospy.get_param('~square_size',        0.03)
         
-		self.image_prefix  = rospy.get_param('~image_prefix',       "camera")
-		self.camera_name   = rospy.get_param('~camera_name',        "camera")
-		self.frame_id      = rospy.get_param('~frame_id',           "/camera")
-		self.output_file   = rospy.get_param('~output_file',        self.camera_name+".yaml")
         
 		self.alpha         = rospy.get_param('~alpha',              0.0)
 		self.verbose       = rospy.get_param('~verbose',            True)
+		
+		self.save_result  = rospy.get_param('~save_result',        False)
         
 		# split pattern_size string into tuple, e.g '9x6' -> tuple(9,6)
 		self.pattern_size = tuple((int(self.pattern_size.split("x")[0]), int(self.pattern_size.split("x")[1])))
@@ -108,6 +115,7 @@ class TorsoPitchCalibration():
 		self.detector    = CheckerboardDetector(self.board)
 		
 		self.sss=simple_script_server()
+		self.ts=TorsoState()
 		
 	def __camera_info_callback__(self,data):
 		'''
@@ -156,11 +164,22 @@ class TorsoPitchCalibration():
 		# initialize torso for movement
 		self.sss.init("torso")
 		
+		# get initial state of Torso (Upper Tilt Joint and Head Axis Joint horizontal)
+		state=list(self.ts.calc_references())
+		print state
+		
 		# start minimization for getting the upright position of the torso
-		self.minimize_yvalue_der(0)
+		start_time=rospy.Time.now()
+		self.minimize_yvalue(state)
+		end_time=rospy.Time.now()
+		if self.verbose:
+			print 'Elapsed time: ',(rospy.Time.now()-start_time).to_sec()
+		if self.save_result:
+			system('roslaunch cob_torso_calibration update_torso_calibration_urdf.launch')
+			
 
 		#
-	def get_height(self): 
+	def get_position(self): 
 		'''
 		returns the Y value in subpixel accuracy for the center of the recognized checkerboard
 		'''
@@ -168,19 +187,16 @@ class TorsoPitchCalibration():
 		image_raw = cv2util.cvmat2np(cvImage)
 		image_processed=cv2.undistort(image_raw,self.cm,self.dc)
 		
-		points=self.detector.detect_image_points(image_processed,True)
-		(image_points,rmat,tvec)= self.detector.calculate_object_pose(image_raw,self.cm,self.dc,True)
+		#points=self.detector.detect_image_points(image_processed,True)
+		(image_points,rmat,tvec)= self.detector.calculate_object_pose_ransac(image_raw,self.cm,self.dc,True)
 		#print tvec[1]
-		tvec=tvec.tolist()
-		return tvec[1]
 		
-		points=points.reshape((54,2))
-		points_mean=points.mean(0)
-		#if self.verbose:
-			#print "Y value: ", points_mean[1]
-		return points_mean[1]
+
+		return tvec[0][0],tvec[1][0],tvec[2][0]
 		
-	def get_average_height(self,nsec,frequency=15):
+	
+		
+	def get_average_position(self,nsec,frequency=15):
 		'''
 		returns the average Y value for the last nsec seconds
 		
@@ -191,138 +207,73 @@ class TorsoPitchCalibration():
 		@type  frequency: integer
 		'''
 		R=rospy.Rate(frequency)
-		height_list=[]
+		position_list=[]
 		for i in range(frequency*nsec):
-			height_list.append(self.get_height())
-		return np.average(height_list)
+			position_list.append(list(self.get_position()))
+			R.sleep()
+			
+		#if self.verbose:
+			#prettyprint(position_list)
+			#print np.average(position_list,0)
+		return np.average(position_list,0)
 		
-	def minimize_yvalue(self,delta_angle,eps=0.0005,initial_state=[0,0,0]):
+	
+			
+	def minimize_yvalue(self,initial_state,eps=0.0005):
 		'''
-		Executive function. Moves torso until the upright position is found
+		Executive function. Calculates and applies forward rotation.
+		Moves torso until the upright position is found
 		
-		@param delta_angle: tilt angle for vertical position of head joint
-		@type  delta_angle: float
-		
+		@param initial_state: initial joint state of torso (usually "Home" position) with leveled head joint
+		@type  initial_state: list [joint state lower neck, joint state tilt, joint state upper neck]
+
+				
 		@param eps: minimum accuracy for upright position
 		@type  eps: float
 		
-		@param initial_state: initial joint state of torso (usually "Home" position)
-		@type  initial_state: list [joint state lower neck, joint state tilt, joint state upper neck]
 		'''		
-		startTime=rospy.Time.now()
-		angular_error=np.asarray([0,0,delta_angle])
 		initial_state=np.asarray(initial_state)
-		initial_state-=angular_error
-		step=0.1
-		self.sss.move("torso",[initial_state.tolist()])
-		initial_height=self.get_average_height(1.0/15)
-		home_height=initial_height
-		stepcounter=0
-		while np.abs(step)>eps:
-			
-			
-			new_state=initial_state-np.asarray([step,0,-step])
-			self.sss.move("torso",[new_state.tolist()])
-			new_height=self.get_average_height(1.0/15)
-			if self.verbose:
-				rospy.logdebug("*****new iteration step*****")
-				rospy.logdebug("step = %s",step)
-				rospy.logdebug("initial_height = %s",initial_height)
-				rospy.logdebug("new_height     = %s",new_height)
-				print("*****new iteration step*****")
-				print("step = %s",step)
-				print("initial_height = %s",initial_height)
-				print("new_height     = %s",new_height)
-			if initial_height<new_height:
-				step/=-2
-			initial_height=new_height
-			initial_state=new_state
-			if self.verbose:
-				rospy.logdebug("new_step = %s", step)
-			stepcounter+=1
-		if self.verbose:
-			print "new height:  ", new_height
-			print "home_height: ", home_height
-			print "Solution found at ",new_state," after ", stepcounter," steps."
-			print "elapsed time: ",(rospy.Time.now()-startTime).to_sec(), " seconds." 
-			
-			
-	def minimize_yvalue_der(self,delta_angle,eps=0.0005,initial_state=[0,0,0]):
-		'''
-		Executive function. Moves torso until the upright position is found
-		
-		@param delta_angle: tilt angle for vertical position of head joint
-		@type  delta_angle: float
-		
-		@param eps: minimum accuracy for upright position
-		@type  eps: float
-		
-		@param initial_state: initial joint state of torso (usually "Home" position)
-		@type  initial_state: list [joint state lower neck, joint state tilt, joint state upper neck]
-		'''		
-		startTime=rospy.Time.now()
-		angular_error=np.asarray([0,0,delta_angle])
-		initial_state=np.asarray(initial_state)
-		initial_state-=angular_error
 		states=[]
 		step=0.1
-		step_factor=[1,-1]
+		step_factor=[1,-1]	
 		state=initial_state		
 		self.sss.move("torso",[state.tolist()])
-		states.append([self.get_average_height(10),state])
+		rospy.sleep(3)
+		
+		# calculate rotational reference and rotate to center
+		
+		
+		states.append([self.get_average_position(10)[1],state])
 		while step>eps:
 		
 			
 			for factor in step_factor:
 				state=initial_state+np.asarray([factor*step,0,factor*-step])		
 				self.sss.move("torso",[state.tolist()])
-				rospy.sleep(1.5)
-				states.append([self.get_average_height(10),state])
-				
-			prettyprint(states)
-			states=sorted(states)
-			prettyprint(states)
+				rospy.sleep(2.5)
+				states.append([self.get_average_position(10)[1],state])
+			if self.verbose:	
+				prettyprint(states)
+				states=sorted(states)
+				prettyprint(states)
 			step/=2
-			states=[states[0]]
-			initial_state=states[0][1]
+			states=[states[0]]			
+			initial_state=states[0][1]	#initial state for next iteration
 			
-			print '*'*20
-			print(states)
-			print initial_state
+			if self.verbose:
+				print '*'*20
+				print(states)
+				print initial_state
+		self.sss.move("torso",[state.tolist()])
+		rospy.sleep(2)
+		position=self.get_average_position(10)
+		rotational_error=math.atan(position[0]/position[2])
+		state-=np.asarray([0,rotational_error,0])
+		self.sss.move("torso",[state.tolist()])
+		return states
 		
-		'''
-		home_height=initial_height
-		stepcounter=0
-		while np.abs(step)>eps:
-			
-			
-			new_state=initial_state-np.asarray([step,0,-step])
-			self.sss.move("torso",[new_state.tolist()])
-			new_height=self.get_average_height(1.0/15)
-			if self.verbose:
-				rospy.logdebug("*****new iteration step*****")
-				rospy.logdebug("step = %s",step)
-				rospy.logdebug("initial_height = %s",initial_height)
-				rospy.logdebug("new_height     = %s",new_height)
-				print("*****new iteration step*****")
-				print("step = %s",step)
-				print("initial_height = %s",initial_height)
-				print("new_height     = %s",new_height)
-			if initial_height<new_height:
-				step/=-2
-			initial_height=new_height
-			initial_state=new_state
-			if self.verbose:
-				rospy.logdebug("new_step = %s", step)
-			stepcounter+=1
-		if self.verbose:
-			print "new height:  ", new_height
-			print "home_height: ", home_height
-			print "Solution found at ",new_state," after ", stepcounter," steps."
-			print "elapsed time: ",(rospy.Time.now()-startTime).to_sec(), " seconds." 
-			'''	
 			
 if __name__=='__main__':
-	node=TorsoPitchCalibration()
+	node=TorsoCalibration()
 	node.run();
 	print "==> done, exiting"
