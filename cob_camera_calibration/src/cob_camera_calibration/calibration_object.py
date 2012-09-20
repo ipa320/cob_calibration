@@ -81,11 +81,29 @@ class Checkerboard(CalibrationObject):
         '''
         Returns the location of checkerboard corners in object centered
         coordinate system. z coordinate is always 0.
+        Origin is in the lower left corner
         '''
         # implementation adapted from opencv examples
         pattern_points = np.zeros((np.prod(self.pattern_size), 3), np.float32)
         pattern_points[:,:2] = np.indices(self.pattern_size).T.reshape(-1, 2)
         pattern_points *= self.square_size
+        return pattern_points
+        
+    def get_pattern_points_center(self):
+        '''
+        Returns the location of checkerboard corners in object centered
+        coordinate system. z coordinate is always 0.
+        origin is in the center of the chessboard
+        '''
+        # implementation adapted from opencv examples
+        pattern_points = np.zeros((np.prod(self.pattern_size), 3), np.float32)
+        pattern_points[:,:2] = np.indices(self.pattern_size).T.reshape(-1, 2)
+        pattern_points[:,:1] = pattern_points[:,:1]-(max(pattern_points[:,:1])/2)
+        pattern_points[:,1] = pattern_points[:,1]-(max(pattern_points[:,1])/2)
+        
+        
+        pattern_points *= self.square_size
+        
         return pattern_points
 
 class SymmerticCirclegrid(CalibrationObject):
