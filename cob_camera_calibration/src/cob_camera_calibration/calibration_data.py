@@ -56,6 +56,7 @@
 
 import yaml
 import numpy as np
+import rospy
 
 class CalibrationData:
     '''
@@ -102,20 +103,29 @@ class CalibrationData:
         assert calib['rectification_matrix']['cols'] == 3
         assert calib['projection_matrix']['rows'] == 3
         assert calib['projection_matrix']['cols'] == 4
-        assert calib['distortion_model'] == 'plumb_bob'
+
         assert calib['distortion_coefficients']['rows'] == 1
         assert calib['distortion_coefficients']['cols'] == 5
         
+      
+        
         # import
         self.camera_name             = calib['camera_name']
-        self.frame_id                = calib['frame_id']
+        
         self.camera_matrix           = np.matrix(calib['camera_matrix']['data']).reshape((3,3))
         self.rectification_matrix    = np.matrix(calib['rectification_matrix']['data']).reshape((3,3))
         self.projection_matrix       = np.matrix(calib['projection_matrix']['data']).reshape((3,4))
-        self.distortion_model        = calib['distortion_model']
+        
         self.distortion_coefficients = np.matrix(calib['distortion_coefficients']['data']).reshape((1,5))
         self.image_width             = calib['image_width']
-        self.image_height            = calib['image_height']        
+        self.image_height            = calib['image_height']   
+        
+        
+        try:
+            self.frame_id                = calib['frame_id']  
+            self.distortion_model        = calib['distortion_model']   
+        except:
+            pass
         pass
     
     def save_camera_yaml_file(self, filename):
