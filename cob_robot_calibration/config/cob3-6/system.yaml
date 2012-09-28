@@ -59,7 +59,7 @@ rectified_cams:
 
 checkerboards:
     cb_9x6:
-      corners_x: 10
+      corners_x: 9
       corners_y: 6
       spacing_x: .03
       spacing_y: .03
