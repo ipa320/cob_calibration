@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+
+    <!-- run stereo calibration of left and right camera -->
+    <node type="generate_calibration_positions.py" pkg="cob_calibration_executive" name="$(anon generate_calibration_positions)" output="screen"/>
+        
+    
+    <param name="arm_joint_configuration_path"          value="$(find cob_calibration_executive)/config/$(env ROBOT)/arm_joint_configurations.yaml" />
+
+</launch>
