@@ -1,0 +1,12 @@
+<launch>
+<!-- collect data for robot calibration -->
+<node type="collect_robot_calibration_data_carthesian.py" pkg="cob_calibration_executive" name="$(anon collect_robot_data)" output="screen">
+
+<param name="pattern_size" value="9x6"/>
+<param name="square_size" value="0.03"/>
+<param name="camera_kinect_rgb" value="$(find cob_calibration_data)/$(env ROBOT)/calibration/cameras/kinect_rgb.yaml"/>
+<param name="camera_left" value="$(find cob_calibration_data)/$(env ROBOT)/calibration/cameras/left.yaml"/>
+<param name="camera_right" value="$(find cob_calibration_data)/$(env ROBOT)/calibration/cameras/right.yaml"/>
+
+</node>
+</launch>

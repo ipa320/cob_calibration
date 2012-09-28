@@ -103,7 +103,8 @@ class ViewfieldChecker():
         '''
         visible=[]
         for camera in self.cameras:
-            visible.append(self.in_viewfield(camera,translation[camera]))
+            visible.append(self.in_viewfield(camera,translations[camera]))
+        print visible
         return all(visible)
         
     def in_viewfield(self,camera,translation):
@@ -125,7 +126,7 @@ class ViewfieldChecker():
         @type  translation: tuple
 
         '''
-      
+        print translation
         t=[translation[2],translation[1],translation[0],1]
         p1=self.calibration[camera].projection_matrix*np.matrix(t).T
         

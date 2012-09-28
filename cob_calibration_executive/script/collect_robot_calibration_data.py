@@ -70,7 +70,7 @@ def capture_loop_arm(positions, sss, capture):
         print "--> moving arm to pos %s sample" % pos
         sss.move("arm", pos)
         sss.sleep(1.5)
-        capture()
+        #capture()
 
 def capture_loop_torso(positions, sss, capture):
     '''
