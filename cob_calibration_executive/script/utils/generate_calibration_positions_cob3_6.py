@@ -165,10 +165,10 @@ def main():
     
     # translation and rotation for main calibration position
     # ------------------------------------------------------
-    t_calib         = (-0.589, 0.0, 1.185) ###
+    t_calib         = (-0.670, 0.00, 1.08) ###
     #t_calib         = (-0.65, 0.0, 1.078) ###
     #t_calib_handeye = (-0.777, -0.016, 1.006)
-    q_calib         = (0, 1.0, 0.0, 0.0) ###
+    q_calib         = (0.061, 0.972, 0.166, 0.154) ###
     
     # define translations
     # -------------------
