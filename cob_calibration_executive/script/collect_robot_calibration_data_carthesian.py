@@ -59,7 +59,7 @@ import roslib; roslib.load_manifest(PKG)
 import rospy
 
 from simple_script_server import simple_script_server
-#from cob_calibration_srvs.srv import Capture
+from cob_calibration_srvs.srv import Capture
 from cob_camera_calibration import ViewfieldChecker,Checkerboard,CheckerboardDetector, cv2util
 
 from sensor_msgs.msg import Image
@@ -186,9 +186,9 @@ def main():
     
     translations={}
     # service client
-    #image_capture_service_name = "/collect_data/capture"
-    #capture = rospy.ServiceProxy(image_capture_service_name, Capture)
-    #rospy.wait_for_service(image_capture_service_name, 1)
+    image_capture_service_name = "/collect_data/capture"
+    capture = rospy.ServiceProxy(image_capture_service_name, Capture)
+    rospy.wait_for_service(image_capture_service_name, 1)
     
     print "--> service client for capture images initialized"
     listener=tf.TransformListener()
@@ -235,14 +235,9 @@ def main():
     quaternion=[]
     for cb_tip_p in cb_tip_positions:
         temp=list(cb_tip_p)
-        #print temp
-        #print type(temp)
         temp.append(cb_tip_offset)
-        #print temp
         vector_to=np.matrix(temp)
-        #print vector_to
         vector_from=np.matrix([0,0,1])
-        #print vector_from
         a=vector_to+vector_from
         a=a/np.linalg.norm(a)
         #print a
@@ -331,7 +326,7 @@ def main():
             nextPose.pose.orientation.w=quaternion[counter%len(quaternion)][3]
            
             chessboard_pose.publish(nextPose)
-            rospy.sleep(1)
+            rospy.sleep(0.5)
             
             #for camera in cameras:            
                 #(t,r)=get_cb_pose(listener,frames[camera])
@@ -375,6 +370,8 @@ def main():
                     
                 # move arm to position
                 sss.move("arm",[jp[0]])
+                rospy.sleep(3)
+                capture()
                 
                 
                 last_valid_round=rounds
