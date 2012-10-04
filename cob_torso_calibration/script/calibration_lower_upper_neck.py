@@ -95,13 +95,13 @@ class TorsoCalibration():
 		# get parameter from parameter server or set defaults
 		self.pattern_size  = rospy.get_param('~pattern_size',       "9x6")
 		self.square_size   = rospy.get_param('~square_size',        0.03)
-        
-        
+
+
 		self.alpha         = rospy.get_param('~alpha',              0.0)
 		self.verbose       = rospy.get_param('~verbose',            True)
 		
 		self.save_result  = rospy.get_param('~save_result',        False)
-        
+
 		# split pattern_size string into tuple, e.g '9x6' -> tuple(9,6)
 		self.pattern_size = tuple((int(self.pattern_size.split("x")[0]), int(self.pattern_size.split("x")[1])))
 		
@@ -131,18 +131,19 @@ class TorsoCalibration():
 		stores newest image
 		'''
 		self.latest_image=data
-        
+		
+
 	def run(self):
 		'''
 		Runs the calibration
 		'''
 		print "==> starting torso pitch/height calibration"
-        
-        
+
+
 		# subscribe to /cam3d/rgb/camera_info for camera_matrix and distortion coefficients
 		rospy.Subscriber('/cam3d/rgb/camera_info',CameraInfo,self.__camera_info_callback__)
 		# subscribe to /cam3d/rgb/image_raw for image data
-		rospy.Subscriber('/cam3d/rgb/image_raw',Image,self.__image_raw_callback__)
+		rospy.Subscriber('/cam3d/rgb/image_color',Image,self.__image_raw_callback__)
 		
 		
 		# wait until camera informations are recieved. 
@@ -183,6 +184,12 @@ class TorsoCalibration():
 		'''
 		returns the Y value in subpixel accuracy for the center of the recognized checkerboard
 		'''
+		r = rospy.Rate(10) #Hz
+		while rospy.Time.now()-self.latest_image.header.stamp>rospy.Duration(5) and not rospy.is_shutdown():
+			print 'no image received'
+			print rospy.Time.now(),self.latest_image.header.stamp
+			r.sleep()
+			pass
 		cvImage = self.bridge.imgmsg_to_cv(self.latest_image, "mono8")
 		image_raw = cv2util.cvmat2np(cvImage)
 		image_processed=cv2.undistort(image_raw,self.cm,self.dc)
@@ -219,7 +226,7 @@ class TorsoCalibration():
 		
 	
 			
-	def minimize_yvalue(self,initial_state,eps=0.0005):
+	def minimize_yvalue(self,initial_state,eps=0.005):
 		'''
 		Executive function. Calculates and applies forward rotation.
 		Moves torso until the upright position is found

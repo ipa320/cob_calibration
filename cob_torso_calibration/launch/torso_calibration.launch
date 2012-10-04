@@ -11,7 +11,7 @@
 <param name="square_size" value="0.03" />
 <param name="alpha" value="0.0" />
 <param name="verbose" value="True" />
-<param name="save_result" value="True" />
+<param name="save_result" value="False" />
 
 
         <!-- set to True for debug output -->
