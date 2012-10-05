@@ -48,7 +48,6 @@ origin, xaxis, yaxis, zaxis = (0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)
 def matrix2dh(matrix):
     
     #matrix=numpy.matrix(matrix).getI().getA()
-    print matrix
     d=matrix[2][3]
     
     costheta=matrix[0][0]
@@ -96,7 +95,6 @@ def xyzrpy2matrix(t,r):
 
     #M=concatenate_matrices(T,R)
     
-    print '*'*2,' Result ','*'*2
     M=compose_matrix(translate=t,angles=r)
     return M
     
@@ -122,32 +120,45 @@ def main():
     else:
         robot = URDF.load_xml_file(sys.argv[1])
 
-    #print(robot)
+    #print robot
     
+     
+    links=robot.links
     joints=robot.joints
     print dh2matrix([ -2.8407,  math.pi/2,  0, 0.1915  ])
+    
+        
     chains=['torso','arm']
-    for joint_key in sorted(joints.iterkeys()):
-        #print joint_key
-        if joint_key.find(chains[0])>=0:
-            print joint_key
-            print joints[joint_key].origin.position
-            print joints[joint_key].origin.rotation
-            
-            print xyzrpy2dh(joints[joint_key].origin.position,joints[joint_key].origin.rotation)
-            pass
-        elif joint_key.find(chains[1])>=0:
-            print joint_key
-            print joints[joint_key].origin.position
-            print joints[joint_key].origin.rotation
-            dh= xyzrpy2dh(joints[joint_key].origin.position,joints[joint_key].origin.rotation)
-            print dh
-            dh2matrix(dh)
-            pass
-        else:
-            pass
-        for chain in chains:
-            pass
+    
+    transforms=[['arm_%s_joint'%(i+1),'arm_%s_link'%(i+1)] for i in range(7)]  #ToDo: joint number from description
+    print links
+
+    for transform in transforms:
+        print '*'*20
+        joint_key=transform[0]
+        
+        t_joint=joints[joint_key].origin.position
+        r_joint=joints[joint_key].origin.rotation
+
+        joint_transformation    =xyzrpy2matrix(t_joint,r_joint)
+        
+        link_key=transform[1]
+        t_link=links[link_key].inertial.origin.position
+        r_link=links[link_key].inertial.origin.rotation
+        link_transformation     =xyzrpy2matrix(t_link,r_link)
+        
+        
+        print link_key, joint_key
+
+        final_transformation=numpy.dot(joint_transformation,link_transformation)
+        print matrix2dh(final_transformation)
+        '''
+        Not yet correct:
+        translation from pan to tilt joint cannot be expressed by Denavit-Hartenberg Parameters
+        Needs Workaround:
+        calculate Translation from tilt to tilt joint, calculate DH-Parameter for section tilt to pan without translation
+        '''        
+       
         
 
 
