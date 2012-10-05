@@ -28,6 +28,7 @@
   <depend package="cob_robot_calibration_est"/>
 
   <depend package="pr2_controllers_msgs"/>
+   <depend package="urdf_parser_py"/>
 
 </package>
 

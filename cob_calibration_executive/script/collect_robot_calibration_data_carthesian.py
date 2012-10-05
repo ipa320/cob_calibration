@@ -79,9 +79,9 @@ from cv_bridge import CvBridge, CvBridgeError
 #board       = Checkerboard(self.pattern_size, self.square_size)
 #checkerboard_detector=CheckerboardDetector()
 #latest_image=Image()
-def getIk(arm_ik, (t, q), link, seed=None):
+def getIk(arm_ik, (t,q), link, seed=None):
     '''
-    query arm_ik server for joint_position which put arm_7_link to pose (t, q)
+    query arm_ik server for joint_position which put arm_7_link to pose 
     
     @param arm_ik: arm_ik service proxy
     @param t: translation
@@ -174,7 +174,7 @@ def is_positive(a):
 def main():
     rospy.init_node(NODE)
     print "==> %s started " % NODE
-    path={}
+   # path={}
     #cameras=['kinect_rgb','left','right']
     #frames={'kinect_rgb':'/head_cam3d_frame','left':'/head_color_camera_l_frame','right':'/head_color_camera_r_frame'}
     #for camera in cameras:
@@ -182,15 +182,15 @@ def main():
         
     chessboard_pose=rospy.Publisher('/cob_calibration/chessboard_pose',PoseStamped)
     print 'chessboard_pose publisher activated'
-    rospy.Subscriber('/cam3d/rgb/image_raw',Image,__image_raw_callback__)
+    #rospy.Subscriber('/cam3d/rgb/image_raw',Image,__image_raw_callback__)
     
-    translations={}
+    #translations={}
     # service client
-    image_capture_service_name = "/collect_data/capture"
-    capture = rospy.ServiceProxy(image_capture_service_name, Capture)
-    rospy.wait_for_service(image_capture_service_name, 1)
+    #image_capture_service_name = "/collect_data/capture"
+    #capture = rospy.ServiceProxy(image_capture_service_name, Capture)
+    #rospy.wait_for_service(image_capture_service_name, 1)
     
-    print "--> service client for capture images initialized"
+    #print "--> service client for capture images initialized"
     listener=tf.TransformListener()
     #viewfieldCheck=ViewfieldChecker(cameras,path)
     rospy.sleep(1.5)
@@ -207,7 +207,7 @@ def main():
     
     
     
-    
+    '''
     print "--> initializing sss"
     sss = simple_script_server()
     sss.init("base")
@@ -221,17 +221,15 @@ def main():
     sss.move("head", "back")
     
     #sss.move("arm",[a[0]])
-    
+    '''
     nextPose=PoseStamped()
 
     
     
     # lissajous like figure for rotation
     cb_tip_offset=3
-    cb_tip_positions=[(0,0),(1,0),(1,1),
-                      (0,1),(-1,1),(-1,0),
-                      (0,0),(1,0),(1,-1),
-                      (0,-1),(-1,-1),(0,-1)]
+    cb_tip_positions=[(0,0),(1,0),(0,1),
+                      (-1,0),(0,-1)]
     quaternion=[]
     for cb_tip_p in cb_tip_positions:
         temp=list(cb_tip_p)
@@ -257,13 +255,87 @@ def main():
         y=vector_from[2]*a[0]-vector_from[0]*a[2]
         z=vector_from[0]*a[1]-vector_from[1]*a[0]
         
-        quaternion.append(tuple(tf.transformations.quaternion_multiply([0,1,0,0],[x,y,z,w]).reshape(1,4).tolist()[0])) 
+        quaternion.append(tuple(tf.transformations.quaternion_multiply([0,0,0,1],[x,y,z,w]).reshape(1,4).tolist()[0])) 
 
-    print quaternion
-    # movement as spiral around center of cam3d
+
+    # define cuboid for positions
+    # limits from base_link frame
+    limits={'x':(-0.5,-1.5),
+            'y':(-1,1),
+            'z':(0.5,1.5)}
 
     
-    torso_position_offset={'front': 0.7,'back': 0.7, 'right':0.6,'left':0.6,'home':0.7}
+    sample_density={'x':5,
+                    'y':9,
+                    'z':5}
+                    
+                    
+                    
+    sample_positions={  'x':[],
+                        'y':[],
+                        'z':[]}
+    for key in limits.keys():
+        limits[key]=sorted(limits[key])
+        sample_positions[key].append(limits[key][0])
+        diff=limits[key][1]-limits[key][0]
+        step=1.0*diff/(sample_density[key]-1)
+     #   print key, ' ',diff,' ',step
+        
+        while sample_positions[key][-1]+step <=(limits[key][1]+0.01):
+            sample_positions[key].append(sample_positions[key][-1]+step)
+        
+    #print sample_positions
+    #return
+    joint_states=[]
+    
+    for x in sample_positions['x']:
+               
+        for y in sample_positions['y']:
+            ll=limits['y'][0]
+            diff=limits['y'][1]-ll
+            y_sector=4
+            if y<ll+diff/4:
+                y_sector=1
+            elif y<ll+diff/2:
+                y_sector=2
+            elif y<ll+diff*3/4:
+                y_sector=3
+                
+                
+            for z in sample_positions['z']:
+                ll=limits['z'][0]
+                diff=limits['z'][1]-ll
+                z_sector=4
+                if z<ll+diff/4:
+                    z_sector=1
+                elif z<ll+diff/2:
+                    z_sector=2
+                elif z<ll+diff*3/4:
+                    z_sector=3
+                
+                for q in quaternion:
+                    nextPose.header.frame_id='/base_link'
+                    nextPose.pose.position.x=x
+                    nextPose.pose.position.y=y
+                    nextPose.pose.position.z=z
+                    
+                    # (0,0,0,1) for cob3-6
+                    nextPose.pose.orientation.x=q[0]
+                    nextPose.pose.orientation.y=q[1]
+                    nextPose.pose.orientation.z=q[2]
+                    nextPose.pose.orientation.w=q[3]
+                    
+                    chessboard_pose.publish(nextPose)
+                    rospy.sleep(0.01)
+                    (t,r)=get_cb_pose(listener,'/arm_0_link')
+                    
+                    js=calculate_ik((t,r),arm_ik)
+                    if js[0] is not None: joint_states.append({'joint_position':js[0],'y_sector':y_sector,'z_sector':z_sector} )
+                    
+    for i in joint_states:
+        print i
+    print '%s ik solutions found'%len(joint_states)
+    '''                
     for key,value in torso_position_offset.items():
         sss.move("torso",key)
         
@@ -388,7 +460,7 @@ def main():
             steps-=1
             R.sleep()
     print "Finished after %s samples"%nsamples
-
+    '''
     
    
                 
