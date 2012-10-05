@@ -24,6 +24,7 @@
 import roslib; roslib.load_manifest('cob_robot_calibration')
 import rospy
 import sys
+import numpy
 
 from urdf_parser_py.urdf import URDF
 
@@ -45,6 +46,8 @@ from tf.transformations import *
 
 origin, xaxis, yaxis, zaxis = (0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)
 def matrix2dh(matrix):
+    
+    #matrix=numpy.matrix(matrix).getI().getA()
     print matrix
     d=matrix[2][3]
     
@@ -78,7 +81,7 @@ def xyzrpy2matrix(t,r):
                     [-sb,   cb*sc,          cb*cc]])
 
     #print '*'*5,' Rotations ','*'*5
-
+    R=euler_matrix(r[0],r[1],r[2])
     #print R
 
 
@@ -94,6 +97,7 @@ def xyzrpy2matrix(t,r):
     #M=concatenate_matrices(T,R)
     
     print '*'*2,' Result ','*'*2
+    M=compose_matrix(translate=t,angles=r)
     return M
     
 def xyzrpy2dh(t,r):
