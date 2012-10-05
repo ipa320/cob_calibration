@@ -176,6 +176,7 @@ class TorsoCalibration():
 		if self.verbose:
 			print 'Elapsed time: ',(rospy.Time.now()-start_time).to_sec()
 			print 'Upright forward Position found at %s'%solution
+			print 'Seed was ',state
 		if self.save_result:
 			system('roslaunch cob_torso_calibration update_torso_calibration_urdf.launch')
 			
@@ -186,11 +187,10 @@ class TorsoCalibration():
 		returns the Y value in subpixel accuracy for the center of the recognized checkerboard
 		'''
 		r = rospy.Rate(10) #Hz
-		while rospy.Time.now()-self.latest_image.header.stamp>rospy.Duration(5) and not rospy.is_shutdown():
+		while rospy.Time.now()-self.latest_image.header.stamp>rospy.Duration(1) and not rospy.is_shutdown():
 			print 'no image received'
 			print rospy.Time.now(),self.latest_image.header.stamp
 			r.sleep()
-			pass
 		cvImage = self.bridge.imgmsg_to_cv(self.latest_image, "mono8")
 		image_raw = cv2util.cvmat2np(cvImage)
 		image_processed=cv2.undistort(image_raw,self.cm,self.dc)
