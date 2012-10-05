@@ -170,10 +170,11 @@ class TorsoCalibration():
 		
 		# start minimization for getting the upright position of the torso
 		start_time=rospy.Time.now()
-		self.minimize_yvalue(state)
+		solution=self.minimize_yvalue(state)
 		end_time=rospy.Time.now()
 		if self.verbose:
 			print 'Elapsed time: ',(rospy.Time.now()-start_time).to_sec()
+			print 'Upright forward Position found at %s'%solution
 		if self.save_result:
 			system('roslaunch cob_torso_calibration update_torso_calibration_urdf.launch')
 			
@@ -270,7 +271,7 @@ class TorsoCalibration():
 		rotational_error=math.atan(position[0]/position[2])
 		state-=np.asarray([0,rotational_error,0])
 		self.sss.move("torso",[state.tolist()])
-		return states
+		return state
 		
 			
 if __name__=='__main__':
