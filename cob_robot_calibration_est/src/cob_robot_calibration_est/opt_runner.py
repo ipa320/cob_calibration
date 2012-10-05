@@ -303,15 +303,25 @@ def build_opt_vector(robot_params, free_dict, pose_guess_arr):
     # Convert the robot parameter dictionary into a vector
     expanded_param_vec = robot_params.deflate()
     free_list = robot_params.calc_free(free_dict)
+    print '######### free list #############'
+    print free_list
 
     # Pull out only the free system parameters from the system parameter vector
     opt_param_vec = array(expanded_param_vec[numpy.where(free_list)].T)[0]
+    print '######### optparam_vec #############'
+    print opt_param_vec
+
 
     assert(pose_guess_arr.shape[1] == 6)
     opt_pose_vec = reshape(pose_guess_arr, [-1])
+ 
+    print '######### opt_pose_vec #############'
+    print opt_pose_vec
 
     opt_all = numpy.concatenate([opt_param_vec, opt_pose_vec])
-
+    
+    print '*'*20
+    print opt_all
     return opt_all
 
 
@@ -347,7 +357,7 @@ def opt_runner(robot_params_dict, pose_guess_arr, free_dict, multisensors, use_c
     # Construct the initial guess
     opt_all = build_opt_vector(robot_params, free_dict, pose_guess_arr)
 
-    x, cov_x, infodict, mesg, iter = scipy.optimize.leastsq(error_calc.calculate_error, opt_all, Dfun=error_calc.calculate_jacobian, full_output=1)
+    x, cov_x, infodict, mesg, iter = scipy.optimize.leastsq(error_calc.calculate_error, opt_all, Dfun=error_calc.calculate_jacobian, full_output=0)
     #x = opt_all
     #error_calc.calculate_error(x)
 

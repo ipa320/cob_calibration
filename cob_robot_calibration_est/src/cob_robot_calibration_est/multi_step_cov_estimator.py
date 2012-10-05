@@ -145,6 +145,9 @@ if __name__ == '__main__':
     rospy.init_node("multi_step_cov_estimator", anonymous=True)
 
     print "Starting The Multi Step [Covariance] Estimator Node\n"
+    
+    
+
 
     if (len(rospy.myargv()) < 2):
         usage()
@@ -206,11 +209,12 @@ if __name__ == '__main__':
         print "Invalid file permissions. You need to be able to write to the following files:"
         print "\n".join([" - " + cur_file for cur_file,cur_valid in zip(output_filenames, valid_list) if not cur_valid])
         sys.exit(-1)
-
+ 
     # Specify which system the first calibration step should use.
     # Normally this would be set at the end of the calibration loop, but for the first step,
     # this is grabbed from the param server
     previous_system = yaml.load(config["initial_system"])
+    print previous_system
 
     # Load all the sensors from the bagfile and config file
     for cur_step in step_list:
