@@ -39,20 +39,32 @@ class DhChain:
         # Determine number of links
 
         #import code; code.interact(local=locals())
-        self._M = len(config['dh'])
-        rospy.logdebug("Initializing dh chain with [%u] links", self._M)
+        try:
+            self._M = len(config['dh'])
+            rospy.logdebug("Initializing dh chain with [%u] links", self._M)
 
-        param_mat = numpy.matrix([ [eval(str(x)) for x in y] for y in config['dh']], float)
-        assert(self._M*4 == param_mat.size)
-        self._length = param_mat.size       # The number of params needed to configure this chain
-        self._config = param_mat            # Mx4 matrix. Each row is a link, containing [theta, alpha, a, d]
+            param_mat = numpy.matrix([ [eval(str(x)) for x in y] for y in config['dh']], float)
+            assert(self._M*4 == param_mat.size)
+            self._length = param_mat.size       # The number of params needed to configure this chain
+            self._config = param_mat            # Mx4 matrix. Each row is a link, containing [theta, alpha, a, d]
 
-        self._cov_dict = config['cov']
-        self._gearing = config['gearing']
-        assert( len(self._cov_dict['joint_angles']) == self._M)
+            self._cov_dict = config['cov']
+            self._gearing = config['gearing']
+            assert( len(self._cov_dict['joint_angles']) == self._M)
+        except:
+            self._cov_dict=config['cov']
+            self._M=len(self._cov_dict['joint_angles'])
+            param_mat = numpy.matrix([[0]*4]*self._M, float)
+            self._length = param_mat.size       # The number of params needed to configure this chain
+            self._config = param_mat            # Mx4 matrix. Each row is a link, containing [theta, alpha, a, d]
+            self._gearing=[0]*self._M
+
+
 
     def calc_free(self, free_config):
         #import code; code.interact(local=locals())
+        #print len(free_config['dh']) 
+        #print self._M
         assert( len(free_config['dh']) == self._M)
         assert( len(free_config['gearing']) == self._M )
 

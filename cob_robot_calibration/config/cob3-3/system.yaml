@@ -10,19 +10,9 @@ dh_chains:
         gearing: [ 1.0, 1.0, 1.0 ]
         
     arm_chain:
-        dh:
-            #   theta,    alpha, a, d
-            - [ -2.8407,  pi/2,  0, 0.1915  ]      # joint arm_0_link -> arm_1_link
-            - [ 0,       -pi/2,  0, 0       ]      # joint arm_1_link -> arm_2_link
-            - [ pi,       pi/2,  0, 0.4     ]      # joint arm_2_link -> arm_3_link
-            - [ 0,       -pi/2,  0, 0       ]      # joint arm_3_link -> arm_4_link
-            - [ pi,       pi/2,  0, 0.39    ]      # joint arm_4_link -> arm_5_link
-            - [ 0,       -pi/2,  0, 0       ]      # joint arm_5_link -> arm_6_link
-            - [ 0,        0,     0, 0.057   ]      # joint arm_6_link -> arm_7_link
         cov:
             joint_angles: [ 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001 ]
-        gearing: [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ]
-
+ 
 transforms:
     # specified as x,y,z translation and rotation vector (angle = magnitude, direction = vector)!
     base_footprint_joint: [ 0, 0, 0, 0, 0, 0 ]
