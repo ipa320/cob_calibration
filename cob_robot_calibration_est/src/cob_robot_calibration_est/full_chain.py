@@ -42,8 +42,11 @@
 #   root
 
 from sensor_msgs.msg import JointState
+from kinematics_msgs.srv import *
 from numpy import matrix
 import numpy
+import rospy
+import tf.transformations
 
 
 class FullChainRobotParams:
@@ -73,14 +76,22 @@ class FullChainRobotParams:
             chain           = robot_params.dh_chains[ self._config_dict["chain_id"] ]
             dh_link_num     = self._config_dict["dh_link_num"]
         after_chain_Ts  = [robot_params.transforms[transform_name] for transform_name in self._config_dict["after_chain"]]
-        self.calc_block.update_config(before_chain_Ts, chain, dh_link_num, after_chain_Ts)
+        first_link=self._config_dict['before_chain'][-1]
+        last_link=self._config_dict['last_link']
+        dh_chain=self._config_dict['dh_chain']
+        self.calc_block.update_config(before_chain_Ts, chain, dh_link_num, after_chain_Ts,first_link,last_link,dh_chain,chain_id=self._config_dict["chain_id"])
 
 class FullChainCalcBlock:
-    def update_config(self, before_chain_Ts, chain, dh_link_num, after_chain_Ts):
+    def update_config(self, before_chain_Ts, chain, dh_link_num, after_chain_Ts,first_link,last_link,dh_chain,chain_id):
         self._before_chain_Ts = before_chain_Ts
         self._chain = chain
         self._dh_link_num = dh_link_num
+        self._dh_link_name=dh_chain
         self._after_chain_Ts = after_chain_Ts
+        self._last_link=last_link
+        self._first_link=first_link
+        self._chain_id=chain_id
+        self._fks = rospy.ServiceProxy('/cob_arm_kinematics/get_fk', GetPositionFK)
 
     def fk(self, chain_state):
         pose = matrix(numpy.eye(4))
@@ -91,8 +102,44 @@ class FullChainCalcBlock:
 
         # Apply the DH Chain
         if self._chain is not None:
-            dh_T = self._chain.fk(chain_state, self._dh_link_num)
-            pose = pose * dh_T
+            if self._chain_id=='arm_chain':
+                print chain_state
+
+                req = GetPositionFKRequest()
+                req.header.stamp = rospy.Time.now()
+                req.header.frame_id= self._first_link
+                req.fk_link_names = [self._last_link]
+                req.robot_state.joint_state.name = self._dh_link_name
+                req.robot_state.joint_state.position = chain_state.position
+                print '*'*20,' Request ','*'*20
+                print req
+                    
+                res = self._fks(req)
+                print '*'*20,' Response ','*'*20
+                print res
+                if  res.error_code.val!=1:
+                    return
+                print res.pose_stamped[0].pose
+                '''
+                convert Pose to 4x4 matrix
+                '''
+                pose_fk=res.pose_stamped[0].pose
+                quat = [pose_fk.orientation.x, pose_fk.orientation.y, pose_fk.orientation.z, pose_fk.orientation.w] 
+                pos = matrix([pose_fk.position.x, pose_fk.position.y, pose_fk.position.z]).T 
+                mat = matrix(tf.transformations.quaternion_matrix(quat)) 
+                mat[0:3, 3] = pos 
+                print mat
+
+                print 'Error Code: ', res.error_code.val
+
+                if  res.error_code.val!=1:
+                    return
+                pose = pose * mat
+
+            
+            else:
+                dh_T = self._chain.fk(chain_state, self._dh_link_num)
+                pose = pose * dh_T
 
         # Apply the 'after chain' transforms
         for after_chain_T in self._after_chain_Ts:

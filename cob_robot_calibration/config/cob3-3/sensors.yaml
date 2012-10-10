@@ -2,29 +2,37 @@ camera_chains:
   - sensor_id: left
     camera_id: left
     chain:
-        before_chain: [ base_footprint_joint, torso_0_joint ]
+        before_chain: [ base_footprint_joint, torso_lower_neck_tilt_link ]
         chain_id: torso_chain
         dh_link_num: 3
+        last_link: torso_upper_neck_tilt_link
         after_chain: [ head_axis_joint, head_color_camera_l_joint ]
+        dh_chain: [torso_lower_neck_tilt_joint,torso_pan_joint,torso_upper_neck_tilt_joint]
   - sensor_id: right
     camera_id: right
     chain:
-        before_chain: [ base_footprint_joint, torso_0_joint ]
+        before_chain: [ base_footprint_joint, torso_lower_neck_tilt_link ]
         chain_id: torso_chain
         dh_link_num: 3
+        last_link: torso_upper_neck_tilt_link
         after_chain: [ head_axis_joint, head_color_camera_l_joint ]
+        dh_chain: [torso_lower_neck_tilt_joint,torso_pan_joint,torso_upper_neck_tilt_joint]
   - sensor_id: kinect_rgb
     camera_id: kinect_rgb
     chain:
-        before_chain: [ base_footprint_joint, torso_0_joint ]
+        before_chain: [ base_footprint_joint, torso_lower_neck_tilt_link ]
         chain_id: torso_chain
         dh_link_num: 3
+        last_link: torso_upper_neck_tilt_link
         after_chain: [ head_axis_joint, head_cam3d_rgb_optical_frame_joint ]
+        dh_chain: [torso_lower_neck_tilt_joint,torso_pan_joint,torso_upper_neck_tilt_joint]
 
 chains:
   - sensor_id:    arm_chain
-    before_chain: [ base_footprint_joint, arm_0_joint ]
+    before_chain: [ base_footprint_joint, arm_0_link ]
     chain_id:     arm_chain
     after_chain:  [ arm_cb ]
     dh_link_num:  7
+    last_link: arm_7_link
+    dh_chain: [arm_1_joint, arm_2_joint,arm_3_joint,arm_4_joint,arm_5_joint,arm_6_joint,arm_7_joint]
 
