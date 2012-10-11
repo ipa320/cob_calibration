@@ -2,13 +2,16 @@
 <launch>
 
     <node pkg="cob_robot_calibration_est" type="multi_step_cov_estimator.py" name="cal_cov_estimator_v0" output="screen" launch-prefix="time"
-        args="/home/fmw-ja/cob_calibration_data/cal/cal_measurements.bag /home/fmw-ja/cob_calibration_data/cal" respawn="False"/>
+        args="/home/fmw-ja/cob_calibration_data/cal/cal_measurements.bag /home/fmw-ja/cob_calibration_data/cal" respawn="False">
+	<param name="fk_service" type="string" value="/cob_%s_kinematics/get_fk"/>
+    </node>
 
     <group ns="calibration_config" clear_params="true">
         <!-- sensors -->
         <group ns="sensors">
             <param name="all" textfile="$(find cob_robot_calibration)/config/cob3-3/sensors.yaml" />
         </group>
+	
 
         <!-- initial system for first calibration step -->
         <param name="initial_system" textfile="$(find cob_robot_calibration)/config/cob3-3/system.yaml" />

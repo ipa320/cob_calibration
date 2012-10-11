@@ -73,25 +73,41 @@ class FullChainRobotParams:
         if self._config_dict["chain_id"] != None:
 
             chain           = robot_params.dh_chains[ self._config_dict["chain_id"] ]
-	    if self._config_dict["chain_id"] != 'arm_chain':
-            	dh_link_num     = self._config_dict["dh_link_num"]
+	    try:
+	      	dh_link_num     = self._config_dict["dh_link_num"]
+	    except:
+		pass
         after_chain_Ts  = [robot_params.transforms[transform_name] for transform_name in self._config_dict["after_chain"]]
         first_link=self._config_dict['before_chain'][-1]
-        last_link=self._config_dict['last_link']
-        dh_chain=self._config_dict['dh_chain']
-        self.calc_block.update_config(before_chain_Ts, chain, dh_link_num, after_chain_Ts,first_link,last_link,dh_chain,chain_id=self._config_dict["chain_id"])
+	last_link=None
+        dh_chain=None
+	try:
+            last_link=self._config_dict['last_link']
+            dh_chain=self._config_dict['dh_chain']
+	except:
+	    pass
+
+        self.calc_block.update_config(before_chain_Ts, chain, dh_link_num, after_chain_Ts, first_link,last_link,dh_chain,chain_id=self._config_dict["chain_id"])
 
 class FullChainCalcBlock:
     def update_config(self, before_chain_Ts, chain, dh_link_num, after_chain_Ts,first_link,last_link,dh_chain,chain_id):
+	if dh_link_num is None and dh_chain is None:
+	    rospy.logerror("forward kinematic can not be calculated. Either DH Parameter in system.yaml or get_fk service missing")
+	    return 
         self._before_chain_Ts = before_chain_Ts
         self._chain = chain
-        self._dh_link_num = dh_link_num
-        self._dh_link_name=dh_chain
-        self._after_chain_Ts = after_chain_Ts
-        self._last_link=last_link
-        self._first_link=first_link
+        self._after_chain_Ts = after_chain_Ts        
         self._chain_id=chain_id
-        self._fks = rospy.ServiceProxy('/cob_arm_kinematics/get_fk', GetPositionFK)
+	
+        if dh_link_num is None:
+	    self._group=self._chain_id.split('_')[0]
+	    fk_s_name=rospy.get_param('fk_service','/cob_%s_kinematics/get_fk')
+            self._fks = rospy.ServiceProxy((fk_s_name%self._group), GetPositionFK)
+	    self._dh_link_names=dh_chain
+	    self._last_link=last_link
+            self._first_link=first_link
+	else:
+	    self._dh_link_num = dh_link_num
 
     def fk(self, chain_state):
         pose = matrix(numpy.eye(4))
@@ -101,15 +117,16 @@ class FullChainCalcBlock:
             pose = pose * before_chain_T.transform
 
         # Apply the DH Chain
+	
         if self._chain is not None:
-            if self._chain_id=='arm_chain':
+            if self._dh_link_names is not None:
                 #print chain_state
 
                 req = GetPositionFKRequest()
                 req.header.stamp = rospy.Time.now()
                 req.header.frame_id= self._first_link
                 req.fk_link_names = [self._last_link]
-                req.robot_state.joint_state.name = self._dh_link_name
+                req.robot_state.joint_state.name = self._dh_link_names
                 req.robot_state.joint_state.position = chain_state.position
                 #print '*'*20,' Request ','*'*20
                 #print req
