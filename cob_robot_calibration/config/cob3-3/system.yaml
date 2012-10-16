@@ -1,50 +1,40 @@
-dh_chains:
-    torso_chain:
-        cov:
-            joint_angles: [ 0.01, 0.01, 0.01 ]
-                
-    arm_chain:
-        cov:
-            joint_angles: [ 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001 ]
-            
- 
-transforms:
-    # specified as x,y,z translation and rotation vector (angle = magnitude, direction = vector)!
-    base_footprint: [ 0, 0, 0, 0, 0, 0 ]                                                                                           # base_link -> base_footprint                                    # in urdf
-    arm_cb:               [ -0.12, 0.02, 0.1, pi/2, 0, 0 ]                                                                      # arm_7_link -> calibration_pattern
-    
-    head_axis_link:      [ 0, .173, 0, 0, 0, 0 ]                                                  # rpy: (0, 0, 0)                 # torso_upper_neck_tilt_link -> head_axis_link             # in urdf
-    head_color_camera_l_link: [ 0, 0, -0.06, 0, -pi/2, 0]                                         # rpy: (pi, -pi/2, pi)          # head_axis_link -> head_color_camera_l_link                # in urdf
-    head_color_camera_r_link: [ 0, 0,  0.06, 0, -pi/2, 0]                                        # rpy: (pi, -pi/2, pi)          # head_axis_link -> head_color_camera_r_link                # in urdf
-    head_color_camera_l_frame_link: [ 0, 0, 0, 1.20919958, -1.20919958,  1.20919958 ]            # rpy: (-pi/2, -pi/2, -pi)      # head_color_camera_l_link -> head_color_camera_l_frame        # in urdf
-    head_cam3d_frame: [ -0.002, -0.030, 0.020, 0, -pi/2, 0 ]                                # rpy: (0, -pi/2, 0)            # head_color_camera_l_link -> head_cam3d_frame                # in urdf
-    
-    torso_0_link:        [ 0.155, 0, 0.892, pi/2, 0, 0]                                          # rpy: (pi/2, 0, 0)             # base_link -> torso_0_link                        # in urdf
-    arm_0_link:          [-0.015982, -0.080992, 0.875995, 0.78081498, -0.10279649, -0.24817203 ] # rpy: (0.7854, 0.0, -0.2618)   # base_link -> arm_0_link                        # in urdf
-    
-rectified_cams:
-    left:
-        baseline_shift: 0.0
-        f_shift: 0.0
-        cx_shift: 0.0
-        cy_shift: 0.0
-        cov: {u: 0.125, v: 0.125}
-    right:
-        baseline_shift: 0.0
-        f_shift: 0.0
-        cx_shift: 0.0
-        cy_shift: 0.0
-        cov: {u: 0.125, v: 0.125}
-    kinect_rgb:
-        baseline_shift: 0.0
-        f_shift: 0.0
-        cx_shift: 0.0
-        cy_shift: 0.0
-        cov: {u: 0.25, v: 0.25}    
-
 checkerboards:
-    cb_9x6:
-      corners_x: 9
-      corners_y: 6
-      spacing_x: .03
-      spacing_y: .03
+  cb_9x6: {corners_x: 9, corners_y: 6, spacing_x: 0.029999999999999999, spacing_y: 0.029999999999999999}
+dh_chains:
+  arm_chain:
+    cov:
+      joint_angles: [0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001]
+  torso_chain:
+    cov:
+      joint_angles: [0.01, 0.01, 0.01]
+rectified_cams:
+  kinect_rgb:
+    baseline_shift: 0.0
+    cov: {u: 0.25, v: 0.25}
+    cx_shift: 0.0
+    cy_shift: 0.0
+    f_shift: 0.0
+  left:
+    baseline_shift: 0.0
+    cov: {u: 0.125, v: 0.125}
+    cx_shift: 0.0
+    cy_shift: 0.0
+    f_shift: 0.0
+  right:
+    baseline_shift: 0.0
+    cov: {u: 0.125, v: 0.125}
+    cx_shift: 0.0
+    cy_shift: 0.0
+    f_shift: 0.0
+transforms:
+  arm_0_link: [-0.0140363871, -0.0833937503, 0.87511230819999997, 0.80306008420000008,
+    0.0034579368999999721, -0.27234397170000008]
+  arm_cb: [0, 0, 0, 0, 0, 0]
+  base_footprint: [0.0, 0.0, 0.0, 0.0, -0.0, 0.0]
+  head_axis_link: [0.0, 0.17299999999999999, 0.0, 0.0, 0.0, -0.0041075851362055759]
+  head_cam3d_link: [-0.041877115899999998, -0.036604520500000001, 0.011677937500000001,
+    -0.1072076679000017, -1.5425357204000005, 0.10131486730000175]
+  head_color_camera_l_link: [-0.023614531000000001, -0.0041529089000000002, -0.066766605899999998,
+    0.23608914850000429, -1.5462373962000002, -0.28751755800000461]
+  torso_0_link: [0.15266190769999999, 0.0147335591, 0.85835592409999995, 1.5772665030999999,
+    -0.071706757300000035, 0.064970754899999997]

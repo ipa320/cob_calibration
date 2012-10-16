@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<launch>
+
+    <!-- run stereo calibration of left and right camera -->
+    <node type="generate_config.py" pkg="cob_robot_calibration" name="$(anon robot_calibration)" output="screen">
+
+       <rosparam file="$(find cob_robot_calibration)/config/$(env ROBOT)/calibration_pattern.yaml"/>
+       
+
+
+    </node>
+<param name="output_system" value="$(find cob_robot_calibration)/config/$(env ROBOT)/system.yaml"/>
+       <param name="free_system" value="$(find cob_robot_calibration)/config/$(env ROBOT)/free.yaml"/>
+       <param name="sensors" value="$(find cob_robot_calibration)/config/$(env ROBOT)/sensors.yaml"/>
+       <param name="minimal_system" value="$(find cob_robot_calibration)/config/minimal_system.yaml"/>
+
+</launch>

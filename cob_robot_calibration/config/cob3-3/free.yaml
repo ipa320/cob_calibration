@@ -27,10 +27,10 @@ rectified_cams:
     cy_shift: 0
     f_shift: 0
 transforms:
-  arm_0_link: [1,1,1, 1,1,1]
-  arm_cb: [1,1,1, 1,1,1]
+  arm_0_link: [0, 0, 0, 0, 0, 0]
+  arm_cb: [0, 0, 0, 0, 0, 0]
   base_footprint: [0, 0, 0, 0, 0, 0]
   head_axis_link: [0, 0, 0, 0, 0, 0]
-  head_cam3d_link: [1,1,1, 1,1,1]
-  head_color_camera_l_link: [1,1,1, 1,1,1]
-  torso_0_link: [1,1,1, 1,1,1]
+  head_cam3d_link: [0, 0, 0, 0, 0, 0]
+  head_color_camera_l_link: [0, 0, 0, 0, 0, 0]
+  torso_0_link: [0, 0, 0, 0, 0, 0]
