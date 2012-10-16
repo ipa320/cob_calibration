@@ -65,6 +65,12 @@ class DhChain:
         #import code; code.interact(local=locals())
         #print len(free_config['dh']) 
         #print self._M
+	if free_config is None:
+	    free_config={}
+	if not free_config.has_key('dh'):
+	    free_config['dh']=[[0]*4]*self._M
+	if not free_config.has_key('gearing'):
+	    free_config['gearing']=[1]*self._M
         assert( len(free_config['dh']) == self._M)
         assert( len(free_config['gearing']) == self._M )
 
