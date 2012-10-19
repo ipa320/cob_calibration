@@ -6,15 +6,17 @@
         <!-- set to 3 cameras -->
         <param name="number_of_cameras" value="3" />
 
-        <!-- configure cameras -->
-        <param name="camera0"       value="/stereo/left/image_raw" />
-        <param name="file_prefix0"  value="left_" />
+        <!-- configure cameras --> 
+        <param name="camera0"       value="/cam3d/rgb/image_color" />
+        <param name="file_prefix0"  value="kinect_" />
+        
+        <param name="camera1"       value="/stereo/left/image_raw" />
+        <param name="file_prefix1"  value="left_" />
 
-        <param name="camera1"       value="/stereo/right/image_raw" />
-        <param name="file_prefix1"  value="right_" />
+        <param name="camera2"       value="/stereo/right/image_raw" />
+        <param name="file_prefix2"  value="right_" />
 
-        <param name="camera2"       value="/cam3d/rgb/image_color" />
-        <param name="file_prefix2"  value="kinect_" />
+       
 
         <!-- set output folder -->
         <param name="output_folder" value="/tmp/cal/intrinsic" />
