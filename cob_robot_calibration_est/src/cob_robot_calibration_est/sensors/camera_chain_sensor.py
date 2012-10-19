@@ -47,7 +47,7 @@ from numpy import matrix, reshape, array, zeros, diag, real
 import roslib; roslib.load_manifest('cob_robot_calibration_est')
 import rospy
 from cob_robot_calibration_est.full_chain import FullChainRobotParams
-from sensor_msgs.msg import JointState
+from sensor_msgs.msg import JointState, CameraInfo
 
 class CameraChainBundler:
     """
@@ -119,8 +119,23 @@ class CameraChainSensor:
         self._M_chain = M_chain
 
         self._chain = FullChainRobotParams(config_dict["chain"])
+        self.camera_info_name=None
+        if self.sensor_id in ["left","right"]:
+            self.camera_info_name="/stereo/%s/camera_info"%self.sensor_id
+       
+        elif self.sensor_id == "kinect_rgb":
+            self.camera_info_name="/cam3d/rgb/camera_info"
+        
+        assert self.sensor_id in ['left','right','kinect_rgb']
+        self.camera_info_received=False
+        rospy.Subscriber(self.camera_info_name,CameraInfo,self._cameraInfo_callback)
+        self.camera_info=CameraInfo()
 
         self.terms_per_sample = 2
+    def _cameraInfo_callback(self,data):
+        self.camera_info_received=True
+        self.camera_info=data
+        
 
     def update_config(self, robot_params):
         """
@@ -190,8 +205,48 @@ class CameraChainSensor:
         """
         Get the target's pixel coordinates as measured by the actual sensor
         """
-        camera_pix = numpy.matrix([[pt.x, pt.y] for pt in self._M_cam.image_points])
-        return camera_pix
+        camera_pix = [[pt.x, pt.y] for pt in self._M_cam.image_points]
+        return self.undistort_measurement(camera_pix)
+    
+    def undistort_measurement(self,points):
+        """
+        Undistorts the target's pixel coordinates
+        given: u,v
+        calc x', y'
+        calc r
+        calc x'',y''
+        calc u',v'
+        """
+        print points
+        self.camera_info_received=False
+        while self.camera_info_received==False:
+            rospy.sleep(0.25)
+        points_out=[]
+        fx=self.camera_info.K[0]*1.0
+        cx=self.camera_info.K[2]*1.0
+        fy=self.camera_info.K[4]*1.0
+        cy=self.camera_info.K[5]*1.0
+        k1,k2,p1,p2,k3=self.camera_info.D
+        print fx,cx,fy,cy,k1,k2,p1,p2,k3
+        for point in points:
+            u,v=point
+            
+            
+            x1=(u-cx)/fx
+            y1=(v-cy)/fy
+            rq=x1**2+y1**2
+            x2=x1*(1+k1*rq+k2*rq**2+k3*rq**3)+p1*x1*y1+p2*(rq+2*x1**2)
+            y2=y1*(1+k1*rq+k2*rq**2+k3*rq**3)+p1*(rq+2*y1**2)+p2*x1*y1
+            u_out=fx*x2+cx
+            v_out=fy*y2+cy
+            points_out.append([u_out,v_out])
+        print points_out
+        
+        assert 1==2
+        return numpy.matrix(points_out)
+        
+            
+        
 
     def compute_expected(self, target_pts):
         """

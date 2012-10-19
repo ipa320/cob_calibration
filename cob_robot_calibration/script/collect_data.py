@@ -315,7 +315,7 @@ class DataCollector():
         
         # detect cb left
         # --------------
-        cvImage = self.bridge.imgmsg_to_cv(latest_left["image_rect"], "mono8")
+        cvImage = self.bridge.imgmsg_to_cv(latest_left["image_color"], "mono8")
         image = cv2util.cvmat2np(cvImage)
         
         corners = checkerboard_detector.detect_image_points(image, is_grayscale=True)
@@ -342,7 +342,7 @@ class DataCollector():
         
         # detect cb right
         # --------------
-        cvImage = self.bridge.imgmsg_to_cv(latest_right["image_rect"], "mono8")
+        cvImage = self.bridge.imgmsg_to_cv(latest_right["image_color"], "mono8")
         image = cv2util.cvmat2np(cvImage)
         
         corners = checkerboard_detector.detect_image_points(image, is_grayscale=True)
