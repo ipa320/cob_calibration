@@ -15,6 +15,7 @@
   <depend package="tf"/>
 
   <rosdep name="opencv2"/>
+  <depend package="cob_calibration_srvs"/>
 
 </package>
 
