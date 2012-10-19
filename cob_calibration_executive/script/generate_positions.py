@@ -71,6 +71,8 @@ from pr2_controllers_msgs.msg import JointTrajectoryControllerState
 import tf
 import math
 import numpy as np
+import yaml
+import os
 
 
 from cv_bridge import CvBridge, CvBridgeError
@@ -148,9 +150,9 @@ def calibration_object_visible():
     return checkerboard_detector.detect_image_points( image_raw, is_greyscale=True, quick_check=True) != None
 
         
-def calculate_ik(pose,arm_ik):
+def calculate_ik(pose,arm_ik,seed=None):
     via_home=False
-    for seed in [None, [0,0,0,0,0,0,0]]:
+    for seed in [seed,None, [0,0,0,0,0,0,0]]:
         joint_positions = getIk(arm_ik, pose, "sdh_palm_link", seed)
         if joint_positions != None:
             if seed is [0,0,0,0,0,0,0]:
@@ -291,26 +293,28 @@ def main():
     for x in sample_positions['x']:
                
         for y in sample_positions['y']:
-            ll=limits['y'][0]
+            ll=1.0*limits['y'][0]
             diff=limits['y'][1]-ll
             y_sector=4
-            if y<ll+diff/4:
+
+            if y<(ll+diff/4):
                 y_sector=1
-            elif y<ll+diff/2:
+            elif y<(ll+diff/2):
                 y_sector=2
-            elif y<ll+diff*3/4:
+            elif y<(ll+diff*3/4):
                 y_sector=3
+
                 
                 
             for z in sample_positions['z']:
-                ll=limits['z'][0]
+                ll=1.0*limits['z'][0]
                 diff=limits['z'][1]-ll
                 z_sector=4
-                if z<ll+diff/4:
+                if z<(ll+diff/4):
                     z_sector=1
-                elif z<ll+diff/2:
+                elif z<(ll+diff/2):
                     z_sector=2
-                elif z<ll+diff*3/4:
+                elif z<(ll+diff*3/4):
                     z_sector=3
                 
                 for q in quaternion:
@@ -328,150 +332,38 @@ def main():
                     chessboard_pose.publish(nextPose)
                     rospy.sleep(0.01)
                     (t,r)=get_cb_pose(listener,'/arm_0_link')
-                    
-                    js=calculate_ik((t,r),arm_ik)
-                    if js[0] is not None: joint_states.append({'joint_position':js[0],'y_sector':y_sector,'z_sector':z_sector} )
-                    
-    for i in joint_states:
-        print i
+                    try:
+                        js=calculate_ik((t,r),arm_ik,joint_states[-1]['joint_position'])
+                    except IndexError:
+                        js=calculate_ik((t,r),arm_ik)
+                    if js[0] is not None:
+                        print 'IK solution found'
+                        torso_sector_y=[]
+                        if y_sector in [3,4]: torso_sector_y.append('right') 
+                        if y_sector in [2,3]: torso_sector_y.append('center')
+                        if y_sector in [1,2]: torso_sector_y.append('left')
+                        
+                        
+                        torso_sector_z=[]
+                        if z_sector in [3,4]: torso_sector_z.append('top') 
+                        if z_sector in [2,3]: torso_sector_z.append('center')
+                        if z_sector in [1,2]: torso_sector_z.append('low')
+                        
+                        joint_states.append({'joint_position':js[0],'y_sector':torso_sector_y,'z_sector':torso_sector_z} )
+    path=rospy.get_param('output_path',None)
+    directory=os.path.dirname(path)
+    
+    
+    if path is not None:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        with open(path,'w') as f:
+            f.write(yaml.dump(joint_states))
+    else:
+        print yaml.dump(joint_states)
     print '%s ik solutions found'%len(joint_states)
-    '''                
-    for key,value in torso_position_offset.items():
-        sss.move("torso",key)
-        
-        nextPose.header.frame_id='/head_cam3d_frame'
-        nextPose.pose.position.x=value
-        nextPose.pose.position.y=0
-        nextPose.pose.position.z=0
-        
-        # (0,0,0,1) for cob3-6
-        nextPose.pose.orientation.x=0
-        nextPose.pose.orientation.y=0
-        nextPose.pose.orientation.z=0
-        nextPose.pose.orientation.w=1
-        
-        
-        segmentation=1
-        angle_step=2*math.pi/segmentation
-        angle=0
-        a=0.01
-        
-        
-        no_valid_solution=[]
-        y_dimension=True
-        R=rospy.Rate(0.5)
-        nsamples=0
-        counter=-1
-        rounds=0
-        steps=0
-        last_valid_round=1
-        reconfiguration=False
-        while not rospy.is_shutdown():
-            counter+=1
-            
-            radius=0.02*angle
-            if steps==0:
-                rounds+=1
-                segmentation*=2
-                if segmentation>10:
-                    segmentation=10
-                steps=segmentation
-                angle_step=2*math.pi/segmentation
-            
-            
-            x=math.cos(angle)*radius
-            y=0.75*math.sin(angle)*radius
-            print '========================'
-            print steps
-            print 'round: ',rounds
-            print 'lastvalidround: ',last_valid_round
-           
-            #print 'x: ',x
-            #print 'y: ',y
-            
-            nextPose.pose.position.y=x
-            nextPose.pose.position.z=y
-            
-            nextPose.pose.orientation.x=quaternion[counter%len(quaternion)][0]
-            nextPose.pose.orientation.y=quaternion[counter%len(quaternion)][1]
-            nextPose.pose.orientation.z=quaternion[counter%len(quaternion)][2]
-            nextPose.pose.orientation.w=quaternion[counter%len(quaternion)][3]
-           
-            chessboard_pose.publish(nextPose)
-            rospy.sleep(0.5)
-            
-            #for camera in cameras:            
-                #(t,r)=get_cb_pose(listener,frames[camera])
-                #translations[camera]=t
-                
-            #if viewfieldCheck.cb_in_modeled_viewfields(translations):
 
-            (t,r)=get_cb_pose(listener,'/arm_0_link')
-            jp=calculate_ik((t,r),arm_ik)
-            #print jp
-            if jp[0] is not None:
-                
-                
-                # safe reconfiguration of the arm
-                try:
-                    reconfiguration=(abs(jp[0][0]-old_jp[0])>math.pi/2) or (abs(jp[0][2]-old_jp[2])>math.pi) or (abs(jp[0][4]-old_jp[4])>math.pi)
-                except:
-                    pass
-                
-                if jp[1] or reconfiguration: # jp[1] means solution was found with seed "home"
-                    # set all tilt joints to 0
-                    p=[]
-                    for i in range(len(jp[0])):
-                        if i%2!=0:
-                            p.append(0)
-                        else:
-                            p.append(old_jp[i])
-                    print p
-                    sss.move("arm",[p])
-                    # apply all new pan joint values
-                    p=[]
-                    for i in range(len(jp[0])):
-                        if i%2!=0:
-                            p.append(0)
-                        else:
-                            p.append(jp[0][i])
-                    print p
-                    sss.move("arm",[p])
-                    rospy.sleep(5)
-                    
-                    
-                # move arm to position
-                sss.move("arm",[jp[0]])
-                rospy.sleep(3)
-                capture()
-                
-                
-                last_valid_round=rounds
-                nsamples+=1
-                old_jp=jp[0]
-                    
-
-
-            if rounds-2==last_valid_round:
-                break
-            angle+=angle_step
-            
-            
-            steps-=1
-            R.sleep()
-    print "Finished after %s samples"%nsamples
-    '''
-    
-   
-                
-    
-    
-    
-   
-    
-    #print "==> capturing TORSO samples"
-    #sss.move("arm", "calibration")
-    #capture_loop_torso(torso_positions, sss, capture)
+  
 
 if __name__ == '__main__':
     main()
