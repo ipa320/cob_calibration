@@ -222,6 +222,13 @@ class CameraChainSensor:
         while self.camera_info_received==False:
             rospy.sleep(0.25)
         points_out=[]
+        
+        fx1=self._M_cam.cam_info.K[0]*1.0
+        fy1=self._M_cam.cam_info.K[2]*1.0
+        cx1=self._M_cam.cam_info.K[4]*1.0
+        cy1=self._M_cam.cam_info.K[5]*1.0
+
+
         fx=self.camera_info.K[0]*1.0
         cx=self.camera_info.K[2]*1.0
         fy=self.camera_info.K[4]*1.0
@@ -242,7 +249,7 @@ class CameraChainSensor:
             points_out.append([u_out,v_out])
         print points_out
         
-        assert 1==2
+
         return numpy.matrix(points_out)
         
             
