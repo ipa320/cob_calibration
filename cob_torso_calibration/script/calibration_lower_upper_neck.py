@@ -196,7 +196,7 @@ class TorsoCalibration():
 		image_processed=cv2.undistort(image_raw,self.cm,self.dc)
 		
 		#points=self.detector.detect_image_points(image_processed,True)
-		(image_points,rmat,tvec)= self.detector.calculate_object_pose_ransac(image_raw,self.cm,self.dc,True)
+		(rmat,tvec,image_points)= self.detector.calculate_object_pose_ransac(image_raw,self.cm,self.dc,True)
 		#print tvec[1]
 		
 

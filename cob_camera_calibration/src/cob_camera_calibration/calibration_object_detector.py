@@ -76,7 +76,7 @@ class CalibrationObjectDetector:
     def detect_image_points(self, image, is_grayscale):
         raise NotImplementedError()
     
-    def calculate_object_pose(self, image_raw, camera_matrix, dist_coeffs, is_grayscale):
+    def calculate_object_pose(self, image_raw, camera_matrix, dist_coeffs, is_grayscale,output_image_points=False):
         '''
         Calculate 3D pose of calibration object in image given the camera's
         camera matrix and distortion coefficients. 
@@ -107,7 +107,11 @@ class CalibrationObjectDetector:
         
         # convert rvec to rotation matrix
         rmat = cv2.Rodrigues(rvec)[0]
-        return (image_points[1],rmat, tvec)
+        if output_image_points:
+            
+            return (rmat, tvec,image_points[1])
+        else:
+            return (rmat, tvec)
     def calculate_object_pose_ransac(self, image_raw, camera_matrix, dist_coeffs, is_grayscale):
         '''
         Calculate 3D pose of calibration object in image given the camera's
