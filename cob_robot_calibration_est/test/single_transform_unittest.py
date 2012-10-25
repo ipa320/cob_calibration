@@ -152,6 +152,24 @@ class TestSingleTransform(unittest.TestCase):
             expected_result.shape = 4,4
 
             self.assertAlmostEqual(numpy.linalg.norm(st.transform-expected_result), 0.0, 4, "Failed on %s" % params_filename)
+    def test_inflate_old_vs_new_1(self):
+        p=[0,0,0,0,0,0]
+        st=SingleTransform(p)
+        self.assertAlmostEqual(numpy.linalg.norm(st.transform-st.inflate_old(p)), 0.0,4)
+        
+    def test_inflate_old_vs_new_2(self):
+        p=[19,0,0,0,numpy.pi/2,0]
+        st=SingleTransform(p)
+        self.assertAlmostEqual(numpy.linalg.norm(st.transform-st.inflate_old(p)), 0.0,4)
+    def test_inflate_old_vs_new_3(self):
+        p=[0,12,0,0,0,numpy.pi/3]
+        st=SingleTransform(p)
+        self.assertAlmostEqual(numpy.linalg.norm(st.transform-st.inflate_old(p)), 0.0,4)
+    def test_inflate_old_vs_new_4(self):
+        p=[0,0,1,numpy.pi/5,0,0]
+        st=SingleTransform(p)
+        self.assertAlmostEqual(numpy.linalg.norm(st.transform-st.inflate_old(p)), 0.0,4)
+        
 
 if __name__ == '__main__':
     import rostest
