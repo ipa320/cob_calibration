@@ -126,10 +126,11 @@ class CameraChainSensor:
         elif self.sensor_id == "kinect_rgb":
             self.camera_info_name="/cam3d/rgb/camera_info"
         
-        assert self.sensor_id in ['left','right','kinect_rgb']
-        self.camera_info_received=False
-        rospy.Subscriber(self.camera_info_name,CameraInfo,self._cameraInfo_callback)
-        self.camera_info=CameraInfo()
+        info_used= self.sensor_id in ['left','right','kinect_rgb']
+	if info_used:
+            self.camera_info_received=False
+            rospy.Subscriber(self.camera_info_name,CameraInfo,self._cameraInfo_callback)
+            self.camera_info=CameraInfo()
 
         self.terms_per_sample = 2
     def _cameraInfo_callback(self,data):
@@ -206,7 +207,7 @@ class CameraChainSensor:
         Get the target's pixel coordinates as measured by the actual sensor
         """
         camera_pix = [[pt.x, pt.y] for pt in self._M_cam.image_points]
-        return self.undistort_measurement(camera_pix)
+        return numpy.matrix(camera_pix)
     
     def undistort_measurement(self,points):
         """

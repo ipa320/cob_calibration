@@ -90,7 +90,7 @@ class FullChainRobotParams:
         self.calc_block.update_config(before_chain_Ts, chain, dh_link_num, after_chain_Ts, first_link,last_link,dh_chain,chain_id=self._config_dict["chain_id"])
 
 class FullChainCalcBlock:
-    def update_config(self, before_chain_Ts, chain, dh_link_num, after_chain_Ts,first_link,last_link,dh_chain,chain_id):
+    def update_config(self, before_chain_Ts, chain, dh_link_num, after_chain_Ts,first_link=None,last_link=None,dh_chain=None,chain_id=None):
 	if dh_link_num is None and dh_chain is None:
 	    rospy.logerror("forward kinematic can not be calculated. Either DH Parameter in system.yaml or get_fk service missing")
 	    return 
@@ -98,12 +98,13 @@ class FullChainCalcBlock:
         self._chain = chain
         self._after_chain_Ts = after_chain_Ts        
         self._chain_id=chain_id
+        self._dh_link_names=dh_chain
 	
         if dh_link_num is None:
 	    self._group=self._chain_id.split('_')[0]
 	    fk_s_name=rospy.get_param('fk_service','/cob_%s_kinematics/get_fk')
             self._fks = rospy.ServiceProxy((fk_s_name%self._group), GetPositionFK)
-	    self._dh_link_names=dh_chain
+	
 	    self._last_link=last_link
             self._first_link=first_link
 	else:
@@ -145,10 +146,10 @@ class FullChainCalcBlock:
                 pos = matrix([pose_fk.position.x, pose_fk.position.y, pose_fk.position.z]).T 
                 mat = matrix(tf.transformations.quaternion_matrix(quat)) 
                 mat[0:3, 3] = pos 
-                #print mat
-
+                
+                
                # print 'Error Code: ', res.error_code.val
-
+                
                 if  res.error_code.val!=1:
                     return
                 pose = pose * mat
@@ -159,7 +160,10 @@ class FullChainCalcBlock:
                 pose = pose * dh_T
 
         # Apply the 'after chain' transforms
+
         for after_chain_T in self._after_chain_Ts:
             pose = pose * after_chain_T.transform
+
+
 
         return pose
