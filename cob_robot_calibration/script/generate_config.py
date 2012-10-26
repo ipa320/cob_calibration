@@ -57,7 +57,7 @@ PKG  = 'cob_robot_calibration'
 import roslib; roslib.load_manifest(PKG)
 import rospy
 
-
+from simple_script_server import simple_script_server
 import yaml
 import tf
 
@@ -129,7 +129,7 @@ def get_single_transform(parent_link,child_link,listener):
         transform=list(translation)+list(rotation)
     except tf.LookupException:
         transform=[0]*6
-    return transform
+    return map(round,transform,[4]*len(transform))
     
 
 
@@ -155,6 +155,8 @@ def __main__():
     rospy.init_node('cob_robot_calibration_generate_cal')
     listener=tf.TransformListener()
     rospy.sleep(1)
+    sss=simple_script_server()
+    sss.move("head","back")
     minimal_system=rospy.get_param('minimal_system',None)
     sensors=rospy.get_param('sensors',None)
     output_system=rospy.get_param('output_system',None)
