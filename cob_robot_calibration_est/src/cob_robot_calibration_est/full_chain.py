@@ -116,6 +116,9 @@ class FullChainCalcBlock:
         # Apply the 'before chain' transforms
         for before_chain_T in self._before_chain_Ts:
             pose = pose * before_chain_T.transform
+	print self._first_link
+	print "to first link: "
+	for p in pose: print p
 
         # Apply the DH Chain
 	
@@ -143,9 +146,10 @@ class FullChainCalcBlock:
                 '''
                 pose_fk=res.pose_stamped[0].pose
                 quat = [pose_fk.orientation.x, pose_fk.orientation.y, pose_fk.orientation.z, pose_fk.orientation.w] 
-                pos = matrix([pose_fk.position.x, pose_fk.position.y, pose_fk.position.z]).T 
-                mat = matrix(tf.transformations.quaternion_matrix(quat)) 
-                mat[0:3, 3] = pos 
+                pos = [pose_fk.position.x, pose_fk.position.y, pose_fk.position.z]
+                euler = tf.transformations.euler_from_quaternion(quat) 
+		mat=tf.transformations.compose_matrix(translate=pos,angles=euler)
+                
                 
                 
                # print 'Error Code: ', res.error_code.val
@@ -158,11 +162,19 @@ class FullChainCalcBlock:
             else:
                 dh_T = self._chain.fk(chain_state, self._dh_link_num)
                 pose = pose * dh_T
+	
+	print "chain_state: ",chain_state.position
+	print "arm_transformation:"
+	for p in mat:print p
+	print "overall_transformation:"
+	for p in pose:print p
+	print '='*20
 
         # Apply the 'after chain' transforms
 
         for after_chain_T in self._after_chain_Ts:
             pose = pose * after_chain_T.transform
+	
 
 
 
