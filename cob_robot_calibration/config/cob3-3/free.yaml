@@ -33,4 +33,5 @@ transforms:
   head_axis_link: [0, 0, 0, 0, 0, 0]
   head_cam3d_link: [0, 0, 0, 0, 0, 0]
   head_color_camera_l_link: [0, 0, 0, 0, 0, 0]
+  sdh_palm_link: [0, 0, 0, 0, 0, 0]
   torso_0_link: [0, 0, 0, 0, 0, 0]

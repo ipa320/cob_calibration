@@ -20,7 +20,7 @@ chains:
   - sensor_id:    arm_chain
     before_chain: [ base_footprint, arm_0_link ]
     chain_id:     arm_chain
-    after_chain:  [arm_cb ]
+    after_chain:  [sdh_palm_link, arm_cb ]
     last_link: arm_7_link
     dh_chain: [arm_1_joint, arm_2_joint,arm_3_joint,arm_4_joint,arm_5_joint,arm_6_joint,arm_7_joint]
 
