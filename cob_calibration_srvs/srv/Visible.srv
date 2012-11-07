@@ -1,3 +1,2 @@
-int64 nCam
 ---
-bool visible
+int8 visible
