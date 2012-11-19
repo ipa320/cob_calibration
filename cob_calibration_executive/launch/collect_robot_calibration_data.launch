@@ -8,4 +8,6 @@
 <include file="$(find cob_robot_calibration)/launch/collect_data.launch"/>
 <include file="$(find cob_camera_calibration)/launch/visibility_check.launch"/>
 	<include file="$(find cob_image_capture)/launch/capture_all.launch"/>
+	<include file="$(find
+		cob_arm_navigation)/launch/start_planning_environment.launch"/>
 </launch>
