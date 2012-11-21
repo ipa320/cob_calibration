@@ -95,6 +95,7 @@ class VisibilityCheckerNode():
 
         # Init images
         self.image = []
+	self.image_received=[False]*self.numCams
         for id in range(self.numCams):
             self.image.append(Image())
 
@@ -119,6 +120,7 @@ class VisibilityCheckerNode():
         '''
         #print "cb executed"
         self.image[id] = data
+	self.image_received[id]=True
     
                 
     def _checkHandle(self, req):
@@ -131,14 +133,19 @@ class VisibilityCheckerNode():
         
         @return: CaptureResponse() message
         '''
+	self.image_received=[False]*self.numCams
         visible=[]
-        
+        while not all(self.image_received):
+            print "waiting for images"
+            rospy.sleep(1)
+	if all(self.image_received): print "=== ALL IMAGES RECEIVED ==="
+	self.images_received=[False]*self.numCams   
         for id in range(self.numCams):
             image=self.image[id]
             
-            cvImage=self.bridge.imgmsg_to_cv(image,'mono8')
+            cvImage=self.bridge.imgmsg_to_cv(image,'rgb8')
             img_raw=cv2util.cvmat2np(cvImage)
-            visible.append(self.detector.detect_image_points(img_raw,True,True)!=None)
+            visible.append(self.detector.detect_image_points(img_raw,False,True)!=None)
             # grab image messages 
         #print '%s checkerboards found --> return %s'%(sum(visible),all(visible))
         if all(visible):
