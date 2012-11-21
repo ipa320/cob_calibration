@@ -262,14 +262,14 @@ def main():
 
     # define cuboid for positions
     # limits from base_link frame
-    limits={'x':(-0.5,-1.5),
-            'y':(-1,1),
-            'z':(0.5,1.5)}
+    limits={'x':(-0.5,-1.2),
+            'y':(-0.3,0.3),
+            'z':(0.4,1.0)}
 
     
-    sample_density={'x':5,
-                    'y':9,
-                    'z':5}
+    sample_density={'x':4,
+                    'y':4,
+                    'z':4}
                     
                     
                     
