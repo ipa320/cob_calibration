@@ -81,14 +81,17 @@ def capture_loop(positions, sss, visible, capture_kinematics, capture_image):
         print "--> moving arm to sample #%s" % index
         pos = positions[index]
         print pos
-        sss.move_planned("arm", [pos['joint_position']])
-
+        nh=sss.move_planned("arm", [pos['joint_position']])
+        while nh.get_state()==0: rospy.sleep(0.2)
+        if nh.get_state() != 3 : 
+            rospy.sleep(1)
+            if nh.get_state() != 3: continue
         #TODO: get limits from robot_description
         left = np.matrix([0, -0.125, 0])
 
         right = left * -1
 
-        front = np.matrix([-0.075, 0, -0.1])
+        front = np.matrix([-0.07, 0, -0.09])
         back = front * -1
 
         for lr in pos['y_sector']:
