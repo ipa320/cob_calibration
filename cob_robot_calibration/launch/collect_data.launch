@@ -3,6 +3,8 @@
   
   	<!-- node that collects and publishes to robot_measurement -->
   	<node type="collect_data.py" pkg="cob_robot_calibration" name="$(anon collect_data)" output="screen" />
+	<param name="sensors_yaml" value="$(find
+		cob_robot_calibration)/config/$(env ROBOT)/sensors.yaml" />
   
 	<!-- record bagfile -->
  	<node type="record" pkg="rosbag" name="record" output="screen"

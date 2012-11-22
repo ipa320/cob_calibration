@@ -1,3 +1,4 @@
 Header header
 string chain_id
-sensor_msgs/JointState chain_state
+float32[] trans
+float32[] rot
