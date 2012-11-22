@@ -225,7 +225,6 @@ class CameraChainSensor:
         calc x'',y''
         calc u',v'
         """
-        print points
         self.camera_info_received = False
         while self.camera_info_received is False:
             rospy.sleep(0.25)
@@ -236,7 +235,6 @@ class CameraChainSensor:
         fy = self.camera_info.K[4] * 1.0
         cy = self.camera_info.K[5] * 1.0
         k1, k2, p1, p2, k3 = self.camera_info.D
-        print fx, cx, fy, cy, k1, k2, p1, p2, k3
         for point in points:
             u, v = point
 
@@ -250,7 +248,6 @@ class CameraChainSensor:
             u_out = fx * x2 + cx
             v_out = fy * y2 + cy
             points_out.append([u_out, v_out])
-        print points_out
 
         return numpy.matrix(points_out)
 
