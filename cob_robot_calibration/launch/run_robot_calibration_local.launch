@@ -2,55 +2,52 @@
 <launch>
 
     <node pkg="cob_robot_calibration_est" type="multi_step_cov_estimator.py" name="cal_cov_estimator_v0" output="screen" launch-prefix="time"
-        args="/home/fmw-ja/cob_calibration_data/cal/cal_measurements.bag /home/fmw-ja/cob_calibration_data/cal" respawn="False">
+	    args="/home/fmw-ja/Dropbox/Studium/7_WS1213/Bagfiles/20121120_cob3-6/cal/cal_measurements.bag /home/fmw-ja/Dropbox/Studium/7_WS1213/Bagfiles/20121120_cob3-6/cal" respawn="False">
 	<param name="fk_service" type="string" value="/cob_%s_kinematics/get_fk"/>
     </node>
 
     <group ns="calibration_config" clear_params="true">
         <!-- sensors -->
         <group ns="sensors">
-            <param name="all" textfile="$(find cob_robot_calibration)/config/cob3-3/sensors.yaml" />
+            <param name="all" textfile="$(find cob_robot_calibration)/config/$(env ROBOT)/sensors.yaml" />
         </group>
 	
 
         <!-- initial system for first calibration step -->
-        <param name="initial_system" textfile="$(find cob_robot_calibration)/config/cob3-3/system.yaml" />
+        <param name="initial_system" textfile="$(find cob_robot_calibration)/config/$(env ROBOT)/system.yaml" />
 
         <!-- calibration steps -->
         <group ns="cal_steps">
 	        <group ns="step0">
-                <param name="free_params" textfile="$(find cob_robot_calibration)/config/cob3-3/free_0.yaml" />
+                <param name="free_params" textfile="$(find cob_robot_calibration)/config/$(env ROBOT)/free_0.yaml" />
                 <param name="use_cov" type="bool" value="True" />
                 <rosparam>
                   sensors:
                   - arm_chain
                   - kinect_rgb
                   - left
-                  - right
                 </rosparam>
                 <param name="output_filename" type="string" value="result_step_1" />
             </group>
 	        <group ns="step1">
-                <param name="free_params" textfile="$(find cob_robot_calibration)/config/cob3-3/free_1.yaml" />
+                <param name="free_params" textfile="$(find cob_robot_calibration)/config/$(env ROBOT)/free_1.yaml" />
                 <param name="use_cov" type="bool" value="True" />
                 <rosparam>
                   sensors:
                   - arm_chain
                   - kinect_rgb
                   - left
-                  - right
                 </rosparam>
                 <param name="output_filename" type="string" value="result_step_2" />
             </group>
  	        <group ns="step2">
-                <param name="free_params" textfile="$(find cob_robot_calibration)/config/cob3-3/free_2.yaml" />
+                <param name="free_params" textfile="$(find cob_robot_calibration)/config/$(env ROBOT)/free_2.yaml" />
                 <param name="use_cov" type="bool" value="True" />
                 <rosparam>
                   sensors:
                   - arm_chain
                   - kinect_rgb
                   - left
-                  - right
                 </rosparam>
                 <param name="output_filename" type="string" value="result_step_3" />
             </group>
