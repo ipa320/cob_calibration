@@ -66,8 +66,6 @@ from cob_calibration_srvs.srv import *
 import numpy as np
 import yaml
 
-#TODO: implement visible service
-
 
 def capture_loop(positions, sss, visible, capture_kinematics, capture_image):
     '''
@@ -80,14 +78,21 @@ def capture_loop(positions, sss, visible, capture_kinematics, capture_image):
     for index in range(len(positions)):
         print "--> moving arm to sample #%s" % index
         pos = positions[index]
+        joint_pos = [[((a * 0.9 + (np.pi)) % (2 * np.pi)) - (np.pi)
+                      for a in positions[index]['joint_position']]]
         print pos
-        nh=sss.move_planned("arm", [pos['joint_position']])
-        while nh.get_state()==0: rospy.sleep(0.2)
-        if nh.get_state() != 3 : 
+        print type(joint_pos[0][0])
+        nh = sss.move_planned("arm", joint_pos)
+        while nh.get_state() == 0:
+            rospy.sleep(0.2)
+        if nh.get_state() != 3:
+            sss.move("torso", "home")
+            nh = sss.move_planned("arm", joint_pos)
             rospy.sleep(1)
-            if nh.get_state() != 3: continue
+            if nh.get_state() != 3:
+                continue
         #TODO: get limits from robot_description
-        left = np.matrix([0, -0.125, 0])
+        left = np.matrix([0, -0.09, 0])
 
         right = left * -1
 
