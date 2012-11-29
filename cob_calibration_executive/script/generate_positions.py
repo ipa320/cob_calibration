@@ -59,24 +59,14 @@ import roslib
 roslib.load_manifest(PKG)
 import rospy
 
-from simple_script_server import simple_script_server
-from cob_calibration_srvs.srv import Capture
-from cob_camera_calibration import ViewfieldChecker, Checkerboard, CheckerboardDetector, cv2util
 
-from sensor_msgs.msg import Image
 from kinematics_msgs.srv import GetPositionIK, GetPositionIKRequest
-from sensor_msgs.msg import JointState
 from geometry_msgs.msg import PoseStamped
-from math import pi, sqrt
 from pr2_controllers_msgs.msg import JointTrajectoryControllerState
 import tf
-import math
 import numpy as np
 import yaml
 import os
-
-
-from cv_bridge import CvBridge, CvBridgeError
 
 
 #board       = Checkerboard(self.pattern_size, self.square_size)
@@ -148,17 +138,6 @@ def getIk(arm_ik, (t, q), link, seed=None):
         return None
 
 
-def __image_raw_callback__(data):
-    image_raw = data
-
-
-def calibration_object_visible():
-    cvImage = self.bridge.imgmsg_to_cv(latest_image, "mono8")
-    image_raw = cv2util.cvmat2np(cvImage)
-
-    return checkerboard_detector.detect_image_points(image_raw, is_greyscale=True, quick_check=True) is not None
-
-
 def calculate_ik(pose, arm_ik, seed=None):
     via_home = False
     for seed in [seed, None, [0, 0, 0, 0, 0, 0, 0]]:
@@ -178,33 +157,32 @@ def get_cb_pose(listener, base_frame):
     return listener.lookupTransform(base_frame, '/chessboard_position_link', rospy.Time(0))
 
 
-def is_positive(a):
-    return True if a >= 0 else False
-
-
 def main():
     rospy.init_node(NODE)
     print "==> %s started " % NODE
-   # path={}
-    #cameras=['kinect_rgb','left','right']
-    #frames={'kinect_rgb':'/head_cam3d_frame','left':'/head_color_camera_l_frame','right':'/head_color_camera_r_frame'}
-    #for camera in cameras:
-    #    path[camera] = rospy.get_param('~camera_%s'%camera,  '$(find cob_calibration_data)/$(env ROBOT)/calibration/cameras/%s.yaml'%camera)
 
+    joint_configuration = ['p', 't', 'p']
+    joint_limits = [0.1, 0.1, 0.1]
+    joint_info = zip(joint_configuration, joint_limits)
+    n_pan = sum([tmp == 'p' for tmp in joint_configuration])
+    n_tilt = sum([tmp == 't' for tmp in joint_configuration])
+    torso_state = [0] * len(joint_configuration)
+
+    camera_viewfield = np.pi / 6
+
+    max_pan = camera_viewfield
+    max_tilt = camera_viewfield
+    for info in joint_info:
+        if info[0] == 'p':
+            max_pan += info[1]
+        elif info[0] == 't':
+            max_tilt += info[1]
+
+    print 'max_pan, max_tilt = ', max_pan, max_tilt
     chessboard_pose = rospy.Publisher(
         '/cob_calibration/chessboard_pose', PoseStamped)
     print 'chessboard_pose publisher activated'
-    #rospy.Subscriber('/cam3d/rgb/image_raw',Image,__image_raw_callback__)
-
-    #translations={}
-    # service client
-    #image_capture_service_name = "/collect_data/capture"
-    #capture = rospy.ServiceProxy(image_capture_service_name, Capture)
-    #rospy.wait_for_service(image_capture_service_name, 1)
-
-    #print "--> service client for capture images initialized"
     listener = tf.TransformListener()
-    #viewfieldCheck=ViewfieldChecker(cameras,path)
     rospy.sleep(1.5)
     arm_ik = rospy.ServiceProxy('/cob_ik_wrapper/arm/get_ik', GetPositionIK)
     '''
@@ -287,35 +265,11 @@ def main():
         while sample_positions[key][-1] + step <= (limits[key][1] + 0.01):
             sample_positions[key].append(sample_positions[key][-1] + step)
 
-    #print sample_positions
-    #return
     joint_states = []
 
     for x in sample_positions['x']:
-
         for y in sample_positions['y']:
-            ll = 1.0 * limits['y'][0]
-            diff = limits['y'][1] - ll
-            y_sector = 4
-
-            if y < (ll + diff / 4):
-                y_sector = 1
-            elif y < (ll + diff / 2):
-                y_sector = 2
-            elif y < (ll + diff * 3 / 4):
-                y_sector = 3
-
             for z in sample_positions['z']:
-                ll = 1.0 * limits['z'][0]
-                diff = limits['z'][1] - ll
-                z_sector = 4
-                if z < (ll + diff / 4):
-                    z_sector = 1
-                elif z < (ll + diff / 2):
-                    z_sector = 2
-                elif z < (ll + diff * 3 / 4):
-                    z_sector = 3
-
                 for q in quaternion:
                     nextPose.header.frame_id = '/base_link'
                     nextPose.pose.position.x = x
@@ -330,6 +284,11 @@ def main():
 
                     chessboard_pose.publish(nextPose)
                     rospy.sleep(0.01)
+                    (t, r) = get_cb_pose(listener, '/head_cam3d_link')
+                    angles = get_angles(t)
+                    if np.abs(angles[0]) > max_pan or np.abs(angles[1]) > max_tilt:
+                        continue
+
                     (t, r) = get_cb_pose(listener, '/arm_0_link')
                     try:
                         js = calculate_ik((
@@ -338,23 +297,22 @@ def main():
                         js = calculate_ik((t, r), arm_ik)
                     if js[0] is not None:
                         print 'IK solution found'
-                        torso_sector_y = []
-                        if y_sector in [3, 4]:
-                            torso_sector_y.append('right')
-                        if y_sector in [2, 3]:
-                            torso_sector_y.append('center')
-                        if y_sector in [1, 2]:
-                            torso_sector_y.append('left')
+                    else:
+                        continue
 
-                        torso_sector_z = []
-                        if z_sector in [3, 4]:
-                            torso_sector_z.append('top')
-                        if z_sector in [2, 3]:
-                            torso_sector_z.append('center')
-                        if z_sector in [1, 2]:
-                            torso_sector_z.append('low')
+                    for i in range(len(torso_state)):
+                        if joint_configuration[i] is 'p':
+                            torso_state[
+                                i] = -float(min(angles[0] / n_pan, sgn(angles[0]) * joint_limits[i], key=np.abs))
+                        elif joint_configuration[i] is 't':
+                            torso_state[
+                                i] = -float(min(angles[1] / n_tilt, sgn(angles[1]) * joint_limits[i], key=np.abs))
+                    for torso_js in [torso_state, [0] * len(torso_state)]:
+                        print type(torso_js)
+                        joint_states.append({'joint_position': js[
+                                            0], 'torso_position': list(torso_js)})
+                        print joint_states[-1]
 
-                        joint_states.append({'joint_position': js[0], 'y_sector': torso_sector_y, 'z_sector': torso_sector_z})
     path = rospy.get_param('output_path', None)
     directory = os.path.dirname(path)
 
@@ -367,6 +325,21 @@ def main():
         print yaml.dump(joint_states)
     print '%s ik solutions found' % len(joint_states)
 
+
+def sgn(x):
+    return x / np.abs(x)
+
+
+def get_angles(t):
+    '''
+    computes pan and tilt angles for camera like translations
+    z-axis: optical axis
+    y-axis: vertical
+    x-axis: horizontal
+    '''
+    pan = np.arctan2(t[0], t[2])
+    tilt = np.arctan2(t[1], t[2])
+    return pan, tilt
 
 if __name__ == '__main__':
     main()

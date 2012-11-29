@@ -78,7 +78,7 @@ def capture_loop(positions, sss, visible, capture_kinematics, capture_image):
     for index in range(len(positions)):
         print "--> moving arm to sample #%s" % index
         pos = positions[index]
-        joint_pos = [[((a * 0.9 + (np.pi)) % (2 * np.pi)) - (np.pi)
+        joint_pos = [[((a + (np.pi)) % (2 * np.pi)) - (np.pi)
                       for a in positions[index]['joint_position']]]
         print pos
         print type(joint_pos[0][0])
@@ -91,58 +91,27 @@ def capture_loop(positions, sss, visible, capture_kinematics, capture_image):
             rospy.sleep(1)
             if nh.get_state() != 3:
                 continue
-        #TODO: get limits from robot_description
-        left = np.matrix([0, -0.09, 0])
 
-        right = left * -1
+        sss.move("torso", [positions[index]['torso_position']])
 
-        front = np.matrix([-0.07, 0, -0.09])
-        back = front * -1
+        sss.sleep(2)
 
-        for lr in pos['y_sector']:
+        visible_response = visible().visible
+        if visible_response == 3:
+            print "3 Checkerboards found"
+            capture_kinematics()
+            capture_image()
+            print "--> captured 1 sample for camera calibration"
+            print "--> captured 1 sample for kinematics calibration"
+            counter_camera += 1
+            counter_kinematics += 1
+        elif visible_response == 2:
+            print "2 Checkerboards found"
+            capture_kinematics()
+            print "--> captured 1 sample for kinematics calibration"
+            counter_kinematics += 1
 
-            torso_joint = np.matrix([0, 0, 0])
-            if lr == 'right':
-                torso_joint = torso_joint + right
-
-            elif lr == 'left':
-                torso_joint = torso_joint + left
-
-            for fb in pos['z_sector']:
-
-                if fb == 'top':
-                    torso_joint_final = torso_joint + front
-                elif fb == 'low':
-                    torso_joint_final = torso_joint + back
-                elif fb == 'center':
-                    torso_joint_final = torso_joint
-
-                print '*' * 20
-                print lr
-                print fb
-                print torso_joint_final
-
-                sss.move("torso", torso_joint_final.tolist())
-
-                sss.sleep(2)
-                #print visible().visible
-
-                visible_response = visible().visible
-                if visible_response == 3:
-                    print "3 Checkerboards found"
-                    capture_kinematics()
-                    capture_image()
-                    print "--> captured 1 sample for camera calibration"
-                    print "--> captured 1 sample for kinematics calibration"
-                    counter_camera += 1
-                    counter_kinematics += 1
-                elif visible_response == 2:
-                    print "2 Checkerboards found"
-                    capture_kinematics()
-                    print "--> captured 1 sample for kinematics calibration"
-                    counter_kinematics += 1
-
-                #capture()
+            #capture()
 
 
 def main():
