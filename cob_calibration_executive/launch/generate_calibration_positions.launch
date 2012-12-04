@@ -4,7 +4,6 @@
     <!-- run stereo calibration of left and right camera -->
     <node type="generate_positions.py" pkg="cob_calibration_executive" name="$(anon generate_calibration_positions)" output="screen">
     <param name="output_path" value="$(find cob_calibration_executive)/config/$(env ROBOT)/calibration_positions.yaml"/>
-	<rosparam file="$(find cob_robot_calibration)/config/$(env ROBOT)/torso.yaml" />
 	<param name="camera_view_angle" value="0.523598776"/>
         
 </node>
