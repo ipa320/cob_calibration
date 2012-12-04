@@ -68,6 +68,8 @@ import numpy as np
 import yaml
 import os
 
+from urdf_parser_py.urdf import URDF
+
 
 #board       = Checkerboard(self.pattern_size, self.square_size)
 #checkerboard_detector=CheckerboardDetector()
@@ -157,13 +159,40 @@ def get_cb_pose(listener, base_frame):
     return listener.lookupTransform(base_frame, '/chessboard_position_link', rospy.Time(0))
 
 
+def get_torso_limits(joint_names):
+    robot = URDF.load_from_parameter_server()
+    limits = []
+    for jn in joint_names:
+        limits.append(
+            min(robot.joints[jn].limits.lower, robot.joints[jn].limits.upper))
+
+    return limits
+
+
+def get_torso_configuration(joint_names):
+    configuration = []
+    for jn in joint_names:
+        assert any(['pan' in jn, 'tilt' in jn])
+        if 'pan' in jn:
+            configuration.append('p')
+        elif 'tilt' in jn:
+            configuration.append('t')
+        else:
+            print 'ERROR joint configuration received unknown names'
+
+    return configuration
+
+
 def main():
     rospy.init_node(NODE)
     print "==> %s started " % NODE
 
-    joint_configuration = rospy.get_param("~joint_configuration")
-    joint_limits = rospy.get_param("~joint_limits")
-    print joint_configuration
+    joint_names = rospy.get_param("/torso_controller/joints")
+    joint_configuration = get_torso_configuration(joint_names)
+    #joint_configuration = rospy.get_param("~joint_configuration")
+    #joint_limits = rospy.get_param("~joint_limits")
+    joint_limits = get_torso_limits(joint_names)
+
     joint_info = zip(joint_configuration, joint_limits)
     n_pan = sum([tmp == 'p' for tmp in joint_configuration])
     n_tilt = sum([tmp == 't' for tmp in joint_configuration])
