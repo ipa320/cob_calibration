@@ -161,14 +161,15 @@ def main():
     rospy.init_node(NODE)
     print "==> %s started " % NODE
 
-    joint_configuration = ['p', 't', 'p']
-    joint_limits = [0.1, 0.1, 0.1]
+    joint_configuration = rospy.get_param("~joint_configuration")
+    joint_limits = rospy.get_param("~joint_limits")
+    print joint_configuration
     joint_info = zip(joint_configuration, joint_limits)
     n_pan = sum([tmp == 'p' for tmp in joint_configuration])
     n_tilt = sum([tmp == 't' for tmp in joint_configuration])
     torso_state = [0] * len(joint_configuration)
 
-    camera_viewfield = np.pi / 6
+    camera_viewfield = rospy.get_param("~camera_view_angle")
 
     max_pan = camera_viewfield
     max_tilt = camera_viewfield
@@ -178,6 +179,7 @@ def main():
         elif info[0] == 't':
             max_tilt += info[1]
 
+    print n_pan, n_tilt
     print 'max_pan, max_tilt = ', max_pan, max_tilt
     chessboard_pose = rospy.Publisher(
         '/cob_calibration/chessboard_pose', PoseStamped)
@@ -283,11 +285,12 @@ def main():
                     nextPose.pose.orientation.w = q[3]
 
                     chessboard_pose.publish(nextPose)
-                    rospy.sleep(0.01)
+                    rospy.sleep(0.2)
                     (t, r) = get_cb_pose(listener, '/head_cam3d_link')
                     angles = get_angles(t)
                     if np.abs(angles[0]) > max_pan or np.abs(angles[1]) > max_tilt:
                         continue
+                    print t
 
                     (t, r) = get_cb_pose(listener, '/arm_0_link')
                     try:
@@ -300,20 +303,21 @@ def main():
                     else:
                         continue
 
+                    print angles
                     for i in range(len(torso_state)):
-                        if joint_configuration[i] is 'p':
+                        print joint_configuration[i]
+                        if joint_configuration[i] == 'p':
                             torso_state[
                                 i] = -float(min(angles[0] / n_pan, sgn(angles[0]) * joint_limits[i], key=np.abs))
-                        elif joint_configuration[i] is 't':
+                        elif joint_configuration[i] == 't':
                             torso_state[
                                 i] = -float(min(angles[1] / n_tilt, sgn(angles[1]) * joint_limits[i], key=np.abs))
                     for torso_js in [torso_state, [0] * len(torso_state)]:
-                        print type(torso_js)
                         joint_states.append({'joint_position': js[
                                             0], 'torso_position': list(torso_js)})
                         print joint_states[-1]
 
-    path = rospy.get_param('output_path', None)
+    path = rospy.get_param('~output_path', None)
     directory = os.path.dirname(path)
 
     if path is not None:
@@ -337,8 +341,8 @@ def get_angles(t):
     y-axis: vertical
     x-axis: horizontal
     '''
-    pan = np.arctan2(t[0], t[2])
-    tilt = np.arctan2(t[1], t[2])
+    pan = np.arctan2(t[1], t[2])
+    tilt = np.arctan2(t[0], t[2])
     return pan, tilt
 
 if __name__ == '__main__':

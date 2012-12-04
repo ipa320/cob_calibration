@@ -1,0 +1,2 @@
+joint_configuration: [p, t, p]
+joint_limits: [0.1, 0.1, 0.1]
