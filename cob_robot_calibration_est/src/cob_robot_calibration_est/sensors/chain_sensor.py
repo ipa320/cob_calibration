@@ -42,12 +42,13 @@
 #      \
 #       before_chain_Ts -- target_chain -- after_chain_Ts -- checkerboard
 
-import numpy
 from numpy import reshape, array, zeros, diag, matrix, real
-import roslib; roslib.load_manifest('cob_robot_calibration_est')
+import roslib
+roslib.load_manifest('cob_robot_calibration_est')
 import rospy
 from cob_robot_calibration_est.full_chain import FullChainRobotParams
 from sensor_msgs.msg import JointState
+
 
 class ChainBundler:
     def __init__(self, valid_configs):
@@ -60,20 +61,22 @@ class ChainBundler:
         for cur_config in self._valid_configs:
             cur_chain_id = cur_config["chain_id"]
             if cur_chain_id == M_robot.chain_id and \
-               cur_chain_id in [ x.chain_id  for x in M_robot.M_chain ] :
+                    cur_chain_id in [x.chain_id for x in M_robot.M_chain]:
                 rospy.logdebug("  Found block")
                 M_chain = [x for x in M_robot.M_chain if cur_chain_id == x.chain_id][0]
-                cur_sensor = ChainSensor(cur_config, M_chain, M_robot.target_id)
+                cur_sensor = ChainSensor(
+                    cur_config, M_chain, M_robot.target_id)
                 sensors.append(cur_sensor)
             else:
                 rospy.logdebug("  Didn't find block")
         return sensors
 
+
 class ChainSensor:
     def __init__(self, config_dict, M_chain, target_id):
 
         self.sensor_type = "chain"
-        self.sensor_id   = config_dict["chain_id"]
+        self.sensor_id = config_dict["chain_id"]
 
         self._config_dict = config_dict
         self._M_chain = M_chain
@@ -85,15 +88,15 @@ class ChainSensor:
 
     def update_config(self, robot_params):
         self._full_chain.update_config(robot_params)
-        self._checkerboard = robot_params.checkerboards[ self._target_id ]
+        self._checkerboard = robot_params.checkerboards[self._target_id]
 
     def compute_residual(self, target_pts):
         h_mat = self.compute_expected(target_pts)
         z_mat = self.get_measurement()
         assert(h_mat.shape == z_mat.shape)
         assert(h_mat.shape[0] == 4)
-        r_mat = h_mat[0:3,:] - z_mat[0:3,:]
-        r = array(reshape(r_mat.T, [-1,1]))[:,0]
+        r_mat = h_mat[0:3, :] - z_mat[0:3, :]
+        r = array(reshape(r_mat.T, [-1, 1]))[:, 0]
         return r
 
     def compute_residual_scaled(self, target_pts):
@@ -107,16 +110,17 @@ class ChainSensor:
         # ----- Populate Here -----
         cov = self.compute_cov(target_pts)
         gamma = matrix(zeros(cov.shape))
-        num_pts = self.get_residual_length()/3
+        num_pts = self.get_residual_length() / 3
 
         for k in range(num_pts):
             #print "k=%u" % k
-            first = 3*k
-            last = 3*k+3
+            first = 3 * k
+            last = 3 * k + 3
             sub_cov = matrix(cov[first:last, first:last])
             sub_gamma_sqrt_full = matrix(scipy.linalg.sqrtm(sub_cov.I))
             sub_gamma_sqrt = real(sub_gamma_sqrt_full)
-            assert(scipy.linalg.norm(sub_gamma_sqrt_full - sub_gamma_sqrt) < 1e-6)
+            assert(scipy.linalg.norm(
+                sub_gamma_sqrt_full - sub_gamma_sqrt) < 1e-6)
             gamma[first:last, first:last] = sub_gamma_sqrt
         return gamma
 
@@ -129,13 +133,13 @@ class ChainSensor:
         x = JointState()
         x.position = self._M_chain.chain_state.position[:]
 
-        f0 = reshape(array(self._calc_fk_target_pts(x)[0:3,:].T), [-1])
+        f0 = reshape(array(self._calc_fk_target_pts(x)[0:3, :].T), [-1])
         for i in range(num_joints):
             x.position = list(self._M_chain.chain_state.position[:])
             x.position[i] += epsilon
-            fTest = reshape(array(self._calc_fk_target_pts(x)[0:3,:].T), [-1])
-            Jt[i] = (fTest - f0)/epsilon
-        cov_angles = [x*x for x in self._full_chain.calc_block._chain._cov_dict['joint_angles']]
+            fTest = reshape(array(self._calc_fk_target_pts(x)[0:3, :].T), [-1])
+            Jt[i] = (fTest - f0) / epsilon
+        cov_angles = [x * x for x in self._full_chain.calc_block._chain._cov_dict['joint_angles']]
         #import code; code.interact(local=locals())
         cov = matrix(Jt).T * matrix(diag(cov_angles)) * matrix(Jt)
         return cov
@@ -143,21 +147,21 @@ class ChainSensor:
     def get_residual_length(self):
         pts = self._checkerboard.generate_points()
         N = pts.shape[1]
-        return N*3
+        return N * 3
 
     def get_measurement(self):
         '''
         Returns a 4xN matrix with the locations of the checkerboard points in homogenous coords,
         as per the forward kinematics of the chain
         '''
-        return self._calc_fk_target_pts(self._M_chain.chain_state)
+        return self._calc_fk_target_pts(self._M_chain.trans, self._M_chain.rot)
 
-    def _calc_fk_target_pts(self, chain_state):
+    def _calc_fk_target_pts(self, trans, rot):
         # Get the target's model points in the frame of the tip of the target chain
         target_pts_tip = self._checkerboard.generate_points()
 
         # Target pose in root frame
-        target_pose_root = self._full_chain.calc_block.fk(chain_state)
+        target_pose_root = self._full_chain.calc_block.fk(trans, rot)
 
         # Transform points into the root frame
         target_pts_root = target_pose_root * target_pts_tip
@@ -171,7 +175,7 @@ class ChainSensor:
     def build_sparsity_dict(self):
         sparsity = dict()
         sparsity['transforms'] = {}
-        for cur_transform_name in ( self._config_dict['before_chain'] + self._config_dict['after_chain'] ):
+        for cur_transform_name in (self._config_dict['before_chain'] + self._config_dict['after_chain']):
             sparsity['transforms'][cur_transform_name] = [1, 1, 1, 1, 1, 1]
 
         sparsity['dh_chains'] = {}
@@ -179,12 +183,11 @@ class ChainSensor:
         num_links = self._full_chain.calc_block._chain._M
         assert(num_links == len(self._M_chain.chain_state.position))
         sparsity['dh_chains'][chain_id] = {}
-        sparsity['dh_chains'][chain_id]['dh'] = [ [1,1,1,1] ] * num_links
+        sparsity['dh_chains'][chain_id]['dh'] = [[1, 1, 1, 1]] * num_links
         sparsity['dh_chains'][chain_id]['gearing'] = [1] * num_links
 
         sparsity['checkerboards'] = {}
-        sparsity['checkerboards'][self._target_id] = { 'spacing_x': 1,
-                                                       'spacing_y': 1 }
+        sparsity['checkerboards'][self._target_id] = {'spacing_x': 1,
+                                                      'spacing_y': 1}
 
         return sparsity
-
