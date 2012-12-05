@@ -164,7 +164,7 @@ def get_torso_limits(joint_names):
     limits = []
     for jn in joint_names:
         limits.append(
-            min(robot.joints[jn].limits.lower, robot.joints[jn].limits.upper))
+            min(np.abs(robot.joints[jn].limits.lower), robot.joints[jn].limits.upper))
 
     return limits
 
@@ -337,10 +337,10 @@ def main():
                         print joint_configuration[i]
                         if joint_configuration[i] == 'p':
                             torso_state[
-                                i] = -float(min(angles[0] / n_pan, sgn(angles[0]) * joint_limits[i], key=np.abs))
+                                i] = float(min(angles[0] / n_pan, sgn(angles[0]) * joint_limits[i], key=np.abs))
                         elif joint_configuration[i] == 't':
                             torso_state[
-                                i] = -float(min(angles[1] / n_tilt, sgn(angles[1]) * joint_limits[i], key=np.abs))
+                                i] = float(min(angles[1] / n_tilt, sgn(angles[1]) * joint_limits[i], key=np.abs))
                     for torso_js in [torso_state, [0] * len(torso_state)]:
                         joint_states.append({'joint_position': js[
                                             0], 'torso_position': list(torso_js)})
