@@ -225,57 +225,8 @@ class DataCollector():
 #        if self._kinect_rgb_received == False:
 #            print "--> kinect sample received (this only prints once!)"
         self._kinect_rgb_received = True
+       #Callback function for joint angles messages
 
-    '''
-    def _callback_tf(self, msg):
-        self._tf_received = True
-        self._tf = msg
-
-    def _callback_joints(self, msg):
-    '''
-        #Callback function for joint angles messages
-    '''
-        #print "DEBUG: callback joints"
-
-        # torso
-        if self.torso_joint_names[0] in msg.name:
-            pos = []
-            header = msg.header
-            for name in self.torso_joint_names:
-                pos.append(msg.position[msg.name.index(name)])
-
-            # create JointState message
-            joint_msg = JointState()
-            joint_msg.header = msg.header
-            joint_msg.name = self.torso_joint_names
-            joint_msg.position = pos
-
-            # safe joint state msg
-            self._torso_joint_msg = joint_msg
- #           if self._torso_joint_msg_received == False:
- #               print "--> torso joint state received (this only prints once!)"
-            self._torso_joint_msg_received = True
-
-        # arm
-        if self.arm_joint_names[0] in msg.name:
-            pos = []
-            header = msg.header
-            for name in self.arm_joint_names:
-                pos.append(msg.position[msg.name.index(name)])
-
-            # create JointState message
-            joint_msg = JointState()
-            joint_msg.header = msg.header
-            joint_msg.name = self.arm_joint_names
-            joint_msg.position = pos
-
-            # safe joint state msg
-            self._arm_joint_msg = joint_msg
- #           if self._arm_joint_msg_received == False:
- #               print "--> arm joint state received (this only prints once!)"
-            self._arm_joint_msg_received = True
-
-    '''
     def _get_transformation_links(self, sensors_yaml):
         ## camera_chains
         self.transformation_links = {}
@@ -353,20 +304,6 @@ class DataCollector():
 
         self._torso_joint_msg_received = False
         self._arm_joint_msg_received = False
-        '''
-        start_time = rospy.Time.now()
-        while (not self._torso_joint_msg_received or not self._arm_joint_msg_received):
-            rospy.sleep(0.005)
-            # print warning every 2 seconds if one of the messages is still missing...
-            if start_time + rospy.Duration(2.0) < rospy.Time.now():
-                if not self._torso_joint_msg_received:
-                    print "--> still waiting for torso joint states"
-                if not self._arm_joint_msg_received:
-                    print "--> still waiting for srm joint states"
-                start_time = rospy.Time.now()
-        latest_torso = self._torso_joint_msg
-        latest_arm = self._arm_joint_msg
-        '''
         # set up checkerboard and checkerboard detector
         # ---------------------------------------------
         checkerboard = Checkerboard(pattern_size, square_size)
@@ -435,8 +372,14 @@ class DataCollector():
             latest_kinect_rgb["image_color"], "mono8")
         image = cv2util.cvmat2np(cvImage)
 
-        corners = checkerboard_detector.detect_image_points(
-            image, is_grayscale=True)
+        try:
+            corners = checkerboard_detector.detect_image_points(
+                image, is_grayscale=True)
+        except Exception:
+            print "It is likely that you specified the wrong topic for kinect images. Should be '/image_color' for real robot and '/image_raw' for simulation"
+            print "Exception was: "
+            print Exception
+            return False
         if corners is not None:
             print "cb found: kinect_rgb"
             img_points_kinect_rgb = []

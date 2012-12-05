@@ -3,9 +3,9 @@
 
 		
 	<!-- node that collects robot calibration data -->
-  	<node type="collect_robot_calibration_data.py" pkg="cob_calibration_executive" name="$(anon collect_robot_calibration_data)" output="screen" />
+	<node type="collect_robot_calibration_data.py" pkg="cob_calibration_executive" name="$(anon collect_robot_calibration_data)" output="screen" />
   	<param name="position_path" value="$(find cob_calibration_executive)/config/$(env ROBOT)/calibration_positions.yaml"/>
-<include file="$(find cob_robot_calibration)/launch/collect_data.launch"/>
-<include file="$(find cob_camera_calibration)/launch/visibility_check.launch"/>
+	<include file="$(find cob_robot_calibration)/launch/collect_data.launch"/>
+	<include file="$(find cob_camera_calibration)/launch/visibility_check.launch"/>
 	<include file="$(find cob_image_capture)/launch/capture_all.launch"/>
 </launch>
