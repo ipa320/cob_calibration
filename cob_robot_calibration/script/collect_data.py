@@ -229,14 +229,10 @@ class DataCollector():
 
     def _get_transformation_links(self, sensors_yaml):
         ## camera_chains
-        self.transformation_links = {}
-        for _chain in sensors_yaml["camera_chains"]:
-            if _chain["chain"]["chain_id"] not in self.transformation_links.keys():
-                self.transformation_links[_chain["chain"]["chain_id"]
-                                          ] = _chain["chain"]["links"]
+        self.transformations = {}
         for _chain in sensors_yaml["chains"]:
-            if _chain["chain_id"] not in self.transformation_links.keys():
-                self.transformation_links[_chain["chain_id"]] = _chain["links"]
+                self.transformations[_chain["chain_id"]
+                                     ] = _chain["links"]
 
     def run(self):
         '''
@@ -402,40 +398,24 @@ class DataCollector():
         #cam_msg_kinect_rgb.image_rect   = latest_kinect_rgb["image_rect"]
         #cam_msg_kinect_rgb.features    = # Not implemented here
 
-        # create torso_chain msg
+        # create chain msgs
         # ----------------------
-        torso_chain_msg = ChainMeasurement()
-        #torso_chain_msg.header = latest_torso.header
-        torso_chain_msg.chain_id = "torso_chain"
-        while not rospy.is_shutdown():
-            try:
-                (
-                    trans, rot) = self.listener.lookupTransform(self.transformation_links[torso_chain_msg.chain_id][0],
-                                                                self.transformation_links[torso_chain_msg.chain_id][1],
-                                                                rospy.Time(0))
-                break
-            except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationExcept):
-                rospy.sleep(0.5)
-        torso_chain_msg.trans = trans
-        torso_chain_msg.rot = rot
-
-        # create arm_chain msg
-        # --------------------
-        arm_chain_msg = ChainMeasurement()
-        #arm_chain_msg.header = latest_arm.header
-        arm_chain_msg.chain_id = "arm_chain"
-        while not rospy.is_shutdown():
-            try:
-                (
-                    trans, rot) = self.listener.lookupTransform(self.transformation_links[arm_chain_msg.chain_id][0],
-                                                                self.transformation_links[arm_chain_msg.chain_id][1],
-                                                                rospy.Time(0))
-                break
-            except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationExcept):
-                rospy.sleep(0.5)
-        arm_chain_msg.trans = trans
-        arm_chain_msg.rot = rot
-
+        transformations=[]
+        print self.transformations
+        for (key,links) in self.transformations.iteritems():
+            chain_msg = ChainMeasurement()
+            chain_msg.chain_id = key
+            while not rospy.is_shutdown():
+                try:
+                    (
+                        trans, rot) = self.listener.lookupTransform(links[0],links[1],
+                                                                    rospy.Time(0))
+                    break
+                except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationExcept):
+                    rospy.sleep(0.5)
+            chain_msg.translation = trans
+            chain_msg.rotation = rot
+            transformations.append(chain_msg)
         # DEBUG publish pic
         # -----------------
         self._image_pub_left.publish(latest_left["image_color"])
@@ -449,7 +429,7 @@ class DataCollector():
         robot_msg.target_id = target_id
         robot_msg.chain_id = chain_id
         robot_msg.M_cam = [cam_msg_left, cam_msg_right, cam_msg_kinect_rgb]
-        robot_msg.M_chain = [torso_chain_msg, arm_chain_msg]
+        robot_msg.M_chain = transformations
         self._robot_measurement_pub.publish(robot_msg)
 
         return True
