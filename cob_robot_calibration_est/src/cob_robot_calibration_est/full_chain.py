@@ -55,32 +55,53 @@ class FullChainRobotParams:
     #   - chain_id: Chain ID for the dh_chain
     #   - dh_link_num: Specifies which dh elem should be the last one to apply.
     #   - after_chain: List of transform ids to apply after the chain
-    def __init__(self, config_dict, tf):
+    def __init__(self, config_dict, configuration):
         self._config_dict = config_dict
         self.calc_block = FullChainCalcBlock()
-        self._tf = tf
+        self._full_config = configuration
+        print self._full_config
+        self.build_chains(self._config_dict["chains"])
+
+    def build_chains(self, chain_ids):
+        self.chains = [None] * len(chain_ids)
+        for chain in self._full_config["chains"]:
+            print chain
+            if chain["chain_id"] in chain_ids:
+                idx = chain_ids.index(chain["chain_id"])
+                self.chains[idx] = SingleChainCalc(chain)
+        print chain_ids
 
     def update_config(self, robot_params):
         # for transform_name in self._config_dict["before_chain"]:
         #     print "transform_name: ", transform_name
         # for transform_name2 in robot_params.transforms:
         #     print "transform_name2: ", transform_name2
+        for c in self.chains:
+            c.update_config(robot_params)
+
         before_chain_Ts = [robot_params.transforms[transform_name]
                            for transform_name in self._config_dict["before_chain"]]
-
         after_chain_Ts = [robot_params.transforms[transform_name]
                           for transform_name in self._config_dict["after_chain"]]
 
-        self.calc_block.update_config(before_chain_Ts, after_chain_Ts)
+        self.calc_block.update_config(
+            self.chains, before_chain_Ts, after_chain_Ts)
 
 
-class FullChainCalcBlock:
-    def update_config(self, before_chain_Ts, after_chain_Ts):
-        self._before_chain_Ts = before_chain_Ts
-        self._after_chain_Ts = after_chain_Ts
+class SingleChainCalc:
+    def __init__(self, config_dict):
+        self._config_dict = config_dict
 
-    def fk(self, trans, rot):
+    def update_config(self, robot_params):
+        self._before_chain_Ts = [robot_params.transforms[transform_name]
+                                 for transform_name in self._config_dict["before_chain"]]
+        self._after_chain_Ts = [robot_params.transforms[transform_name]
+                                for transform_name in self._config_dict["after_chain"]]
+
+    def fk(self, transformation):
         pose = matrix(numpy.eye(4))
+        trans = transformation.translation
+        rot = transformation.rotation
 
         # Apply the 'before chain' transforms
         for before_chain_T in self._before_chain_Ts:
@@ -93,6 +114,43 @@ class FullChainCalcBlock:
             translate=trans, angles=euler)
 
         pose = pose * mat
+
+        # Apply the 'after chain' transforms
+        for after_chain_T in self._after_chain_Ts:
+            pose = pose * after_chain_T.transform
+
+        return pose
+
+    def __getitem__(self, key):
+        return self._config_dict[key]
+
+
+class FullChainCalcBlock:
+    def update_config(self, chains, before_chain_Ts, after_chain_Ts):
+        self._before_chain_Ts = before_chain_Ts
+        self._after_chain_Ts = after_chain_Ts
+        self._chains = chains
+        self._chain_ids = [c['chain_id'] for c in self._chains]
+
+        #print "before: ", self._before_chain_Ts
+        #print "chains: ", self._chain_ids
+        #print "after: ", self._after_chain_Ts
+
+    def fk(self, m_chain):
+        pose = matrix(numpy.eye(4))
+
+        # Apply the 'before chain' transforms
+        for before_chain_T in self._before_chain_Ts:
+            pose = pose * before_chain_T.transform
+
+        # Apply the Chain
+
+        for chain in self._chains:
+            for transformation in m_chain:
+                if transformation.chain_id in self._chain_ids:
+                    t = transformation
+            mat = chain.fk(t)
+            pose = pose * mat
 
         # Apply the 'after chain' transforms
         for after_chain_T in self._after_chain_Ts:

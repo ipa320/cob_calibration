@@ -44,6 +44,7 @@ import yaml
 import os.path
 import numpy
 
+
 import stat
 import os
 
@@ -64,16 +65,21 @@ def build_sensor_defs(sensors_dump):
     '''
     Given a list of sensor definition dictionaries, merge them into a single dictionary
     '''
+    print sensors_dump
     # There could be multiple defitions of sensors in the sensors namespace. We
     # need to merge all of these into a single consistent dictionary
     all_sensors_dict = dict()
 
     for cur_sensors_file in sensors_dump:
+        print cur_sensors_file
         for cur_sensor_type, cur_sensor_list in cur_sensors_file.items():
             for cur_sensor in cur_sensor_list:
                 # We want sensor_ids to be unique. Thus, we should warn the user if there are duplicate block IDs being loaded
-                if cur_sensor['sensor_id'] in all_sensors_dict.keys():
-                    rospy.logwarn("Loading a duplicate [%s]. Overwriting previous" % cur_sensor['sensor_id'])
+                try:
+                    if cur_sensor['sensor_id'] in all_sensors_dict.keys():
+                        rospy.logwarn("Loading a duplicate [%s]. Overwriting previous" % cur_sensor['sensor_id'])
+                except KeyError:
+                    continue
                 all_sensors_dict[cur_sensor['sensor_id']] = cur_sensor
                 all_sensors_dict[cur_sensor['sensor_id']]['sensor_type'] = cur_sensor_type
 
@@ -89,6 +95,8 @@ def build_sensor_defs(sensors_dump):
             print "   - %s" % cur_sensor_id
         print ""
 
+    print "after building_sensor_defs"
+    print all_sensors_dict
     return all_sensors_dict
 
 def load_calibration_steps(steps_dict):
@@ -132,21 +140,27 @@ def load_requested_sensors(all_sensors_dict, requested_sensors):
     '''
     all_sensor_types = list(set([x['sensor_type'] for x in all_sensors_dict.values()]))
     cur_sensors = dict([(x,[]) for x in all_sensor_types])
+    for k,sensor in all_sensors_dict.iteritems():
+        if sensor['sensor_type'] ==  'chains':
+            requested_sensors+=[k]
     for requested_sensor_id in requested_sensors:
         # We need to now find requested_sensor_id in our library of sensors
         if requested_sensor_id in all_sensors_dict.keys():
             cur_sensor_type = all_sensors_dict[requested_sensor_id]['sensor_type']
             cur_sensors[cur_sensor_type].append(all_sensors_dict[requested_sensor_id])
         else:
-            rospy.logerr("Could not find [%s] in block library. Skipping this block")
+            rospy.logerr("Could not find [%s] in block library. Skipping this block"%requested_sensor_id)
     return cur_sensors
 
 if __name__ == '__main__':
+    main()
+
+def main():
     rospy.init_node("multi_step_cov_estimator", anonymous=True)
 
     print "Starting The Multi Step [Covariance] Estimator Node\n"
-    
-    
+
+
 
 
     if (len(rospy.myargv()) < 2):
@@ -209,7 +223,7 @@ if __name__ == '__main__':
         print "Invalid file permissions. You need to be able to write to the following files:"
         print "\n".join([" - " + cur_file for cur_file,cur_valid in zip(output_filenames, valid_list) if not cur_valid])
         sys.exit(-1)
- 
+
     # Specify which system the first calibration step should use.
     # Normally this would be set at the end of the calibration loop, but for the first step,
     # this is grabbed from the param server

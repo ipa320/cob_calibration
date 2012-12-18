@@ -51,21 +51,22 @@ from sensor_msgs.msg import JointState
 
 
 class ChainBundler:
-    def __init__(self, valid_configs):
-        self._valid_configs = valid_configs
+    def __init__(self, configs):
+        self._configs = configs
+        self._valid_configs = configs['sensor_chains']
 
     # Construct a CameraChainRobotParamsBlock for every 'valid config' that finds everything it needs in the current robot measurement
     def build_blocks(self, M_robot):
         sensors = []
         #import code; code.interact(local=locals())
         for cur_config in self._valid_configs:
-            cur_chain_id = cur_config["chain_id"]
+            cur_chain_id = cur_config["sensor_id"]
             if cur_chain_id == M_robot.chain_id and \
-                    cur_chain_id in [x.chain_id for x in M_robot.M_chain]:
+                    all([chain in [x.chain_id for x in M_robot.M_chain] for chain in cur_config['chains']]):
                 rospy.logdebug("  Found block")
-                M_chain = [x for x in M_robot.M_chain if cur_chain_id == x.chain_id][0]
+                M_chain = M_robot.M_chain
                 cur_sensor = ChainSensor(
-                    cur_config, M_chain, M_robot.target_id)
+                    cur_config, M_chain, M_robot.target_id, self._configs)
                 sensors.append(cur_sensor)
             else:
                 rospy.logdebug("  Didn't find block")
@@ -73,16 +74,18 @@ class ChainBundler:
 
 
 class ChainSensor:
-    def __init__(self, config_dict, M_chain, target_id):
+    def __init__(self, config_dict, M_chain, target_id, config):
 
         self.sensor_type = "chain"
         self.sensor_id = config_dict["chain_id"]
 
         self._config_dict = config_dict
+        self._config = config
         self._M_chain = M_chain
         self._target_id = target_id
 
-        self._full_chain = FullChainRobotParams(self._config_dict)
+        self._full_chain = FullChainRobotParams(
+            self._config_dict['chain'], self._config)
 
         self.terms_per_sample = 3
 
@@ -154,14 +157,14 @@ class ChainSensor:
         Returns a 4xN matrix with the locations of the checkerboard points in homogenous coords,
         as per the forward kinematics of the chain
         '''
-        return self._calc_fk_target_pts(self._M_chain.trans, self._M_chain.rot)
+        return self._calc_fk_target_pts()
 
-    def _calc_fk_target_pts(self, trans, rot):
+    def _calc_fk_target_pts(self):
         # Get the target's model points in the frame of the tip of the target chain
         target_pts_tip = self._checkerboard.generate_points()
 
         # Target pose in root frame
-        target_pose_root = self._full_chain.calc_block.fk(trans, rot)
+        target_pose_root = self._full_chain.calc_block.fk(self._M_chain)
 
         # Transform points into the root frame
         target_pts_root = target_pose_root * target_pts_tip
