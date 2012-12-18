@@ -62,9 +62,10 @@ roslib.load_manifest(PKG)
 import rospy
 
 from simple_script_server import simple_script_server
-from cob_calibration_srvs.srv import *
+from cob_calibration_srvs.srv import Visible, Capture
 import numpy as np
 import yaml
+import tf
 
 
 def capture_loop(positions, sss, visible, capture_kinematics, capture_image):
@@ -72,16 +73,16 @@ def capture_loop(positions, sss, visible, capture_kinematics, capture_image):
     Moves arm to all positions using script server instance sss
     and calls capture() to capture samples
     '''
-
+    br = tf.TransformBroadcaster()
     counter_camera = 0
     counter_kinematics = 0
     for index in range(len(positions)):
         print "--> moving arm to sample #%s" % index
         pos = positions[index]
-        joint_pos = [[((a + (np.pi)) % (2 * np.pi)) - (np.pi)
-                      for a in positions[index]['joint_position']]]
+        #joint_pos = [[((a + (np.pi)) % (2 * np.pi)) - (np.pi)
+                      #for a in positions[index]['joint_position']]]
+        joint_pos=[[a for a in positions[index]['joint_position']]]
         print pos
-        print type(joint_pos[0][0])
         nh = sss.move_planned("arm", joint_pos)
         while nh.get_state() == 0:
             rospy.sleep(0.2)
@@ -92,10 +93,17 @@ def capture_loop(positions, sss, visible, capture_kinematics, capture_image):
             if nh.get_state() != 3:
                 continue
 
+        print nh.get_state()
+        br.sendTransform((0, 0, 0.24),
+                         (0, 0, 0, 1),
+                         rospy.Time.now(),
+                         "/chessboard_center",
+                         "/sdh_palm_link")  # right upper corner
+
         sss.move("torso", [positions[index]['torso_position']])
+        sss.sleep(9)
 
-        sss.sleep(2)
-
+        '''
         visible_response = visible().visible
         if visible_response == 3:
             print "3 Checkerboards found"
@@ -112,6 +120,7 @@ def capture_loop(positions, sss, visible, capture_kinematics, capture_image):
             counter_kinematics += 1
 
             #capture()
+        '''
 
 
 def main():

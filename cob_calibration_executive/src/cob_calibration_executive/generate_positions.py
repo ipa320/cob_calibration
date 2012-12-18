@@ -67,8 +67,9 @@ import tf
 import numpy as np
 import yaml
 import os
+from cob_calibration_executive.torso_ik import TorsoIK
 
-from urdf_parser_py.urdf import URDF
+from simple_script_server import simple_script_server
 
 
 #board       = Checkerboard(self.pattern_size, self.square_size)
@@ -155,61 +156,18 @@ def calculate_ik(pose, arm_ik, seed=None):
     return joint_positions, via_home
 
 
+def get_cb_pose_head(listener, base_frame):
+    return listener.lookupTransform(base_frame, '/chessboard_center', rospy.Time(0))
+
+
 def get_cb_pose(listener, base_frame):
     return listener.lookupTransform(base_frame, '/chessboard_position_link', rospy.Time(0))
-
-
-def get_torso_limits(joint_names):
-    robot = URDF.load_from_parameter_server()
-    limits = []
-    for jn in joint_names:
-        limits.append(
-            min(np.abs(robot.joints[jn].limits.lower), robot.joints[jn].limits.upper))
-
-    return limits
-
-
-def get_torso_configuration(joint_names):
-    configuration = []
-    for jn in joint_names:
-        assert any(['pan' in jn, 'tilt' in jn])
-        if 'pan' in jn:
-            configuration.append('p')
-        elif 'tilt' in jn:
-            configuration.append('t')
-        else:
-            print 'ERROR joint configuration received unknown names'
-
-    return configuration
 
 
 def main():
     rospy.init_node(NODE)
     print "==> %s started " % NODE
 
-    joint_names = rospy.get_param("/torso_controller/joints")
-    joint_configuration = get_torso_configuration(joint_names)
-    #joint_configuration = rospy.get_param("~joint_configuration")
-    #joint_limits = rospy.get_param("~joint_limits")
-    joint_limits = get_torso_limits(joint_names)
-
-    joint_info = zip(joint_configuration, joint_limits)
-    n_pan = sum([tmp == 'p' for tmp in joint_configuration])
-    n_tilt = sum([tmp == 't' for tmp in joint_configuration])
-    torso_state = [0] * len(joint_configuration)
-
-    camera_viewfield = rospy.get_param("~camera_view_angle")
-
-    max_pan = camera_viewfield
-    max_tilt = camera_viewfield
-    for info in joint_info:
-        if info[0] == 'p':
-            max_pan += info[1]
-        elif info[0] == 't':
-            max_tilt += info[1]
-
-    print n_pan, n_tilt
-    print 'max_pan, max_tilt = ', max_pan, max_tilt
     chessboard_pose = rospy.Publisher(
         '/cob_calibration/chessboard_pose', PoseStamped)
     print 'chessboard_pose publisher activated'
@@ -224,7 +182,6 @@ def main():
     '''
 
     # init
-    '''
     print "--> initializing sss"
     sss = simple_script_server()
     sss.init("base")
@@ -238,8 +195,10 @@ def main():
     sss.move("head", "back")
 
     #sss.move("arm",[a[0]])
-    '''
     nextPose = PoseStamped()
+
+    torso = TorsoIK()
+    torso.set_camera_viewfield(rospy.get_param('~camera_view_angle'))
 
     # lissajous like figure for rotation
     cb_tip_offset = 3
@@ -315,12 +274,15 @@ def main():
 
                     chessboard_pose.publish(nextPose)
                     rospy.sleep(0.2)
-                    (t, r) = get_cb_pose(listener, '/head_cam3d_link')
-                    angles = get_angles(t)
-                    if np.abs(angles[0]) > max_pan or np.abs(angles[1]) > max_tilt:
+                    (t, r) = get_cb_pose_head(listener, '/head_cam3d_link')
+                    angles = calculate_angles(t)
+                    if not torso.in_range(angles):
                         continue
                     print t
 
+                    (t, r) = get_cb_pose(listener, '/head_cam3d_link')
+
+                    print t
                     (t, r) = get_cb_pose(listener, '/arm_0_link')
                     try:
                         js = calculate_ik((
@@ -331,16 +293,7 @@ def main():
                         print 'IK solution found'
                     else:
                         continue
-
-                    print angles
-                    for i in range(len(torso_state)):
-                        print joint_configuration[i]
-                        if joint_configuration[i] == 'p':
-                            torso_state[
-                                i] = float(min(angles[0] / n_pan, sgn(angles[0]) * joint_limits[i], key=np.abs))
-                        elif joint_configuration[i] == 't':
-                            torso_state[
-                                i] = float(min(angles[1] / n_tilt, sgn(angles[1]) * joint_limits[i], key=np.abs))
+                    torso_state = torso.calculate_ik(angles)
                     for torso_js in [torso_state, [0] * len(torso_state)]:
                         joint_states.append({'joint_position': js[
                                             0], 'torso_position': list(torso_js)})
@@ -359,20 +312,17 @@ def main():
     print '%s ik solutions found' % len(joint_states)
 
 
-def sgn(x):
-    return x / np.abs(x)
-
-
-def get_angles(t):
+def calculate_angles(t):
     '''
     computes pan and tilt angles for camera like translations
     z-axis: optical axis
     y-axis: vertical
     x-axis: horizontal
     '''
-    pan = np.arctan2(t[1], t[2])
-    tilt = np.arctan2(t[0], t[2])
-    return pan, tilt
+    angles = {}
+    angles['p'] = np.arctan2(t[0], t[2])
+    angles['t'] = np.arctan2(t[1], t[2])
+    return angles
 
 if __name__ == '__main__':
     main()
