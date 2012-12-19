@@ -83,12 +83,12 @@ def capture_loop(positions, sss, visible, capture_kinematics, capture_image):
                       #for a in positions[index]['joint_position']]]
         joint_pos=[[a for a in positions[index]['joint_position']]]
         print pos
-        nh = sss.move_planned("arm", joint_pos)
+        nh = sss.move("arm", joint_pos)
         while nh.get_state() == 0:
             rospy.sleep(0.2)
         if nh.get_state() != 3:
             sss.move("torso", "home")
-            nh = sss.move_planned("arm", joint_pos)
+            nh = sss.move("arm", joint_pos)
             rospy.sleep(1)
             if nh.get_state() != 3:
                 continue
@@ -101,9 +101,8 @@ def capture_loop(positions, sss, visible, capture_kinematics, capture_image):
                          "/sdh_palm_link")  # right upper corner
 
         sss.move("torso", [positions[index]['torso_position']])
-        sss.sleep(9)
+        sss.sleep(1)
 
-        '''
         visible_response = visible().visible
         if visible_response == 3:
             print "3 Checkerboards found"
@@ -119,8 +118,7 @@ def capture_loop(positions, sss, visible, capture_kinematics, capture_image):
             print "--> captured 1 sample for kinematics calibration"
             counter_kinematics += 1
 
-            #capture()
-        '''
+            capture()
 
 
 def main():

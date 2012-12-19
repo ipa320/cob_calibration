@@ -136,14 +136,11 @@ def getIk(arm_ik, (t, q), link, seed=None):
     if resp.error_code.val == resp.error_code.SUCCESS:
         result = list(resp.solution.joint_state.position)
         return result
-    else:
-        print "Inverse kinematics request failed with error code", resp.error_code.val, ", seed was", seed
-        return None
 
 
-def calculate_ik(pose, arm_ik, seed=None):
+def calculate_ik(pose, arm_ik, seed=[0.05897, -1.62093, 1.61828, -0.60607, 2.32322, -1.44618, -1.08467]):
     via_home = False
-    for seed in [seed, None, [0, 0, 0, 0, 0, 0, 0]]:
+    for seed in [seed]:
         joint_positions = getIk(arm_ik, pose, "sdh_palm_link", seed)
         if joint_positions is not None:
             if seed is [0, 0, 0, 0, 0, 0, 0]:
