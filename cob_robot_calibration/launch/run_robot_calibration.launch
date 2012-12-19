@@ -8,7 +8,9 @@
         <!-- sensors -->
         <group ns="sensors">
             <param name="all" textfile="$(find cob_robot_calibration)/config/$(env ROBOT)/sensors.yaml" />
-        </group>
+	    <param name="camera_parameter" value="$(find
+		    cob_calibration_data)/$(env ROBOT)/calibration/cameras" />
+ 	 </group>
 
         <!-- initial system for first calibration step -->
         <param name="initial_system" textfile="$(find cob_robot_calibration)/config/$(env ROBOT)/system.yaml" />
