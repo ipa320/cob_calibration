@@ -184,7 +184,7 @@ class DataCollector():
         self._sub_kinect_rgb_info = message_filters.Subscriber(
             "/cam3d/rgb/camera_info", CameraInfo)
         self._sub_kinect_rgb_image_color = message_filters.Subscriber(
-            "/cam3d/rgb/image_raw", Image)  # ONLY FOR SIMULATION image_raw. ELSE: image_color
+            "/cam3d/rgb/image_color", Image)  # ONLY FOR SIMULATION image_raw. ELSE: image_color
         self._sub_kinect_rgb = message_filters.TimeSynchronizer(
             [self._sub_kinect_rgb_info,
              self._sub_kinect_rgb_image_color], 15)

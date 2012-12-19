@@ -7,7 +7,7 @@
         <param name="number_of_cameras" value="3" />
 
         <!-- configure cameras --> 
-        <param name="camera0"       value="/cam3d/rgb/image_raw" /><!-- for
+        <param name="camera0"       value="/cam3d/rgb/image_color" /><!-- for
 	real robot: image_color, for simulation: image_raw -->
         <param name="file_prefix0"  value="kinect_" />
         
