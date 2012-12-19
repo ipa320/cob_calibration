@@ -17,7 +17,7 @@
         <group ns="cal_steps">
 	        <group ns="step0">
                 <param name="free_params" textfile="$(find cob_robot_calibration)/config/$(env ROBOT)/free_0.yaml" />
-                <param name="use_cov" type="bool" value="True" />
+                <param name="use_cov" type="bool" value="False" />
                 <rosparam>
                   sensors:
                   - arm_chain
@@ -29,7 +29,7 @@
             </group>
 	        <group ns="step1">
                 <param name="free_params" textfile="$(find cob_robot_calibration)/config/$(env ROBOT)/free_1.yaml" />
-                <param name="use_cov" type="bool" value="True" />
+                <param name="use_cov" type="bool" value="False" />
                 <rosparam>
                   sensors:
                   - arm_chain
@@ -41,7 +41,7 @@
             </group>
  	        <group ns="step2">
                 <param name="free_params" textfile="$(find cob_robot_calibration)/config/$(env ROBOT)/free_2.yaml" />
-                <param name="use_cov" type="bool" value="True" />
+                <param name="use_cov" type="bool" value="False" />
                 <rosparam>
                   sensors:
                   - arm_chain
