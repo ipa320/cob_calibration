@@ -42,7 +42,7 @@
 #      \
 #       before_chain_Ts -- target_chain -- after_chain_Ts -- checkerboard
 
-from numpy import reshape, array, zeros, diag, matrix, real
+from numpy import ones, reshape, array, zeros, diag, matrix, real
 import roslib
 roslib.load_manifest('cob_robot_calibration_est')
 import rospy
@@ -76,8 +76,13 @@ class ChainBundler:
 class ChainSensor:
     def __init__(self, config_dict, M_chain, target_id, config):
 
+	print 'Config: '
+	print config
+
+	print 'Config_dict: '
+	print config_dict
         self.sensor_type = "chain"
-        self.sensor_id = config_dict["chain_id"]
+        self.sensor_id = config_dict["sensor_id"]
 
         self._config_dict = config_dict
         self._config = config
@@ -85,7 +90,7 @@ class ChainSensor:
         self._target_id = target_id
 
         self._full_chain = FullChainRobotParams(
-            self._config_dict['chain'], self._config)
+            self._config_dict, self._config)
 
         self.terms_per_sample = 3
 
@@ -94,12 +99,14 @@ class ChainSensor:
         self._checkerboard = robot_params.checkerboards[self._target_id]
 
     def compute_residual(self, target_pts):
+	print 'tick'
         h_mat = self.compute_expected(target_pts)
         z_mat = self.get_measurement()
         assert(h_mat.shape == z_mat.shape)
         assert(h_mat.shape[0] == 4)
         r_mat = h_mat[0:3, :] - z_mat[0:3, :]
         r = array(reshape(r_mat.T, [-1, 1]))[:, 0]
+	print 'residual calculated'
         return r
 
     def compute_residual_scaled(self, target_pts):
@@ -128,6 +135,10 @@ class ChainSensor:
         return gamma
 
     def compute_cov(self, target_pts):
+	_ones=ones([7,self.get_residual_length()])
+	cov= matrix(diag([0.01]*self.get_residual_length()))
+
+	return cov
         epsilon = 1e-8
 
         num_joints = len(self._M_chain.chain_state.position)
