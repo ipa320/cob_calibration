@@ -29,9 +29,8 @@ rectified_cams:
 transforms:
   arm_0_link: [0, 0, 0, 0, 0, 0]
   arm_cb: [0, 0, 0, 0, 0, 0]
-  base_footprint: [0, 0, 0, 0, 0, 0]
-  head_axis_link: [0, 0, 0, 0, 0, 0]
-  head_cam3d_link: [0, 0, 0, 0, 0, 0]
-  head_color_camera_l_link: [0, 0, 0, 0, 0, 0]
+  head_cam3d_frame: [0, 0, 0, 0, 0, 0]
+  head_color_camera_l_frame: [0, 0, 0, 0, 0, 0]
+  head_cover_link: [0, 0, 0, 0, 0, 0]
   sdh_palm_link: [0, 0, 0, 0, 0, 0]
   torso_0_link: [0, 0, 0, 0, 0, 0]
