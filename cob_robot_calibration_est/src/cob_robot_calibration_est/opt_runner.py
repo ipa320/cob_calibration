@@ -40,6 +40,7 @@ import numpy
 from numpy import array, matrix, zeros, cumsum, concatenate, reshape
 import scipy.optimize
 import sys
+import multiprocessing
 
 class ErrorCalc:
     """
@@ -78,14 +79,13 @@ class ErrorCalc:
             multisensor.update_config(self._robot_params)
 
         r_list = []
-        for multisensor, cb_pose_vec in zip(self._multisensors, list(full_pose_arr)):
-            # Process cb pose
-            cb_points = SingleTransform(cb_pose_vec).transform * self._robot_params.checkerboards[multisensor.checkerboard].generate_points()
-            if (self._use_cov):
-                r_list.append(multisensor.compute_residual_scaled(cb_points))
-            else:
-                r_list.append(multisensor.compute_residual(cb_points))
-        #import code; code.interact(local=locals())
+        params = zip(self._multisensors, list(full_pose_arr))
+        params = zip(params, [self._robot_params]*len(params), [self._use_cov]*len(params))
+        pool = multiprocessing.Pool()
+        cew = calculate_error_worker
+        #r_list = [cew(p) for p in params]   #single process
+        r_list = pool.map(cew, params)       #multi process
+                   #import code; code.interact(local=locals())
         r_vec = concatenate(r_list)
 
         rms_error = numpy.sqrt( numpy.mean(r_vec**2) )
@@ -93,7 +93,6 @@ class ErrorCalc:
         sys.stdout.flush()
 
         return array(r_vec)
-
     def calculate_jacobian(self, opt_all_vec):
         """
         Full Jacobian:
@@ -288,6 +287,17 @@ class ErrorCalc:
             J_scaled = J
         return J_scaled
 
+def calculate_error_worker(params):
+    params, robot_params, use_cov = params
+    multisensor, cb_pose_vec = params # Process cb pose
+
+    cb_points = SingleTransform(cb_pose_vec).transform * robot_params.checkerboards[multisensor.checkerboard].generate_points()
+    if (use_cov):
+        return multisensor.compute_residual_scaled(cb_points)
+    else:
+        return multisensor.compute_residual(cb_points)
+
+
 def build_opt_vector(robot_params, free_dict, pose_guess_arr):
     """
     Construct vector of all the parameters that we're optimizing over. This includes
@@ -314,12 +324,12 @@ def build_opt_vector(robot_params, free_dict, pose_guess_arr):
 
     assert(pose_guess_arr.shape[1] == 6)
     opt_pose_vec = reshape(pose_guess_arr, [-1])
- 
+
     print '######### opt_pose_vec #############'
     print opt_pose_vec
 
     opt_all = numpy.concatenate([opt_param_vec, opt_pose_vec])
-    
+
     print '*'*20
     print opt_all
     return opt_all
