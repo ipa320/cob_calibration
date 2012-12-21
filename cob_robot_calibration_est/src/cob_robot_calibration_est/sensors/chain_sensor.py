@@ -76,11 +76,11 @@ class ChainBundler:
 class ChainSensor:
     def __init__(self, config_dict, M_chain, target_id, config):
 
-	print 'Config: '
-	print config
+   # print 'Config: '
+        #print config
 
-	print 'Config_dict: '
-	print config_dict
+        #print 'Config_dict: '
+   # print config_dict
         self.sensor_type = "chain"
         self.sensor_id = config_dict["sensor_id"]
 
@@ -99,14 +99,12 @@ class ChainSensor:
         self._checkerboard = robot_params.checkerboards[self._target_id]
 
     def compute_residual(self, target_pts):
-	print 'tick'
         h_mat = self.compute_expected(target_pts)
         z_mat = self.get_measurement()
         assert(h_mat.shape == z_mat.shape)
         assert(h_mat.shape[0] == 4)
         r_mat = h_mat[0:3, :] - z_mat[0:3, :]
         r = array(reshape(r_mat.T, [-1, 1]))[:, 0]
-	print 'residual calculated'
         return r
 
     def compute_residual_scaled(self, target_pts):
@@ -135,10 +133,10 @@ class ChainSensor:
         return gamma
 
     def compute_cov(self, target_pts):
-	_ones=ones([7,self.get_residual_length()])
-	cov= matrix(diag([0.01]*self.get_residual_length()))
+        _ones = ones([7, self.get_residual_length()])
+        cov = matrix(diag([0.01] * self.get_residual_length()))
 
-	return cov
+        return cov
         epsilon = 1e-8
 
         num_joints = len(self._M_chain.chain_state.position)
@@ -189,9 +187,13 @@ class ChainSensor:
     def build_sparsity_dict(self):
         sparsity = dict()
         sparsity['transforms'] = {}
-        for cur_transform_name in (self._config_dict['before_chain'] + self._config_dict['after_chain']):
+        chain_transform_names = [chain['before_chain'] + chain['after_chain'] for chain in self._config['chains']
+                                 if chain['chain_id'] in self._config_dict['chains']][0]
+
+        for cur_transform_name in (self._config_dict['before_chain'] + self._config_dict['after_chain'] + chain_transform_names):
             sparsity['transforms'][cur_transform_name] = [1, 1, 1, 1, 1, 1]
 
+        '''
         sparsity['dh_chains'] = {}
         chain_id = self._config_dict['chain_id']
         num_links = self._full_chain.calc_block._chain._M
@@ -199,7 +201,7 @@ class ChainSensor:
         sparsity['dh_chains'][chain_id] = {}
         sparsity['dh_chains'][chain_id]['dh'] = [[1, 1, 1, 1]] * num_links
         sparsity['dh_chains'][chain_id]['gearing'] = [1] * num_links
-
+        '''
         sparsity['checkerboards'] = {}
         sparsity['checkerboards'][self._target_id] = {'spacing_x': 1,
                                                       'spacing_y': 1}

@@ -49,6 +49,7 @@ roslib.load_manifest('cob_robot_calibration_est')
 import rospy
 from cob_robot_calibration_est.full_chain import FullChainRobotParams
 from sensor_msgs.msg import JointState, CameraInfo
+import yaml
 
 
 class CameraChainBundler:
@@ -122,18 +123,14 @@ class CameraChainSensor:
 
         self._chain = FullChainRobotParams(config_dict["chain"], self._config)
         self.camera_info_name = None
-        if self.sensor_id in ["left", "right"]:
-            self.camera_info_name = "/stereo/%s/camera_info" % self.sensor_id
 
-        elif self.sensor_id == "kinect_rgb":
-            self.camera_info_name = "/cam3d/rgb/camera_info"
-
-        info_used = self.sensor_id in ['left', 'right', 'kinect_rgb']
-        if info_used:
-            self.camera_info_received = False
-            rospy.Subscriber(
-                self.camera_info_name, CameraInfo, self._cameraInfo_callback)
-            self.camera_info = CameraInfo()
+        self.info_used = self.sensor_id in ['left', 'right', 'kinect_rgb']
+        path = rospy.get_param(
+            '/calibration_config/camera_parameter') + self.sensor_id + '.yaml'
+        with open(path) as f:
+            self._yaml = yaml.load(f)
+        self._distortion = self._yaml['distortion_coefficients']['data']
+        self._camera_matrix = self._yaml['camera_matrix']['data']
 
         self.terms_per_sample = 2
 
@@ -222,16 +219,13 @@ class CameraChainSensor:
         calc x'',y''
         calc u',v'
         """
-        self.camera_info_received = False
-        while self.camera_info_received is False:
-            rospy.sleep(0.25)
         points_out = []
 
-        fx = self.camera_info.K[0] * 1.0
-        cx = self.camera_info.K[2] * 1.0
-        fy = self.camera_info.K[4] * 1.0
-        cy = self.camera_info.K[5] * 1.0
-        k1, k2, p1, p2, k3 = self.camera_info.D
+        fx = self._camera_matrix[0] * 1.0
+        cx = self._camera_matrix[2] * 1.0
+        fy = self._camera_matrix[4] * 1.0
+        cy = self._camera_matrix[5] * 1.0
+        k1, k2, p1, p2, k3 = self._distortion
         for point in points:
             u, v = point
 
@@ -373,7 +367,9 @@ class CameraChainSensor:
         """
         sparsity = dict()
         sparsity['transforms'] = {}
-        for cur_transform_name in (self._config_dict['chain']['before_chain'] + self._config_dict['chain']['after_chain']):
+        chain_transform_names = [chain['before_chain'] + chain['after_chain'] for chain in self._config['chains']
+                                 if chain['chain_id'] in self._config_dict['chain']['chains']][0]
+        for cur_transform_name in (self._config_dict['chain']['before_chain'] + self._config_dict['chain']['after_chain'] + chain_transform_names):
             sparsity['transforms'][cur_transform_name] = [1, 1, 1, 1, 1, 1]
 
         sparsity['dh_chains'] = {}
