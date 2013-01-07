@@ -259,9 +259,8 @@ class StereoCalibrator(Calibrator):
         print "--> loaded %i right images" % len(images_r)       
         
         # get width and height of images and check all
-        (h, w) = images_l[0].shape[:2]
-        for l in images_l: assert l.shape[:2] == (h, w)
-        for r in images_r: assert r.shape[:2] == (h, w)
+        (h_ref, w_ref) = images_l[0].shape[:2]
+        (h_dep, w_dep) = images_r[0].shape[:2]
         
         # detect image and object points in all images
         print "--> detecting calibration object in all images..."
@@ -286,8 +285,8 @@ class StereoCalibrator(Calibrator):
         #mono_flags |= cv2.CALIB_FIX_K3
     
         # run monocular calibration on each camera to get intrinsic parameters
-        (rms_l, camera_matrix_l, dist_coeffs_l, _, _) = cv2.calibrateCamera(object_points, image_points_l, (w, h), camera_matrix_l, dist_coeffs_l, flags=mono_flags)
-        (rms_r, camera_matrix_r, dist_coeffs_r, _, _) = cv2.calibrateCamera(object_points, image_points_r, (w, h), camera_matrix_r, dist_coeffs_r, flags=mono_flags)
+        (rms_l, camera_matrix_l, dist_coeffs_l, _, _) = cv2.calibrateCamera(object_points, image_points_l, (w_ref, h_ref), camera_matrix_l, dist_coeffs_l, flags=mono_flags)
+        (rms_r, camera_matrix_r, dist_coeffs_r, _, _) = cv2.calibrateCamera(object_points, image_points_r, (w_dep, h_dep), camera_matrix_r, dist_coeffs_r, flags=mono_flags)
         #(camera_matrix_l, _) = cv2.getOptimalNewCameraMatrix(camera_matrix_l, dist_coeffs_l, (w, h), alpha)
         #(camera_matrix_r, _) = cv2.getOptimalNewCameraMatrix(camera_matrix_r, dist_coeffs_r, (w, h), alpha)
 
@@ -305,11 +304,11 @@ class StereoCalibrator(Calibrator):
 #        stereo_flags |= cv2.CALIB_RATIONAL_MODEL          # Use 8 param rational distortion model instead of 5 param plumb bob model
         
         # run stereo calibration
-        res = cv2.stereoCalibrate(object_points, image_points_l, image_points_r, camera_matrix_l, dist_coeffs_l, camera_matrix_r, dist_coeffs_r, (w, h), flags=stereo_flags)
+        res = cv2.stereoCalibrate(object_points, image_points_l, image_points_r, camera_matrix_l, dist_coeffs_l, camera_matrix_r, dist_coeffs_r, (w_ref, h_ref), flags=stereo_flags)
         (rms_stereo, camera_matrix_l, dist_coeffs_l, camera_matrix_r, dist_coeffs_r, R, T, E, F) = res    
         
         # run stereo rectification
-        res = self._rectify(camera_matrix_l, dist_coeffs_l, camera_matrix_r, dist_coeffs_r, (h, w), R, T, alpha)
+        res = self._rectify(camera_matrix_l, dist_coeffs_l, camera_matrix_r, dist_coeffs_r, (w_ref, h_ref), R, T, alpha)
         (rectification_matrix_l, rectification_matrix_r, projection_matrix_l, projection_matrix_r) = res
 
 #        # DEBUG: check types -> should all be np.ndarray
@@ -327,7 +326,7 @@ class StereoCalibrator(Calibrator):
         return ((rms_l, rms_r, rms_stereo), 
                 camera_matrix_l, dist_coeffs_l, rectification_matrix_l, projection_matrix_l,
                 camera_matrix_r, dist_coeffs_r, rectification_matrix_r, projection_matrix_r,
-                (h, w), R, T)
+                ((h_ref, w_ref),(h_dep,w_dep)), R, T)
     
     def _rectify(self, camera_matrix_l, dist_coeffs_l, camera_matrix_r, dist_coeffs_r, (h, w), R, T, alpha):
         '''
