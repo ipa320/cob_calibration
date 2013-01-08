@@ -23,7 +23,7 @@ transforms:
     base_footprint_joint:            [ 0, 0, 0, 0, 0, 0 ]
     arm_cb:                          [ 1, 1, 1, 1, 1, 1 ]
 
-    torso_0_joint:                   [ 1, 1, 1, 1, 1, 1 ]
+    torso_0_joint:                   [ 1, 0, 1, 1, 1, 1 ]   # keep y-axis of torso fixed to zero
     arm_0_joint:                     [ 1, 1, 1, 1, 1, 1 ]   # joint base_link -> arm_0_link
 
     head_axis_joint:                 [ 0, 0, 0, 0, 0, 0 ]   # torso_upper_neck_tilt_link -> head_axis_link
