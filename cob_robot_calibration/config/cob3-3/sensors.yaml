@@ -4,14 +4,7 @@ camera_chains:
     chain:
         before_chain: []
         chains: [torso_chain, head_chain]
-        after_chain: [head_color_camera_l_frame ]
-
-  - sensor_id: kinect_rgb
-    camera_id: kinect_rgb
-    chain:
-        before_chain: []
-        chains: [torso_chain, head_chain]
-        after_chain: [head_cam3d_frame ]
+        after_chain: [head_color_camera_l_link ]
 
 sensor_chains:
   - sensor_id:    arm_chain
