@@ -59,17 +59,14 @@ class FullChainRobotParams:
         self._config_dict = config_dict
         self.calc_block = FullChainCalcBlock()
         self._full_config = configuration
-        print self._full_config
         self.build_chains(self._config_dict["chains"])
 
     def build_chains(self, chain_ids):
         self.chains = [None] * len(chain_ids)
         for chain in self._full_config["chains"]:
-            print chain
             if chain["chain_id"] in chain_ids:
                 idx = chain_ids.index(chain["chain_id"])
                 self.chains[idx] = SingleChainCalc(chain)
-        print chain_ids
 
     def update_config(self, robot_params):
         # for transform_name in self._config_dict["before_chain"]:
@@ -142,12 +139,11 @@ class FullChainCalcBlock:
         # Apply the 'before chain' transforms
         for before_chain_T in self._before_chain_Ts:
             pose = pose * before_chain_T.transform
-
         # Apply the Chain
 
         for chain in self._chains:
             for transformation in m_chain:
-                if transformation.chain_id in self._chain_ids:
+                if transformation.chain_id == chain._config_dict["chain_id"]:
                     t = transformation
             mat = chain.fk(t)
             pose = pose * mat

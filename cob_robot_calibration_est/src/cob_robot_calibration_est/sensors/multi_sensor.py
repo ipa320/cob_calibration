@@ -63,8 +63,8 @@ class MultiSensor:
         self._sensor_configs = sensor_configs
         self.sensors = []
         self.checkerboard = "NONE"
-        print "in MultiSensor"
-        print self._sensor_configs
+        #print "in MultiSensor"
+        #print self._sensor_configs
 
     def sensors_from_message(self, msg):
         sensors = []
@@ -100,6 +100,8 @@ class MultiSensor:
         self.checkerboard = msg.target_id
 
     def update_config(self, robot_params):
+        #import code
+        #code.interact(local=locals())
         for sensor in self.sensors:
             sensor.update_config(robot_params)
 
@@ -109,6 +111,8 @@ class MultiSensor:
         if len(r_list) == 0:
             return array([])
 
+        #import code
+        #code.interact(local=locals())
         r = concatenate(r_list, 0)
         return r
 

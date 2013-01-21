@@ -42,12 +42,13 @@
 #      \
 #       before_chain_Ts -- target_chain -- after_chain_Ts -- checkerboard
 
-from numpy import ones, reshape, array, zeros, diag, matrix, real
+from numpy import reshape, array, zeros, diag, matrix, real
 import roslib
 roslib.load_manifest('cob_robot_calibration_est')
 import rospy
 from cob_robot_calibration_est.full_chain import FullChainRobotParams
-from sensor_msgs.msg import JointState
+from cob_robot_calibration_est.ChainMessage import ChainMessage
+#import code
 
 
 class ChainBundler:
@@ -119,7 +120,7 @@ class ChainSensor:
         cov = self.compute_cov(target_pts)
         gamma = matrix(zeros(cov.shape))
         num_pts = self.get_residual_length() / 3
-
+        #code.interact(local=locals())
         for k in range(num_pts):
             #print "k=%u" % k
             first = 3 * k
@@ -133,28 +134,59 @@ class ChainSensor:
         return gamma
 
     def compute_cov(self, target_pts):
-        _ones = ones([7, self.get_residual_length()])
-        cov = matrix(diag([0.01] * self.get_residual_length()))
-
-        return cov
+        '''
+        Computes the measurement covariance in pixel coordinates for the given
+        set of target points (target_pts)
+        Input:
+         - target_pts: 4xN matrix, storing N feature points of the target, in homogeneous coords
+        '''
         epsilon = 1e-8
+        #print "chain sensor"
+        if self._M_chain is not None:
+            M_chain = [chain for chain in self._M_chain if chain.chain_id in self._config_dict["chains"]]
+            cm = ChainMessage()
+            inertial = cm.deflate(M_chain)
+            num_params = len(inertial)
+            Jt = zeros([num_params, self.get_residual_length()])
 
-        num_joints = len(self._M_chain.chain_state.position)
-        Jt = zeros([num_joints, self.get_residual_length()])
+            x = inertial[:]
+            ## Compute the Jacobian from the chain's joint angles to pixel residuals
+            f0 = reshape(array(
+                self._calc_fk_target_pts(cm.inflate(x))[0:3, :].T), [-1])
+            for i in range(num_params):
+                x = inertial[:]
+                x[i] += epsilon
+                fTest = reshape(array(
+                    self._calc_fk_target_pts(cm.inflate(x))[0:3, :].T), [-1])
+                Jt[i] = (fTest - f0) / epsilon
+                #code.interact(local=locals())
+            cov_angles = [0.01] * num_params
 
-        x = JointState()
-        x.position = self._M_chain.chain_state.position[:]
+            ## Transform the chain's covariance from joint angle space into pixel space using the just calculated jacobian
+            chain_cov = matrix(Jt).T * matrix(diag(cov_angles)) * matrix(Jt)
 
-        f0 = reshape(array(self._calc_fk_target_pts(x)[0:3, :].T), [-1])
-        for i in range(num_joints):
-            x.position = list(self._M_chain.chain_state.position[:])
-            x.position[i] += epsilon
-            fTest = reshape(array(self._calc_fk_target_pts(x)[0:3, :].T), [-1])
-            Jt[i] = (fTest - f0) / epsilon
-        cov_angles = [x * x for x in self._full_chain.calc_block._chain._cov_dict['joint_angles']]
-        #import code; code.interact(local=locals())
-        cov = matrix(Jt).T * matrix(diag(cov_angles)) * matrix(Jt)
-        return cov
+        return chain_cov
+        #_ones = ones([7, self.get_residual_length()])
+        #cov = matrix(diag([0.01] * self.get_residual_length()))
+
+        #epsilon = 1e-8
+
+        #num_joints = len(self._M_chain.chain_state.position)
+        #Jt = zeros([num_joints, self.get_residual_length()])
+
+        #x = JointState()
+        #x.position = self._M_chain.chain_state.position[:]
+
+        #f0 = reshape(array(self._calc_fk_target_pts(x)[0:3, :].T), [-1])
+        #for i in range(num_joints):
+            #x.position = list(self._M_chain.chain_state.position[:])
+            #x.position[i] += epsilon
+            #fTest = reshape(array(self._calc_fk_target_pts(x)[0:3, :].T), [-1])
+            #Jt[i] = (fTest - f0) / epsilon
+        #cov_angles = [x * x for x in self._full_chain.calc_block._chain._cov_dict['joint_angles']]
+        ##import code; code.interact(local=locals())
+        #cov = matrix(Jt).T * matrix(diag(cov_angles)) * matrix(Jt)
+        #return cov
 
     def get_residual_length(self):
         pts = self._checkerboard.generate_points()
@@ -168,12 +200,14 @@ class ChainSensor:
         '''
         return self._calc_fk_target_pts()
 
-    def _calc_fk_target_pts(self):
+    def _calc_fk_target_pts(self, M_chain=None):
+        #code.interact(local=locals())
+        M_chain = self._M_chain if M_chain is None else M_chain
         # Get the target's model points in the frame of the tip of the target chain
         target_pts_tip = self._checkerboard.generate_points()
 
         # Target pose in root frame
-        target_pose_root = self._full_chain.calc_block.fk(self._M_chain)
+        target_pose_root = self._full_chain.calc_block.fk(M_chain)
 
         # Transform points into the root frame
         target_pts_root = target_pose_root * target_pts_tip
