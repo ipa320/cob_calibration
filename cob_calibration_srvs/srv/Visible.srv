@@ -1,2 +1,3 @@
 ---
-int8 visible
+bool master
+bool every

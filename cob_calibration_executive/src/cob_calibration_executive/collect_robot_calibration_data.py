@@ -81,7 +81,7 @@ def capture_loop(positions, sss, visible, capture_kinematics, capture_image):
         pos = positions[index]
         #joint_pos = [[((a + (np.pi)) % (2 * np.pi)) - (np.pi)
                       #for a in positions[index]['joint_position']]]
-        joint_pos=[[a for a in positions[index]['joint_position']]]
+        joint_pos = [[a for a in positions[index]['joint_position']]]
         print pos
         nh = sss.move("arm", joint_pos)
         while nh.get_state() == 0:
@@ -103,22 +103,22 @@ def capture_loop(positions, sss, visible, capture_kinematics, capture_image):
         sss.move("torso", [positions[index]['torso_position']])
         sss.sleep(1)
 
-        visible_response = visible().visible
-        if visible_response == 3:
-            print "3 Checkerboards found"
+        visible_response = visible()
+        if visible_response.every:
+            print "All Checkerboards found"
             capture_kinematics()
             capture_image()
             print "--> captured 1 sample for camera calibration"
             print "--> captured 1 sample for kinematics calibration"
             counter_camera += 1
             counter_kinematics += 1
-        elif visible_response == 2:
-            print "2 Checkerboards found"
+        elif visible_response.master:
+            print "Master Checkerboards found"
             capture_kinematics()
             print "--> captured 1 sample for kinematics calibration"
             counter_kinematics += 1
 
-            capture()
+            #capture()
 
 
 def main():
