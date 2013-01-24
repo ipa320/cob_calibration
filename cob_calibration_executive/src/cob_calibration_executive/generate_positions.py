@@ -138,7 +138,7 @@ def getIk(arm_ik, (t, q), link, seed=None):
         return result
 
 
-def calculate_ik(pose, arm_ik, seed=[0.05897, -1.62093, 1.61828, -0.60607, 2.32322, -1.44618, -1.08467]):
+def calculate_ik(pose, arm_ik, seed=[0.7, -1.6, 4.4, 0.5, 1.2, 1.5, 3.0]):
     via_home = False
     for seed in [seed]:
         joint_positions = getIk(arm_ik, pose, "sdh_palm_link", seed)
@@ -271,13 +271,14 @@ def main():
 
                     chessboard_pose.publish(nextPose)
                     rospy.sleep(0.2)
-                    (t, r) = get_cb_pose_head(listener, '/head_cam3d_link')
+                    (t, r) = get_cb_pose_head(
+                        listener, '/head_color_camera_l_link')
                     angles = calculate_angles(t)
                     if not torso.in_range(angles):
                         continue
                     print t
 
-                    (t, r) = get_cb_pose(listener, '/head_cam3d_link')
+                    #(t, r) = get_cb_pose(listener, '/head_cam3d_link')
 
                     print t
                     (t, r) = get_cb_pose(listener, '/arm_0_link')
@@ -290,7 +291,7 @@ def main():
                         print 'IK solution found'
                     else:
                         continue
-                    torso_state = torso.calculate_ik(angles)
+                    torso_state = [-a for a in torso.calculate_ik(angles)]
                     for torso_js in [torso_state, [0] * len(torso_state)]:
                         joint_states.append({'joint_position': js[
                                             0], 'torso_position': list(torso_js)})
