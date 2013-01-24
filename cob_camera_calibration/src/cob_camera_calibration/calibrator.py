@@ -129,6 +129,9 @@ class Calibrator:
             if corners != None:
                 image_points.append(corners.reshape(-1, 2))
                 object_points.append(pattern_points)
+	    else:
+		image_points.append(None)
+		object_points.append(None)
         
         assert(len(image_points) == len(object_points))
         if len(image_points) == 0:
@@ -266,7 +269,23 @@ class StereoCalibrator(Calibrator):
         print "--> detecting calibration object in all images..."
         (image_points_l, object_points_l) = self._detect_points(images_l, is_grayscale=True)
         (image_points_r, object_points_r) = self._detect_points(images_r, is_grayscale=True)
-    
+
+        impl=[]
+        obpl=[]
+        impr=[]
+        obpr=[]
+
+        for ipl, opl, ipr, opr in zip(image_points_l, object_points_l, image_points_r, object_points_r):
+	    if ipl is not None and opl is not None and ipr is not None and opr is not None:
+	
+		impl.append(ipl)
+		obpl.append(opl)
+		impr.append(ipr)
+		obpr.append(opr)	 
+	image_points_l=impl
+	object_points_l=obpl
+	image_points_r=impr
+	object_points_r=obpr
         # sanity checks for image and object points
         print "image_points_l = " + str(len(image_points_l)) + ", image_points_r = " + str(len(image_points_r))
         print "object_points_l = " + str(len(object_points_l)) + ", object_points_r = " + str(len(object_points_r))
