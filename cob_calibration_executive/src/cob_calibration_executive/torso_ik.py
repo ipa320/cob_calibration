@@ -38,7 +38,7 @@ class TorsoIK():
         self.limits = []
         for jn in self.joint_names:
             self.limits.append(
-                min(np.abs(robot.joints[jn].limits.lower), robot.joints[jn].limits.upper))
+                min(np.abs(robot.joints[jn].limits.lower), robot.joints[jn].limits.upper)*0.99)
 
     def compute_maximum_angles(self):
         """docstring for compute_maximum_angles"""
