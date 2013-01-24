@@ -161,7 +161,7 @@ class VisibilityCheckerNode():
 
         elif visible[0]:
             response.master = True
-        return VisibleResponse(response)
+        return response
 
     def run(self):
         # Start service
