@@ -53,9 +53,10 @@
 # If not, see <http://www.gnu.org/licenses/>.
 #
 #################################################################
-PKG  = 'cob_image_capture'
+PKG = 'cob_image_capture'
 NODE = 'image_capture'
-import roslib; roslib.load_manifest(PKG)
+import roslib
+roslib.load_manifest(PKG)
 import rospy
 
 import cv
@@ -63,33 +64,37 @@ from sensor_msgs.msg import Image
 from cob_calibration_srvs.srv import Capture, CaptureResponse
 from cv_bridge import CvBridge, CvBridgeError
 
+
 class ImageCaptureNode():
     '''
     @summary: Captures Images from one or more cameras (Image message topics) to files.
-    
+
     Number of cameras, output folder and file names are configurable via ROS parameters.
-    After startup call "~capture_images" ROS service to save images of all 
+    After startup call "~capture_images" ROS service to save images of all
     cameras to output folder.
     '''
 
-    def __init__(self): 
+    def __init__(self):
         '''
         Initializes storage, gets parameters from parameter server and logs to rosinfo
         '''
         rospy.init_node(NODE)
-        self.bridge = CvBridge() 
+        self.bridge = CvBridge()
         self.counter = 0
-               
-        # Get params from ros parameter server or use default
-        self.numCams       = int(rospy.get_param("~number_of_cameras", "1"))
-        self.output_folder     = rospy.get_param("~output_folder",     "/tmp")
-        self.save_header_stamp = rospy.get_param("~save_header_stamp", "False")
-        self.camera = []
-        self.file_prefix = []
-        for id in range(self.numCams):
-            self.camera.append(     rospy.get_param("~camera%d" % id,      "/stereo/left/image_raw"))
-            self.file_prefix.append(rospy.get_param("~file_prefix%d" % id, "cam%d_" % id))
 
+        # Get params from ros parameter server or use default
+        self.cams = rospy.get_param("~cameras")
+        self.numCams = int(rospy.get_param("~number_of_cameras", "1"))
+        self.output_folder = rospy.get_param("~output_folder", "/tmp")
+        self.save_header_stamp = rospy.get_param("~save_header_stamp", "False")
+        self.camera = [self.cams['reference']['topic']]
+
+        self.file_prefix = [self.cams['reference']['file_prefix']]
+        for cam in self.cams["further"]:
+            self.camera.append(cam["topic"])
+            self.file_prefix.append(cam["file_prefix"])
+
+        self.numCams = len(self.camera)
         # Init images
         self.image = []
         for id in range(self.numCams):
@@ -98,91 +103,98 @@ class ImageCaptureNode():
         # Subscribe to images
         self.imageSub = []
         for id in range(self.numCams):
-            self.imageSub.append(rospy.Subscriber(self.camera[id], Image, self._imageCallback, id))
-        
+            self.imageSub.append(rospy.Subscriber(
+                self.camera[id], Image, self._imageCallback, id))
+
         # Wait for image messages
         for id in range(self.numCams):
             rospy.wait_for_message(self.camera[id], Image, 5)
-        
+
         # Report
         rospy.loginfo("started capture process...")
         rospy.loginfo("capturing images from")
         for id in range(self.numCams):
-            rospy.loginfo(" %s -> files %s*" % (self.camera[id], self.file_prefix[id]))
+            rospy.loginfo(
+                " %s -> files %s*" % (self.camera[id], self.file_prefix[id]))
         rospy.loginfo("to output folder %s" % self.output_folder)
 
     def _imageCallback(self, data, id):
         '''
         Copy image message to local storage
-        
+
         @param data: Currently received image message
         @type  data: ROS Image() message
         @param id: Id of camera from which the image was received
-        @type  id: integer 
+        @type  id: integer
         '''
         #print "cb executed"
         self.image[id] = data
-    
+
     def _convertAndSaveImage(self, rosImage, filenamePrefix, counter):
         '''
         Convert image to cvImage and store to file as jpg image.
-        
+
         @param rosImage: Image
         @type  rosImage: ROS Image() message
         @param filenamePrefix: Prefix to be prepended to image filename
         @type  filenamePrefix: string
         @param counter: Number to be appended to image filename
         @type  counter: integer
-        '''   
+        '''
         # save image
-        cvImage = cv.CreateImage((1,1), 1 , 3)
+        cvImage = cv.CreateImage((1, 1), 1, 3)
         try:
             cvImage = self.bridge.imgmsg_to_cv(rosImage, "bgr8")
         except CvBridgeError, e:
             print e
-        cv.SaveImage(self.output_folder+'/'+filenamePrefix+'%05d.jpg' % counter, cvImage)
-                  
+        cv.SaveImage(self.output_folder + '/' + filenamePrefix +
+                     '%05d.jpg' % counter, cvImage)
+
         # save header
         if self.save_header_stamp:
-            f = open(self.output_folder+'/'+filenamePrefix+'%05d_header.txt' % counter, "w")
+            f = open(self.output_folder + '/' +
+                     filenamePrefix + '%05d_header.txt' % counter, "w")
             f.writelines(str(rosImage.header))
             f.close()
-            
+
     def _captureHandle(self, req):
         '''
         Service handle for "Capture" Service
         Grabs images, converts them and saves them to files
-        
+
         @param req: service request
         @type  req: CaptureRequest() message
-        
+
         @return: CaptureResponse() message
         '''
-        # grab image messages 
+        # grab image messages
         localImages = []
         for id in range(self.numCams):
             if self.image[id].header.stamp > rospy.Time(0):
                 localImages.append(self.image[id])
-                rospy.loginfo("   header.stamp of cam %d: %s" % (id, str(self.image[id].header.stamp)))
-        
+                rospy.loginfo("   header.stamp of cam %d: %s" %
+                              (id, str(self.image[id].header.stamp)))
+
         if len(localImages) == 0:
             rospy.loginfo("No sample captured, no image in queue.")
             return CaptureResponse(False)
-        
+
         # convert and save
         for id in range(self.numCams):
-            self._convertAndSaveImage(localImages[id], self.file_prefix[id], self.counter)
+            self._convertAndSaveImage(
+                localImages[id], self.file_prefix[id], self.counter)
         self.counter = self.counter + 1
-        
+
         # log infos
         rospy.loginfo("-> %s image(s) captured | captured %d set(s) of images in total" % (self.numCams, self.counter))
-        
+
         # return service response
         return CaptureResponse(True)
-        
+
     def run(self):
         # Start service
-        srv = rospy.Service('/image_capture/capture', Capture, self._captureHandle)
+        srv = rospy.Service(
+            '/image_capture/capture', Capture, self._captureHandle)
         rospy.loginfo("service '/image_capture/capture' started, waiting for requests...")
         rospy.spin()
 

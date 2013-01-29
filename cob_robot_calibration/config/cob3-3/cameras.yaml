@@ -1,0 +1,14 @@
+reference:
+        name: left
+        topic: /stereo/left/image_raw
+        file_prefix: left_
+
+further:
+       -        name: right
+                topic: /stereo/right/image_raw
+                file_prefix: right_
+       -        name: cam3d
+                topic: /cam3d/rgb/image_color
+                file_prefix: kinect_
+
+                

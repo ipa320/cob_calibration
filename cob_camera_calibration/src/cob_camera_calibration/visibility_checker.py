@@ -59,7 +59,6 @@ import roslib
 roslib.load_manifest(PKG)
 import rospy
 
-import cv2
 from cob_camera_calibration import Checkerboard, CheckerboardDetector, cv2util
 from sensor_msgs.msg import Image
 from cob_calibration_srvs.srv import *
@@ -88,12 +87,11 @@ class VisibilityCheckerNode():
         self.counter = 0
 
         # Get params from ros parameter server or use default
-        self.numCams = int(rospy.get_param("~number_of_cameras", "1"))
-        self.camera = []
-        self.file_prefix = []
-        for id in range(self.numCams):
-            self.camera.append(rospy.get_param(
-                "~camera%d" % id, "/stereo/left/image_raw"))
+        self.cams = rospy.get_param("~cameras")
+        self.camera = [self.cams["reference"]["topic"]]
+        for cam in self.cams["further"]:
+            self.camera.append(cam["topic"])
+        self.numCams = len(self.camera)
 
         # Init images
         self.image = []
@@ -161,7 +159,7 @@ class VisibilityCheckerNode():
 
         elif visible[0]:
             response.master = True
-        return VisibleResponse(response)
+        return response
 
     def run(self):
         # Start service

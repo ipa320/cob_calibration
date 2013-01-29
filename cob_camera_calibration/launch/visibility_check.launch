@@ -4,20 +4,8 @@
     <!-- run image_capture node -->
     <node name="visibility_check" pkg="cob_camera_calibration" type="visibility_checker.py" args="" output="screen">
         <!-- set to 3 cameras -->
-        <param name="number_of_cameras" value="3" />
-
-        <!-- configure cameras --> 
-	<param name="camera0"       value="/cam3d/rgb/image_color" /> <!-- for
-	real robot: image_color, for simulation: image_raw -->
-        <param name="file_prefix0"  value="kinect_" />
-        
-        <param name="camera1"       value="/stereo/left/image_raw" />
-        <param name="file_prefix1"  value="left_" />
-
-        <param name="camera2"       value="/stereo/right/image_raw" />
-        <param name="file_prefix2"  value="right_" />
-
-       
+	<rosparam param="cameras" file="$(find
+		cob_robot_calibration)/config/$(env ROBOT)/cameras.yaml"/>
 
         <!-- set output folder -->
         </node>
