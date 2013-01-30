@@ -2,10 +2,14 @@
 <launch>
   
   	<!-- node that collects and publishes to robot_measurement -->
-  	<node type="collect_data.py" pkg="cob_robot_calibration" name="$(anon collect_data)" output="screen" />
+  	<node type="collect_data.py" pkg="cob_robot_calibration" name="$(anon collect_data)" output="screen">
 	<param name="sensors_yaml" value="$(find
 		cob_robot_calibration)/config/$(env ROBOT)/sensors.yaml" />
-  
+	<rosparam param="cameras" file="$(find
+		cob_robot_calibration)/config/$(env ROBOT)/cameras.yaml" />  
+	<rosparam param="calibration_pattern" file="$(find
+		cob_robot_calibration)/config/$(env ROBOT)/calibration_pattern.yaml" />  
+	</node>
 	<!-- record bagfile -->
  	<node type="record" pkg="rosbag" name="record" output="screen"
 	args="--output-name /tmp/cal/cal_measurements /robot_measurement /robot_measurement_image_left /robot_measurement_image_right /robot_measurement_image_kinect_rgb /robot_description">
