@@ -84,39 +84,31 @@ class StereoCalibrationNode():
         # get parameter from parameter server or set defaults
         self.folder = rospy.get_param(
             '~folder', ".")
-        self.pattern_size = rospy.get_param(
-            '~pattern_size', "9x6")
-        self.square_size = rospy.get_param(
-            '~square_size', 0.03)
+        self.pattern = rospy.get_param(
+            '~calibration_pattern')
+        self.output_path = rospy.get_param(
+            '~output_file_path')
+        self.cameras = rospy.get_param(
+            '~cameras')
 
         # Reference Camera
-        self.image_prefix_ref = rospy.get_param(
-            '~image_prefix_ref', "left")
-        self.camera_name_ref = rospy.get_param(
-            '~camera_name_ref', "left")
-        self.frame_id_ref = rospy.get_param(
-            '~frame_id_ref', "/left")
-        self.output_file_ref = rospy.get_param(
-            '~output_file_ref', self.camera_name_ref + ".yaml")
+        self.image_prefix_ref = self.cameras["reference"]["file_prefix"]
+        self.camera_name_ref = self.cameras["reference"]["name"]
+        self.frame_id_ref = self.cameras["reference"]["frame_id"]
+        self.output_file_ref = self.output_path + self.cameras["reference"][
+            "calibration_data_file"]
 
         # Dependent Cameras
-        self.image_prefixes_dep = [rospy.get_param(
-            '~image_prefix_r', "right"),
-            rospy.get_param('~image_prefix_cam3d', None),
-            rospy.get_param('~image_prefix_cam3d_ir', None)]
-        self.camera_names_dep = [rospy.get_param(
-            '~camera_name_r', "right"),
-            rospy.get_param('~camera_name_cam3d', None),
-            rospy.get_param('~camera_name_cam3d_ir', None)]
-        self.frame_ids_dep = [rospy.get_param(
-            '~frame_id_r', "/right"),
-            rospy.get_param('~frame_id_cam3d', None),
-            rospy.get_param('~frame_id_cam3d_ir', None)]
-        self.output_files_dep = [rospy.get_param(
-            '~output_file_r', None),
-            rospy.get_param(
-                '~output_file_cam3d', None),
-            rospy.get_param('~output_file_cam3d_ir', None)]
+        self.image_prefixes_dep = []
+        self.camera_names_dep = []
+        self.frame_ids_dep = []
+        self.output_files_dep = []
+        for cam in self.cameras["further"]:
+            self.image_prefixes_dep.append(cam.get("file_prefix", None))
+            self.camera_names_dep.append(cam.get("name", None))
+            self.frame_ids_dep.append(cam.get("frame_id", None))
+            self.output_files_dep.append(
+                self.output_path + cam.get("calibration_data_file", None) if "calibration_data_file" in cam else None)
 
         self.calibration_urdf_in = rospy.get_param(
             '~calibration_urdf_in', "")
@@ -134,15 +126,15 @@ class StereoCalibrationNode():
             '~verbose', False)
 
         # split pattern_size string into tuple, e.g '9x6' -> tuple(9,6)
-        self.pattern_size = tuple((int(self.pattern_size.split(
-            "x")[0]), int(self.pattern_size.split("x")[1])))
+        self.pattern_size = tuple((int(self.pattern["pattern_size"].split(
+            "x")[0]), int(self.pattern["pattern_size"].split("x")[1])))
 
     def run_stereo_calibration(self):
         '''
         Runs the calibration
         '''
         # set up Checkerboard, CheckerboardDetector and MonoCalibrator
-        board = Checkerboard(self.pattern_size, self.square_size)
+        board = Checkerboard(self.pattern_size, self.pattern["square_size"])
         detector = CheckerboardDetector(board)
         attributes2update = {}
         for image_prefix_dep, camera_name_dep, frame_id_dep, output_file_dep, baseline_prop_prefix in zip(self.image_prefixes_dep, self.camera_names_dep, self.frame_ids_dep, self.output_files_dep, self.baseline_prop_prefixes_dep):
@@ -180,7 +172,7 @@ class StereoCalibrationNode():
                     print "==> saved left results to:", self.output_file_ref
 
                     camera_info_dep.save_camera_yaml_file(output_file_dep)
-                    print "==> saved right results to:", output_file_dep
+                    print "==> saved " + camera_name_dep + " results to:", output_file_dep
 
                 # convert baseline (invert transfrom as T and R bring right frame into left
                 # and we need transform from left to right for urdf!)

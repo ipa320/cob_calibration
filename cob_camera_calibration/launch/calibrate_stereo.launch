@@ -4,24 +4,13 @@
     <!-- run stereo calibration of left and right camera -->
     <node type="stereo_calibration.py" pkg="cob_camera_calibration" name="$(anon mono_calibration)" output="screen">
 
-        <param name="folder"                value="/tmp/cal/intrinsic" />
-        <param name="pattern_size"          value="9x6" />
-        <param name="square_size"           value="0.03" />
+	    <param name="folder"
+		    value="/home/fmw-ja/Dropbox/Studium/7_WS1213/Bagfiles/20130114_cob3-3/cal/intrinsic" />
+	<rosparam param="calibration_pattern" file="$(find cob_robot_calibration)/config/$(env ROBOT)/calibration_pattern.yaml"/>
 
-        <param name="image_prefix_l"        value="left" />
-        <param name="camera_name_l"         value="left" />
-        <param name="frame_id_l"            value="/head_color_camera_l_link" />
-        <param name="output_file_l"         value="$(find cob_calibration_data)/$(env ROBOT)/calibration/cameras/left.yaml" />
-
-        <param name="image_prefix_r"        value="right" />
-        <param name="camera_name_r"         value="right" />
-        <param name="frame_id_r"            value="/head_color_camera_l_link" />
-        <param name="output_file_r"         value="$(find cob_calibration_data)/$(env ROBOT)/calibration/cameras/right.yaml" />
-
-        <param name="image_prefix_cam3d"        value="kinect" />
-        <param name="camera_name_cam3d"         value="cam3d" />
-        <param name="frame_id_cam3d"            value="/head_cam3d_link" />
-
+	<rosparam param="cameras" file="$(find
+		cob_robot_calibration)/config/$(env ROBOT)/cameras.yaml"/>
+        <param name="output_file_path"         value="$(find cob_calibration_data)/$(env ROBOT)/calibration/cameras/" />
 
         <param name="calibration_urdf_in"  value="$(find cob_calibration_data)/$(env ROBOT)/calibration/calibration_offset.urdf.xacro" />
         <param name="calibration_urdf_out" value="$(find cob_calibration_data)/$(env ROBOT)/calibration/calibration_offset.urdf.xacro" />
