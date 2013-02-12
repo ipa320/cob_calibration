@@ -1,13 +1,12 @@
 <?xml version="1.0"?>
 <launch>
 
-    <!-- run image_capture node -->
+    <!-- run visibility_check node -->
     <node name="visibility_check" pkg="cob_camera_calibration" type="visibility_checker.py" args="" output="screen">
-        <!-- set to 3 cameras -->
+        <!-- load camera config yaml -->
 	<rosparam param="cameras" file="$(find
 		cob_robot_calibration)/config/$(env ROBOT)/cameras.yaml"/>
 
-        <!-- set output folder -->
         </node>
 
 
