@@ -5,6 +5,5 @@
 	<include file="$(find cob_default_robot_config)/upload_param.launch"/>
 
 	<!-- upload calibration script_server parameters -->
-	<rosparam command="load" ns="/script_server/arm" file="$(find cob_calibration_executive)/config/$(env ROBOT)/arm_joint_configurations.yaml"/>
-	<rosparam command="load" ns="/script_server/torso" file="$(find cob_calibration_executive)/config/$(env ROBOT)/torso_joint_configurations.yaml"/>
+	<rosparam command="load" ns="/script_server/arm" file="$(find cob_robot_calibration)/config/$(env ROBOT)/calibration_seed.yaml"/>
 </launch>
