@@ -63,7 +63,7 @@ import rospy
 
 from simple_script_server import simple_script_server
 from cob_calibration_srvs.srv import Visible, Capture
-import numpy as np
+from cob_calibration_msgs.msg import Progress
 import yaml
 import tf
 
@@ -73,10 +73,17 @@ def capture_loop(positions, sss, visible, capture_kinematics, capture_image):
     Moves arm to all positions using script server instance sss
     and calls capture() to capture samples
     '''
+    progress_pub = rospy.Publisher(
+        "/calibration/data_collection/progress", Progress)
     br = tf.TransformBroadcaster()
     counter_camera = 0
     counter_kinematics = 0
+    msg = Progress()
     for index in range(len(positions)):
+        msg.Percent_done = round(100.0 * index / len(positions), 2)
+        msg.Samples_left = len(positions) - index
+        progress_pub.publish(msg)
+
         print "--> moving arm to sample #%s" % index
         pos = positions[index]
         #joint_pos = [[((a + (np.pi)) % (2 * np.pi)) - (np.pi)
@@ -113,11 +120,13 @@ def capture_loop(positions, sss, visible, capture_kinematics, capture_image):
             counter_camera += 1
             counter_kinematics += 1
         elif visible_response.master:
-            print "Master Checkerboards found"
+            print "Master Checkerboard found"
             capture_kinematics()
             print "--> captured 1 sample for kinematics calibration"
             counter_kinematics += 1
 
+        msg.Camera_samples = counter_camera
+        msg.Kinematic_samples = counter_kinematics
             #capture()
 
 
@@ -156,7 +165,7 @@ def main():
     sss.move("head", "back")
 
     # get position from parameter server
-    position_path = rospy.get_param('position_path', None)
+    position_path = rospy.get_param('~position_path', None)
     if position_path is None:
         print "[ERROR]: no path for positions set"
         return
@@ -165,6 +174,7 @@ def main():
     print "==> capturing samples"
     start = rospy.Time.now()
     capture_loop(positions, sss, visible, capture_kinematics, capture_image)
+    sss.move("arm", "calibration")
     print "finished after %s seconds" % (rospy.Time.now() - start).to_sec()
 
 
