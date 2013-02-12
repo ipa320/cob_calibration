@@ -3,8 +3,8 @@ camera_chains:
     camera_id: left
     chain:
         before_chain: []
-        chains: [torso_chain, head_chain]
-        after_chain: [head_color_camera_l_link ]
+        chains: [torso_chain]
+        after_chain: [head_axis_link,cam_reference_link ]
 
 sensor_chains:
   - sensor_id:    arm_chain
@@ -17,9 +17,9 @@ chains:
   - chain_id: torso_chain
     sensor_id: torso_chain_kinematic
     parent_frame: base_link
-    before_chain: [ torso_0_link ]
+    before_chain: [ torso_base_link ]
     after_chain: []
-    links: [torso_0_link, torso_upper_neck_tilt_link]
+    links: [torso_base_link, torso_upper_neck_tilt_link]
 
   - chain_id: head_chain
     sensor_id: head_chain_kinematic

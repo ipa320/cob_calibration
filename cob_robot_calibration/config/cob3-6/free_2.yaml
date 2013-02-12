@@ -1,4 +1,4 @@
-checkerboards:
+####### Use this file as template for free_0.yaml - free_2.yaml. #######checkerboards:
   cb_9x6: {corners_x: 0, corners_y: 0, spacing_x: 0, spacing_y: 0}
 dh_chains:
   arm_chain:
@@ -27,9 +27,9 @@ rectified_cams:
     cy_shift: 0
     f_shift: 0
 transforms:
-  arm_0_link: [1, 1, 1, 1, 1, 1]
-  arm_cb: [1, 1, 1, 1, 1, 1]
-  head_color_camera_l_link: [1, 1, 1, 1, 1, 1]
-  head_cover_link: [1, 1, 1, 1, 1, 1]
+  arm_0_link: [1,1,1,1,1,1]
+  arm_cb: [1,1,1,1,1,1]
+  cam_reference_link: [1,1,1,1,1,1]
+  head_axis_link: [0, 0, 0, 0, 0, 0]
   sdh_palm_link: [0, 0, 0, 0, 0, 0]
-  torso_0_link: [1, 1, 1, 1, 1, 1]
+  torso_base_link: [1,1,1,1,1,1]
