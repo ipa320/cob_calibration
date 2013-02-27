@@ -194,6 +194,7 @@ class DataCollector():
                 if not self._left_received:
                     print "--> still waiting for sample from left"
                 start_time = rospy.Time.now()
+	print "got sample"
         latest_left = self._left
 
         self._torso_joint_msg_received = False
@@ -244,7 +245,8 @@ class DataCollector():
                         trans, rot) = self.listener.lookupTransform(links[0], links[1],
                                                                     rospy.Time(0))
                     break
-                except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationExcept):
+                except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+		    print "error looking up transformation from ", links[0], " to ", links[1]
                     rospy.sleep(0.5)
             chain_msg.translation = trans
             chain_msg.rotation = rot
