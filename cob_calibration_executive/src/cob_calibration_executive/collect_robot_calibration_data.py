@@ -134,6 +134,7 @@ def main():
     rospy.init_node(NODE)
     print "==> %s started " % NODE
 
+    rospy.sleep(4)
     # service client
     checkerboard_checker_name = "/image_capture/visibility_check"
     visible = rospy.ServiceProxy(checkerboard_checker_name, Visible)
