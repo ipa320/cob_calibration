@@ -5,7 +5,7 @@
     <node type="stereo_calibration.py" pkg="cob_camera_calibration" name="$(anon mono_calibration)" output="screen">
 
 	    <param name="folder"
-		    value="/home/fmw-ja/Dropbox/Studium/7_WS1213/Bagfiles/20130114_cob3-3/cal/intrinsic" />
+		    value="/tmp/cal/intrinsic" />
 	<rosparam param="calibration_pattern" file="$(find cob_robot_calibration)/config/$(env ROBOT)/calibration_pattern.yaml"/>
 
 	<rosparam param="cameras" file="$(find
