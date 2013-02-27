@@ -6,10 +6,10 @@
 
 	    <param name="folder"
 		    value="/tmp/cal/intrinsic" />
-	<rosparam param="calibration_pattern" file="$(find cob_robot_calibration)/config/$(env ROBOT)/calibration_pattern.yaml"/>
+        <rosparam param="calibration_pattern" file="$(find cob_robot_config)/$(env ROBOT)/user_defined/calibration_pattern.yaml"/>
 
 	<rosparam param="cameras" file="$(find
-		cob_robot_calibration)/config/$(env ROBOT)/cameras.yaml"/>
+        cob_robot_config)/$(env ROBOT)/user_defined/cameras.yaml"/>
         <param name="output_file_path"         value="$(find cob_calibration_data)/$(env ROBOT)/calibration/cameras/" />
 
         <param name="calibration_urdf_in"  value="$(find cob_calibration_data)/$(env ROBOT)/calibration/calibration_offset.urdf.xacro" />
