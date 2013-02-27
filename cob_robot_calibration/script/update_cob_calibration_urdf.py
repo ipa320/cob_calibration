@@ -101,10 +101,11 @@ class UpdateCobCalibrationUrdf():
         # tfs2update stores the transform names [which need to be converted to (x, y, z, roll, pitch, yaw) 
         # and updated in the urdf] and their corresponding property name prefixes as used in calibration.urdf.xarco
         self.tfs2update = {'arm_0_link':                        'offset_arm_', 
-                           'torso_0_link':                      'offset_torso_',  
-                           'head_color_camera_l_link':          'offset_cam_l_', 
+                           'torso_base_link':                      'offset_torso_',  
+                           'cam_reference_link':          'offset_cam_ref_' 
                            #'head_color_camera_r_joint':          'cam_r_', 
-                           'head_cam3d_link': 'offset_cam3d_'}
+#                           'head_cam3d_link': 'offset_cam3d_'
+}
         
         # chains2process stores the dh chain names of chains which need to be updated and their corresponding
         # property names/segments as used in calibration.urdf.xarco
