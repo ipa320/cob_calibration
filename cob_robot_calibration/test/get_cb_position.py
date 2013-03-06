@@ -85,11 +85,12 @@ class TransformationTransform():
     def sendTransform(transform, frame):
         rot = tf.transformations.quaternion_from_matrix(transform[0])
         self.bc.sendTransform(transform[1], rot, "detected", frame)
+        self.bc.sendTransform((0, 0, 0.1), (0, 0, 0, 1), "target", "/detected")
 
     def getTransform(transform, frame):
         self.sendTransform(transform, frame)
 
-        trans, rot = self.listener.waitForTransform("/detected", "/arm_0_link",
+        trans, rot = self.listener.waitForTransform("/target", "/arm_0_link",
                                                     rospy.Time.now(), rospy.Duration(4))
 
         return trans, rot
@@ -217,11 +218,17 @@ if __name__ == '__main__':
 
     rospy.init_node(NODE)
     print "==> started " + NODE
+
+    # Detect chessboard
     detect = Detection()
     p, frame = detect.get_position()
     print p, frame
+
+    # calculate pose (10cm in z-direction ahead)
     tft = TransformationTransform()
     quat, trans = tft.getTransform(p, frame)
+
+    # prepare for ik calculation
     ik = IK()
     point = Point(trans)
     orientation = Quaternion(quat)
@@ -229,7 +236,11 @@ if __name__ == '__main__':
     h = Header()
     h.frame_id = "/arm_0_link"
     pose_stamped = PoseStamped(h, pose)
+
+    # solve ik
     sol, ec = ik.callIK(pose_stamped, "sdh_tip_link")
     print sol, ec
+
+    # tbd: move arm to target
 
     print "==> done, exiting"
