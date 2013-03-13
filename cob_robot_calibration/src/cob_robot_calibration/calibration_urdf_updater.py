@@ -57,26 +57,51 @@
 from xml.dom import minidom
 import numpy
 
+
 class CalibrationUrdfUpdater():
     '''
     Parses calibration.urdf.xarco and provides method to update it
     '''
-    
-    def __init__(self, urdf_in, urdf_out, debug=False,urdf_default=None):
+
+    def __init__(self, urdf_in, urdf_out, debug=False, urdf_default=None):
         '''
         Init object with paths to input and output xml
         '''
-	self.file_urdf_default=urdf_default
-        self.file_urdf_in =  urdf_in
+        self.file_urdf_default = urdf_default
+        self.file_urdf_in = urdf_in
         self.file_urdf_out = urdf_out
         self.debug = debug
-	
-    
+
+    def update_references(self, attributes2update):
+
+        print "--> loading calibration xml file from '%s'" % self.file_urdf_in
+        xml_dom = minidom.parse(file(self.file_urdf_in))
+
+        for node in xml_dom.getElementsByTagName("property"):
+            # sanity check, all property elements need name and value attributes
+            assert node.hasAttribute("name") and node.hasAttribute("value")
+            attr_name = node.getAttribute("name")
+            attr_value = float(node.getAttribute("value"))
+
+            if attr_name in attributes2update:
+                attr_value_new = attributes2update[attr_name] + attr_value
+                node.setAttribute("value", str(attr_value_new))
+                if self.debug:
+                    print "Updating '%s' from '%s' to '%s'" % (attr_name, attr_value, attr_value_new)
+        # convert changed dom to pretty xml string
+        xml_string = xml_dom.toprettyxml(indent="", newl="")
+
+        # save string to xml_out
+        print "--> saving results to calibration xml file '%s'" % self.file_urdf_out
+        f = open(self.file_urdf_out, "w")
+        f.writelines(xml_string)
+        f.close()
+
     def update(self, attributes2update):
         '''
         Read urdf xml file (self.file_urdf_in) and replace values according to attributes2update dictionary.
         Save results to urdf xml file (self.file_urdf_out)
-        
+
         @param attributes2update: names of arguments (of property tags) in urdf xml file which need to be updated -> new values
         @type  attributes2update: dictionary
         '''
@@ -84,40 +109,44 @@ class CalibrationUrdfUpdater():
         print "--> loading calibration xml file from '%s'" % self.file_urdf_in
         xml_dom = minidom.parse(file(self.file_urdf_in))
         if self.file_urdf_default is not None:
-	    xml_dom_def=minidom.parse(file(self.file_urdf_default))
-	    default_property_nodes=xml_dom_def.getElementsByTagName("property") 
+            xml_dom_def = minidom.parse(file(self.file_urdf_default))
+            default_property_nodes = xml_dom_def.getElementsByTagName(
+                "property")
+
         # get all property elements
-        for node in  xml_dom.getElementsByTagName("property"):
+        for node in xml_dom.getElementsByTagName("property"):
             # sanity check, all property elements need name and value attributes
             assert node.hasAttribute("name") and node.hasAttribute("value")
-            attr_name  = node.getAttribute("name")
-            attr_value = node.getAttribute("value")    
-            attr_name_def= attr_name.replace("offset","def")
-	   # print attr_name, attr_name_def
+            attr_name = node.getAttribute("name")
+            attr_value = node.getAttribute("value")
+            attr_name_def = attr_name.replace("offset", "def")
+           # print attr_name, attr_name_def
             if self.file_urdf_default is not None:
-		for node_def in default_property_nodes:
+                for node_def in default_property_nodes:
 
-		    #print node_def.getAttribute("name"), attr_name_def
-		    if node_def.getAttribute("name")==attr_name_def:
-		        attr_value_def=float(node_def.getAttribute("value"))
-		        break
-	    else: attr_value_def=0
-	    #print attr_value_def
+                    #print node_def.getAttribute("name"), attr_name_def
+                    if node_def.getAttribute("name") == attr_name_def:
+                        attr_value_def = float(node_def.getAttribute("value"))
+                        break
+            else:
+                attr_value_def = 0
+            #print attr_value_def
             # if attributes name is in attributes2update dict, update attributes value to new value (attributes2update[name])
             if attr_name in attributes2update:
-                attr_value_new = attributes2update[attr_name]-attr_value_def
+                attr_value_new = attributes2update[attr_name] - attr_value_def
 
-		if "roll" in attr_name or "pitch" in attr_name or "yaw" in attr_name:
-		    attr_value_new=(attr_value_new+numpy.pi)%(2*numpy.pi)-numpy.pi
+                if "roll" in attr_name or "pitch" in attr_name or "yaw" in attr_name:
+                    attr_value_new = (
+                        attr_value_new + numpy.pi) % (2 * numpy.pi) - numpy.pi
                 node.setAttribute("value", str(attr_value_new))
                 if self.debug:
                     print "Updating '%s' from '%s' to '%s'" % (attr_name, attr_value, attr_value_new)
-    
+
         # convert changed dom to pretty xml string
         xml_string = xml_dom.toprettyxml(indent="", newl="")
-        
+
         # save string to xml_out
         print "--> saving results to calibration xml file '%s'" % self.file_urdf_out
         f = open(self.file_urdf_out, "w")
-        f.writelines(xml_string) 
+        f.writelines(xml_string)
         f.close()
