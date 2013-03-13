@@ -4,11 +4,11 @@
   	<!-- node that collects and publishes to robot_measurement -->
   	<node type="collect_data.py" pkg="cob_robot_calibration" name="$(anon collect_data)" output="screen">
 	<param name="sensors_yaml" value="$(find
-        cob_robot_config)/$(env ROBOT)/user_defined/sensors.yaml" />
+        cob_calibration_config)/$(env ROBOT)/user_defined/sensors.yaml" />
 	<rosparam param="cameras" file="$(find
-        cob_robot_config)/$(env ROBOT)/user_defined/cameras.yaml" />  
+        cob_calibration_config)/$(env ROBOT)/user_defined/cameras.yaml" />  
 	<rosparam param="calibration_pattern" file="$(find
-        cob_robot_config)/$(env ROBOT)/user_defined/calibration_pattern.yaml" />  
+        cob_calibration_config)/$(env ROBOT)/user_defined/calibration_pattern.yaml" />  
 	</node>
 	<!-- record bagfile -->
  	<node type="record" pkg="rosbag" name="record" output="screen"

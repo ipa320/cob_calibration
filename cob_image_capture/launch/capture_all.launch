@@ -4,7 +4,7 @@
     <!-- run image_capture node -->
     <node name="image_capture" pkg="cob_image_capture" type="image_capture.py" args="" output="screen">
 	    <rosparam param="cameras" file="$(find
-            cob_robot_config)/$(env ROBOT)/user_defined/cameras.yaml"/>
+            cob_calibration_config)/$(env ROBOT)/user_defined/cameras.yaml"/>
 
         <!-- set output folder -->
         <param name="output_folder" value="/tmp/cal/intrinsic" />
