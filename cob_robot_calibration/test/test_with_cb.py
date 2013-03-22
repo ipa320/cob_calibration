@@ -71,9 +71,11 @@ from cob_camera_calibration import Checkerboard, CheckerboardDetector, cv2util
 from cv_bridge import CvBridge
 from kinematics_msgs.srv import *
 from arm_navigation_msgs.srv import *
+from cob_kinematics.srv import *
 
 from simple_script_server import simple_script_server
-
+from tf.transformations import *
+from cob_arm_navigation_python.MoveArm import MoveArm
 
 def prettyprint(array):
     print '*' * 20
@@ -96,7 +98,7 @@ class UdTransformationTransform():
 	#rospy.sleep(1)
 	while not rospy.is_shutdown():
             self.bc.sendTransform(tuple(transform[1]), rot, rospy.Time.now(), "detected", "head_color_camera_l_link")
-	    self.bc.sendTransform((0, 0, -0.2), (0, 0, 0, 1), rospy.Time.now(), "target", "detected")
+	    self.bc.sendTransform((0, 0, -0.2-0.103), (0, 0, 0, 1), rospy.Time.now(), "target", "detected")
 	    rospy.sleep(0.05)
 
     def getTransform(self,transform, frame):
@@ -172,12 +174,13 @@ class Detection():
 
         self.sss = simple_script_server()
 
+	topic_name = '/stereo/left/'
         # subscribe to /cam3d/rgb/camera_info for camera_matrix and distortion coefficients
-        rospy.Subscriber('/stereo/left/camera_info', CameraInfo,
+	rospy.Subscriber(topic_name + 'camera_info', CameraInfo,
                          self.__camera_info_callback__)
         # subscribe to /cam3d/rgb/image_raw for image data
         rospy.Subscriber(
-            '/stereo/left/image_raw', Image, self.__image_raw_callback__)
+            topic_name + 'image_color', Image, self.__image_raw_callback__)
 
         # wait until camera informations are recieved.
         start_time = rospy.Time.now()
@@ -229,19 +232,57 @@ class Detection():
         (rmat, tvec) = self.detector.calculate_object_pose(image_raw, self.cm, self.dc, True)
         #print tvec[1]
 
-        return (rmat, tvec), self.frame
+        return (rmat, tvec), self.latest_image.header.frame_id
 
 
 if __name__ == '__main__':
 
     rospy.init_node(NODE)
     print "==> started " + NODE
+    MoveArm('arm','look_at_table').execute().wait()
 
     # Detect chessboard
     detect = Detection()
-    p, frame = detect.get_position()
-    print p, frame
+    (rot, trans), frame = detect.get_position()
 
+    print rot, trans, frame
+
+    rot = np.append(rot,[[0,0,0]],0)
+    rot = np.append(rot,[[0],[0],[0],[1]],1)
+    quat = tuple(tf.transformations.quaternion_from_matrix(rot))
+    bc = tf.TransformBroadcaster()
+    bc.sendTransform(tuple(trans), quat, rospy.Time.now(), "/detected", frame)
+    while False: #not rospy.is_shutdown():
+    	bc.sendTransform(tuple(trans), quat, rospy.Time.now(), "/detected", frame)
+        rospy.sleep(0.05)
+
+    ik_req = GetPositionIKExtendedRequest()
+    ik_req.timeout=rospy.Duration(5.0)
+    ik_req.ik_pose.orientation.w=1.0
+    ik_req.ik_pose.position.z= 0.1 + 0.103
+
+    ik_req.ik_request.ik_link_name = 'sdh_palm_link'
+    ik_req.ik_request.ik_seed_state.joint_state.name = [ 'arm_%d_link'%(d+1) for d in range(7) ]
+    ik_req.ik_request.ik_seed_state.joint_state.position = [0]*7 
+
+    tip = PoseStamped()
+    cb = PoseStamped()
+    
+    cb.header.frame_id = frame
+    cb.header.stamp = rospy.Time.now()
+    cb.pose.position.x = trans[0]
+    cb.pose.position.y = trans[1]
+    cb.pose.position.z = trans[2]
+    cb.pose.orientation.x = quat[0]
+    cb.pose.orientation.y = quat[1]
+    cb.pose.orientation.z = quat[2]
+    cb.pose.orientation.w = quat[3]
+
+    ma = MoveArm('arm',[cb,['sdh_grasp_link']])
+    print ma.plan()
+    print ma.joint_goal
+    ma.execute().wait()
+    exit()
     # calculate pose (10cm in z-direction ahead)
     tft = UdTransformationTransform()
     trans,quat = tft.getTransform(p, " head_color_camera_l_link")
@@ -260,7 +301,7 @@ if __name__ == '__main__':
     print pose_stamped 
     # solve ik
     ik = IK()
-    sol, ec = ik.callIK(pose_stamped, "sdh_tip_link")
+    sol, ec = ik.callIK(pose_stamped, "sdh_palm_link")
     print sol, ec
     from simple_script_server import simple_script_server
     sss=simple_script_server()
