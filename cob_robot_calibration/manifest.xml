@@ -26,6 +26,9 @@
   <depend package="cob_calibration_msgs"/>
   <depend package="cob_camera_calibration"/>
   <depend package="cob_robot_calibration_est"/>
+  <depend package="cob_kinematics"/>
+  <depend package="tf_conversions"/>
+  <depend package="cob_arm_navigation_python"/>
 
   <depend package="pr2_controllers_msgs"/>
    <depend package="urdf_parser_py"/>
