@@ -237,9 +237,9 @@ def main():
               'y': (-0.3, 0.3),
               'z': (0.5, 1.0)}
 
-    sample_density = {'x': 4,
-                      'y': 4,
-                      'z': 4}
+    sample_density = {'x': 5,
+                      'y': 5,
+                      'z': 5}
 
     sample_positions = {'x': [],
                         'y': [],
