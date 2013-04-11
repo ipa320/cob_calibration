@@ -5,7 +5,7 @@ Calibrates cameras, arm and torso of Care-O-bot
 
 
 
-Prepare the Robot for Calibration
+Prepare the robot for calibration
 ====
 ---
 described [here](http://www.ros.org/wiki/cob_calibration/Tutorials/preparation)
@@ -17,7 +17,7 @@ mount calibration object(defined in step 4 of configuration) on arm
 --->
 
 
-Automatic Camera and Robot Calibration
+Automatic camera and robot calibration
 ====
 ---
 
@@ -47,14 +47,14 @@ the calibration process.
 
 
 
-Running Calibration
+Running calibration
 ---
 
 1. **Collect data**
 
  start the data collection by calling ```roslaunch cob_calibration_executive collect_robot_calibration_data.launch```.
  
- This will start all needed Nodes and Services. The Robot now moves to the sample positions calculated 
+ This will start all needed nodes and services. The robot now moves to the sample positions calculated 
  in step 6 of the configuration.
  
  The progress can be seen by ```rostopic echo /calibration/data_collection/progress```.
@@ -67,7 +67,7 @@ Running Calibration
 
  The results will be stored in the calibration file specified in the "camera.yaml" configuration file. 
  
- This step should take approximately 3 Minutes.
+ This step should take approximately 3 minutes.
 
  For robots with only one calibrated camera this step is not required.
 
@@ -83,10 +83,10 @@ Running Calibration
  
  copies the result of the optimization to the robot urdf file
 
-5. **Restart Robot**
+5. **Restart bringup**
 
 
-Final Steps
+Final steps
 ---
 
 
@@ -96,7 +96,7 @@ Final Steps
 4. Remove the checkerboard from the arm and reattach the hand. (activate the emergency stop before attaching the schunk hand).
 
 
-Configure Calibration(needs to be more verbose)
+Configure calibration(needs to be more verbose)
 ====
 ---
 
