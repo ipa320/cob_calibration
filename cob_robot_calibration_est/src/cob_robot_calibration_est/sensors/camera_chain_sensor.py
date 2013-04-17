@@ -41,19 +41,23 @@
 #       checkerboard
 
 
-import numpy
-from numpy import matrix, reshape, array, zeros, diag, real
+from numpy import matrix, reshape, array, zeros, real, float64, asarray, diag
 
-import roslib; roslib.load_manifest('cob_robot_calibration_est')
+import roslib
+roslib.load_manifest('cob_robot_calibration_est')
 import rospy
 from cob_robot_calibration_est.full_chain import FullChainRobotParams
-from sensor_msgs.msg import JointState
+from cob_robot_calibration_est.ChainMessage import ChainMessage
+import yaml
+import cv
+#import code
+
 
 class CameraChainBundler:
     """
     Tool used to generate a list of CameraChain sensors from a single calibration sample message
     """
-    def __init__(self, valid_configs):
+    def __init__(self, configs):
         """
         Inputs:
         - valid_configs: A list of dictionaries, where each list elem stores the configuration of a potential
@@ -68,7 +72,8 @@ class CameraChainBundler:
                                r_forearm_cam_optical_frame_joint]
                 dh_link_num:  4
         """
-        self._valid_configs = valid_configs
+        self._configs = configs
+        self._valid_configs = configs['camera_chains']
 
     # Construct a CameraChainSensor for every camera chain sensor that exists in the given robot measurement
     def build_blocks(self, M_robot):
@@ -81,27 +86,25 @@ class CameraChainBundler:
         """
         sensors = []
         for cur_config in self._valid_configs:
-            if cur_config["camera_id"] in [ x.camera_id for x in M_robot.M_cam ]:
-                if cur_config["chain"]["chain_id"] in [ x.chain_id  for x in M_robot.M_chain ] :
+            if cur_config["camera_id"] in [x.camera_id for x in M_robot.M_cam]:
+                if all([chain in [x.chain_id for x in M_robot.M_chain] for chain in cur_config["chain"]["chains"]]):
 #                    print "if cur_config[chain][chain_id]: ", cur_config["chain"]["chain_id"]
-                    M_cam   = M_robot.M_cam  [ [ x.camera_id for x in M_robot.M_cam   ].index(cur_config["camera_id"])]
-                    M_chain = M_robot.M_chain[ [ x.chain_id  for x in M_robot.M_chain ].index(cur_config["chain"]["chain_id"]) ]
-#                elif cur_config["chain"]["chain_id"] == 'NULL':
-                elif cur_config["chain"]["chain_id"] == None:
- #                   print "elif cur_config[chain][chain_id]: ", cur_config["chain"]["chain_id"]
-                    M_cam   = M_robot.M_cam  [ [ x.camera_id for x in M_robot.M_cam   ].index(cur_config["camera_id"])]
-                    M_chain = None
+                    M_cam = M_robot.M_cam[[x.camera_id for x in M_robot.M_cam]
+                                          .index(cur_config["camera_id"])]
+                    M_chain = M_robot.M_chain
                 else:
                     print "else cur_config[chain][chain_id]: ", cur_config["chain"]["chain_id"]
                     break
-                cur_sensor = CameraChainSensor(cur_config, M_cam, M_chain)
+                cur_sensor = CameraChainSensor(
+                    cur_config, M_cam, M_chain, self._configs)
                 sensors.append(cur_sensor)
             else:
                 rospy.logdebug("  Didn't find block")
         return sensors
 
+
 class CameraChainSensor:
-    def __init__(self, config_dict, M_cam, M_chain):
+    def __init__(self, config_dict, M_cam, M_chain, config):
         """
         Generates a single sensor block for a single configuration
         Inputs:
@@ -115,10 +118,20 @@ class CameraChainSensor:
         self.sensor_id = config_dict["camera_id"]
 
         self._config_dict = config_dict
+        self._config = config
         self._M_cam = M_cam
         self._M_chain = M_chain
 
-        self._chain = FullChainRobotParams(config_dict["chain"])
+        self._chain = FullChainRobotParams(config_dict["chain"], self._config)
+        self.camera_info_name = None
+
+        self.info_used = self.sensor_id in ['left', 'right', 'kinect_rgb']
+        path = rospy.get_param(
+            '/calibration_config/camera_parameter') + self.sensor_id + '.yaml'
+        with open(path) as f:
+            self._yaml = yaml.load(f)
+        self._distortion = self._yaml['distortion_coefficients']['data']
+        self._camera_matrix = self._yaml['projection_matrix']['data']
 
         self.terms_per_sample = 2
 
@@ -128,7 +141,8 @@ class CameraChainSensor:
         after each change in parameters we must call update_config to ensure that our calculated residual reflects
         the newest set of system parameters.
         """
-        self._camera = robot_params.rectified_cams[ self._config_dict["camera_id"] ]
+        self._camera = robot_params.rectified_cams[
+            self._config_dict["camera_id"]]
 
         if self._chain is not None:
             self._chain.update_config(robot_params)
@@ -141,14 +155,14 @@ class CameraChainSensor:
         Output:
         - r: 2N long vector, storing pixel residuals for the target points in the form [u1, v1, u2, v2, ..., uN, vN]
         """
-        z_mat = self.get_measurement()
+        z_mat = self.get_measurement()[:, 0, :]
         h_mat = self.compute_expected(target_pts)
+        #code.interact(local=locals())
         assert(z_mat.shape[1] == 2)
         assert(h_mat.shape[1] == 2)
         assert(z_mat.shape[0] == z_mat.shape[0])
-        r = array(reshape(h_mat - z_mat, [-1,1]))[:,0]
+        r = array(reshape(h_mat - z_mat, [-1, 1]))[:, 0]
         return r
-
 
     def compute_residual_scaled(self, target_pts):
         """
@@ -168,30 +182,49 @@ class CameraChainSensor:
         import scipy.linalg
         cov = self.compute_cov(target_pts)
         gamma = matrix(zeros(cov.shape))
-        num_pts = self.get_residual_length()/2
+        num_pts = self.get_residual_length() / 2
 
         for k in range(num_pts):
             #print "k=%u" % k
-            first = 2*k
-            last = 2*k+2
+            first = 2 * k
+            last = 2 * k + 2
             sub_cov = matrix(cov[first:last, first:last])
             sub_gamma_sqrt_full = matrix(scipy.linalg.sqrtm(sub_cov.I))
             sub_gamma_sqrt = real(sub_gamma_sqrt_full)
-            assert(scipy.linalg.norm(sub_gamma_sqrt_full - sub_gamma_sqrt) < 1e-6)
+            assert(scipy.linalg.norm(
+                sub_gamma_sqrt_full - sub_gamma_sqrt) < 1e-6)
             gamma[first:last, first:last] = sub_gamma_sqrt
         return gamma
 
     def get_residual_length(self):
         N = len(self._M_cam.image_points)
-        return N*2
+        return N * 2
 
     # Get the observed measurement in a Nx2 Matrix
     def get_measurement(self):
         """
         Get the target's pixel coordinates as measured by the actual sensor
         """
-        camera_pix = numpy.matrix([[pt.x, pt.y] for pt in self._M_cam.image_points])
-        return camera_pix
+        cm = cv.CreateMat(3, 3, cv.CV_32F)
+        cv.Set(cm, 0)
+        cm_t = reshape(matrix(self._camera_matrix, float64), (3, 4))[:3, :3]
+        for x in range(3):
+            for y in range(3):
+                cm[x, y] = cm_t[x, y]
+        dc = cv.CreateMat(5, 1, cv.CV_32F)
+        for i in range(len(self._distortion)):
+            dc[i, 0] = self._distortion[i]
+
+        camera_pix = cv.fromarray(float64(
+            [[[pt.x, pt.y]] for pt in self._M_cam.image_points]))
+        #print asarray(camera_pix)
+        #print asarray(cm)
+        #print asarray(dc)
+        dst = cv.CreateMat(camera_pix.rows, camera_pix.cols, camera_pix.type)
+        cv.UndistortPoints(camera_pix, dst, cm, dc, P=cm)
+        #print asarray(dst)
+
+        return asarray(dst)
 
     def compute_expected(self, target_pts):
         """
@@ -200,10 +233,11 @@ class CameraChainSensor:
         Returns: target points projected into pixel coordinates, in a Nx2 matrix
         """
         if self._M_chain is not None:
-            return self._compute_expected(self._M_chain.chain_state, target_pts)
+            return self._compute_expected(target_pts)
         else:
             return self._compute_expected(None, target_pts)
-    def _compute_expected(self, chain_state, target_pts):
+
+    def _compute_expected(self, target_pts, M_chain=None):
         """
         Compute what measurement we would expect to see, based on the current system parameters
         and the specified target point locations.
@@ -214,12 +248,14 @@ class CameraChainSensor:
 
         Returns: target points projected into pixel coordinates, in a Nx2 matrix
         """
+        M_chain = self._M_chain if M_chain is None else M_chain
         # Camera pose in root frame
-        camera_pose_root = self._chain.calc_block.fk(chain_state)
+        camera_pose_root = self._chain.calc_block.fk(M_chain)
         cam_frame_pts = camera_pose_root.I * target_pts
         # Do the camera projection
-        pixel_pts = self._camera.project(self._M_cam.cam_info.P, cam_frame_pts)
+        pixel_pts = self._camera.project(self._camera_matrix, cam_frame_pts)
 
+        #code.interact(local=locals())
         return pixel_pts.T
 
     def compute_expected_J(self, target_pts):
@@ -231,20 +267,19 @@ class CameraChainSensor:
         """
         epsilon = 1e-8
         N = len(self._M_cam.image_points)
-        Jt = zeros([N*3, N*2])
+        Jt = zeros([N * 3, N * 2])
         for k in range(N):
             # Compute jacobian for point k
-            sub_Jt = zeros([3,2])
-            x = target_pts[:,k].copy()
+            sub_Jt = zeros([3, 2])
+            x = target_pts[:, k].copy()
             f0 = self.compute_expected(x)
-            for i in [0,1,2]:
-                x[i,0] += epsilon
+            for i in [0, 1, 2]:
+                x[i, 0] += epsilon
                 fTest = self.compute_expected(x)
-                sub_Jt[i,:] = array((fTest - f0) / epsilon)
-                x[i,0] -= epsilon
-            Jt[k*3:(k+1)*3, k*2:(k+1)*2] = sub_Jt
+                sub_Jt[i, :] = array((fTest - f0) / epsilon)
+                x[i, 0] -= epsilon
+            Jt[k * 3:(k + 1) * 3, k * 2:(k + 1) * 2] = sub_Jt
         return Jt.T
-
 
     def compute_cov(self, target_pts):
         '''
@@ -254,34 +289,48 @@ class CameraChainSensor:
          - target_pts: 4xN matrix, storing N feature points of the target, in homogeneous coords
         '''
         epsilon = 1e-8
-
+        #print "camera chain sensor"
+        #code.interact(local=locals())
         if self._M_chain is not None:
-            num_joints = len(self._M_chain.chain_state.position)
-            Jt = zeros([num_joints, self.get_residual_length()])
+            M_chain = [chain for chain in self._M_chain if chain.chain_id in self._config_dict["chain"]["chains"]]
+            cm = ChainMessage()
+            inertial = cm.deflate(M_chain)
+            num_params = len(inertial)
+            #num_joints = len(self._M_chain.chain_state.position)
+            Jt = zeros([num_params, self.get_residual_length()])
 
-            x = JointState()
-            x.position = self._M_chain.chain_state.position[:]
+            #x = JointState()
+            #x.position = self._M_chain.chain_state.position[:]
 
-            # Compute the Jacobian from the chain's joint angles to pixel residuals
-            f0 = reshape(array(self._compute_expected(x, target_pts)), [-1])
-            for i in range(num_joints):
-                x.position = [cur_pos for cur_pos in self._M_chain.chain_state.position]
-                x.position[i] += epsilon
-                fTest = reshape(array(self._compute_expected(x, target_pts)), [-1])
-                Jt[i] = (fTest - f0)/epsilon
-            cov_angles = [x*x for x in self._chain.calc_block._chain._cov_dict['joint_angles']]
+            ## Compute the Jacobian from the chain's joint angles to pixel residuals
+            #f0 = reshape(array(self._compute_expected(x, target_pts)), [-1])
+            f0 = reshape(array(self._compute_expected(
+                target_pts, cm.inflate(inertial))), [-1])
+            for i in range(num_params):
+                x = inertial[:]
+                #x.position = [
+                    #cur_pos for cur_pos in self._M_chain.chain_state.position]
+                x[i] += epsilon
+                #fTest = reshape(
+                      #array(self._compute_expected(x, target_pts)), [-1])
+                fTest = reshape(array(
+                    self._compute_expected(target_pts, cm.inflate(x))), [-1])
+                Jt[i] = (fTest - f0) / epsilon
+            #cov_angles = [x * x for x in self._chain.calc_block._chain._cov_dict['joint_angles']]
+            cov_angles = [0.01] * num_params
 
-            # Transform the chain's covariance from joint angle space into pixel space using the just calculated jacobian
+            ## Transform the chain's covariance from joint angle space into pixel space using the just calculated jacobian
             chain_cov = matrix(Jt).T * matrix(diag(cov_angles)) * matrix(Jt)
 
-        cam_cov = matrix(zeros([self.get_residual_length(), self.get_residual_length()]))
+        cam_cov = matrix(
+            zeros([self.get_residual_length(), self.get_residual_length()]))
 
         # Convert StdDev into variance
         var_u = self._camera._cov_dict['u'] * self._camera._cov_dict['u']
         var_v = self._camera._cov_dict['v'] * self._camera._cov_dict['v']
-        for k in range(cam_cov.shape[0]/2):
-            cam_cov[2*k  , 2*k]   = var_u
-            cam_cov[2*k+1, 2*k+1] = var_v
+        for k in range(cam_cov.shape[0] / 2):
+            cam_cov[2 * k, 2 * k] = var_u
+            cam_cov[2 * k + 1, 2 * k + 1] = var_v
 
         # Both chain and camera covariances are now in measurement space, so we can simply add them together
         if self._M_chain is not None:
@@ -315,21 +364,22 @@ class CameraChainSensor:
         """
         sparsity = dict()
         sparsity['transforms'] = {}
-        for cur_transform_name in ( self._config_dict['chain']['before_chain'] + self._config_dict['chain']['after_chain'] ):
+        chain_transform_names = [chain['before_chain'] + chain['after_chain'] for chain in self._config['chains']
+                                 if chain['chain_id'] in self._config_dict['chain']['chains']][0]
+        for cur_transform_name in (self._config_dict['chain']['before_chain'] + self._config_dict['chain']['after_chain'] + chain_transform_names):
             sparsity['transforms'][cur_transform_name] = [1, 1, 1, 1, 1, 1]
 
         sparsity['dh_chains'] = {}
-        if self._M_chain is not None:
-            chain_id = self._config_dict['chain']['chain_id']
-            num_links = self._chain.calc_block._chain._M
-            assert(num_links == len(self._M_chain.chain_state.position))
-            sparsity['dh_chains'][chain_id] = {}
-            sparsity['dh_chains'][chain_id]['dh'] = [ [1,1,1,1] ] * num_links
-            sparsity['dh_chains'][chain_id]['gearing'] = [1] * num_links
+        #if self._M_chain is not None:
+            #chain_id = self._config_dict['chain']['chain_id']
+            #num_links = self._chain.calc_block._chain._M
+            #assert(num_links == len(self._M_chain.chain_state.position))
+            #sparsity['dh_chains'][chain_id] = {}
+            #sparsity['dh_chains'][chain_id]['dh'] = [[1, 1, 1, 1]] * num_links
+            #sparsity['dh_chains'][chain_id]['gearing'] = [1] * num_links
 
         sparsity['rectified_cams'] = {}
-        sparsity['rectified_cams'][self.sensor_id] = dict( [(x,1) for x in self._camera.get_param_names()] )
+        sparsity['rectified_cams'][self.sensor_id] = dict(
+            [(x, 1) for x in self._camera.get_param_names()])
 
         return sparsity
-
-

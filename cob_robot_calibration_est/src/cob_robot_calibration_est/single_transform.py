@@ -33,6 +33,7 @@
 import numpy
 from numpy import matrix, vsplit, sin, cos, reshape, zeros, pi
 import rospy
+import tf.transformations
 
 class SingleTransform:
     def __init__(self, config = [0, 0, 0, 0, 0, 0]):
@@ -54,12 +55,22 @@ class SingleTransform:
         assert(param_vec.shape == (6,1))
         return param_vec.T.tolist()[0]
 
-    # Convert column vector of params into config
+    # Convert column vector of params into config/home/fmw-ja/.ros/test_results/cob_robot_calibration_est/TEST-test_SingleTransform.xml
     def inflate(self, p):
         assert(p.size == 6)
+        T=tf.transformations.compose_matrix(angles=[p[3,0],p[4,0],p[5,0]],translate=[p[0,0],p[1,0],p[2,0]])
+        self.transform = T
+        
+    def inflate_old(self,p):
+        
+        '''
+        complex calculation of 4x4 homogeneus transformation matrix by Willow Garage Inc.
+        for simplification with use of tf see inflate(self,p)
+        '''
+        p=reshape(matrix([eval(str(x))for x in p],float),(-1,1))
 
-        self._config = p.copy()  # Once we can back compute p from T, we don't need _config
 
+	
         # Init output matrix
         T = matrix( zeros((4,4), float ))
         T[3,3] = 1.0
@@ -81,11 +92,14 @@ class SingleTransform:
                       [a[0,0]*a[2,0]*(1-c)-a[1,0]*s, a[1,0]*a[2,0]*(1-c)+a[0,0]*s,    a[2,0]**2+(1-a[2,0]**2)*c] ] )
 
         T[0:3,0:3] = R ;
-        self.transform = T
+        return T
 
     # Take transform, and convert into 6 param vector
     def deflate(self):
-        # todo: This currently a hacky stub. To be correct, this should infer the parameter vector from the 4x4 transform
+        scale,shear,angles,transl,persp=tf.transformations.decompose_matrix(self.transform)
+        config=list(transl)+list(angles)
+        c=[[v] for v in config]
+        self._config=c
         return self._config
 
     # Returns # of params needed for inflation & deflation

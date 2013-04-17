@@ -17,6 +17,8 @@
 #   ROS package name: cob_calibration_executive
 #
 # \author
+#   Author: Jannik Abbenseth, email:jannik.abbenseth@gmail.com
+# \author
 #   Author: Sebastian Haug, email:sebhaug@gmail.com
 # \author
 #   Supervised by: Florian Weisshardt, email:florian.weisshardt@ipa.fhg.de
@@ -53,45 +55,72 @@
 # If not, see <http://www.gnu.org/licenses/>.
 #
 #################################################################
-PKG  = 'cob_calibration_executive'
+PKG = 'cob_calibration_executive'
 NODE = 'collect_robot_calibration_data_node'
-import roslib; roslib.load_manifest(PKG)
+import roslib
+roslib.load_manifest(PKG)
 import rospy
 
 from simple_script_server import simple_script_server
-from cob_calibration_srvs.srv import Capture
+import yaml
+import tf
 
-def capture_loop_arm(positions, sss, capture):
+
+def capture_loop(positions, sss):
     '''
-    Moves arm to all positions using script server instance sss 
+    Moves arm to all positions using script server instance sss
     and calls capture() to capture samples
     '''
-    for pos in positions:
-        print "--> moving arm to pos %s sample" % pos
-        sss.move("arm", pos)
-        sss.sleep(1.5)
-        capture()
+    br = tf.TransformBroadcaster()
+    for index in range(len(positions)):
+        if positions[index]['torso_position'] == [0, 0, 0]:
+            continue
+        pre_signs=[a*b<0 for a,b in zip(positions[index]['joint_position'], positions[index-1]['joint_position'])]
+        if any(pre_signs[0:3]):
+            sss.move("arm","home")
+        print "--> moving arm to sample #%s" % index
+        pos = positions[index]
+        joint_pos = [[a for a in positions[index]['joint_position']]]
+        print pos
+        nh = sss.move("arm", joint_pos)
+        while nh.get_state() == 0:
+            rospy.sleep(0.2)
+        if nh.get_state() != 3:
+            sss.move("torso", "home")
+            nh = sss.move("arm", joint_pos)
+            rospy.sleep(1)
+            if nh.get_state() != 3:
+                continue
 
-def capture_loop_torso(positions, sss, capture):
-    '''
-    Moves torso to all positions using script server instance sss 
-    and calls capture() to capture samples
-    '''
-    for pos in positions:
-        print "--> moving torso to pos %s sample" % pos
-        sss.move("torso", pos)
-        sss.sleep(1.5)
-        capture()
+        br.sendTransform((0, 0, 0.24),
+                         (0, 0, 0, 1),
+                         rospy.Time.now(),
+                         "/chessboard_center",
+                         "/sdh_palm_link")  # right upper corner
+
+        sss.move("torso", [positions[index]['torso_position']])
+
 
 def main():
     rospy.init_node(NODE)
     print "==> %s started " % NODE
-    
-    # service client
-    image_capture_service_name = "/collect_data/capture"
-    capture = rospy.ServiceProxy(image_capture_service_name, Capture)
-    rospy.wait_for_service(image_capture_service_name, 1)
-    print "--> service client for capture images initialized"
+
+    ## service client
+    #checkerboard_checker_name = "/image_capture/visibility_check"
+    #visible = rospy.ServiceProxy(checkerboard_checker_name, Visible)
+    #rospy.wait_for_service(checkerboard_checker_name, 2)
+    #print "--> service client for for checking for chessboards initialized"
+
+    #kinematics_capture_service_name = "/collect_data/capture"
+    #capture_kinematics = rospy.ServiceProxy(
+        #kinematics_capture_service_name, Capture)
+    #rospy.wait_for_service(kinematics_capture_service_name, 2)
+    #print "--> service client for capture robot_states initialized"
+
+    #image_capture_service_name = "/image_capture/capture"
+    #capture_image = rospy.ServiceProxy(image_capture_service_name, Capture)
+    #rospy.wait_for_service(image_capture_service_name, 2)
+    #print "--> service client for capture images initialized"
 
     # init
     print "--> initializing sss"
@@ -102,36 +131,22 @@ def main():
     sss.recover("base")
     sss.recover("torso")
     sss.recover("head")
-    
+
     print "--> setup care-o-bot for capture"
     sss.move("head", "back")
 
     # get position from parameter server
-    positions_back = rospy.get_param("/script_server/arm/all_robot_back")
-    positions_center = rospy.get_param("/script_server/arm/all_robot_center")
-    positions_right = rospy.get_param("/script_server/arm/all_robot_right")
-    positions_left = rospy.get_param("/script_server/arm/all_robot_left")
-    torso_positions = ["calib_front_left2", "calib_front_right2", "calib_right2", "calib_left2", "calib_back_left2", "calib_back_right2", "home"]
+    position_path = rospy.get_param('position_path', None)
+    if position_path is None:
+        print "[ERROR]: no path for positions set"
+        return
+    with open(position_path, 'r') as f:
+        positions = yaml.load(f)
+    print "==> capturing samples"
+    start = rospy.Time.now()
+    capture_loop(positions, sss)
+    print "finished after %s seconds" % (rospy.Time.now() - start).to_sec()
 
-    print "==> capturing images BACK"
-    sss.move("torso", "back")
-    capture_loop_arm(positions_back, sss, capture)
-    
-    print "==> capturing images LEFT"
-    sss.move("torso", "left")
-    capture_loop_arm(positions_left, sss, capture)
-    
-    print "==> capturing images RIGHT"
-    sss.move("torso", "right")
-    capture_loop_arm(positions_right, sss, capture)
-    
-    print "==> capturing images CENTER"
-    sss.move("torso", "home")
-    capture_loop_arm(positions_center, sss, capture)
-    
-    print "==> capturing TORSO samples"
-    sss.move("arm", "calibration")
-    capture_loop_torso(torso_positions, sss, capture)
 
 if __name__ == '__main__':
     main()

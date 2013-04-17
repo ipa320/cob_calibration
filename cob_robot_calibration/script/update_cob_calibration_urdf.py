@@ -71,7 +71,7 @@ from cob_robot_calibration import calibration_urdf_updater
 DEFAULT_CALIB_URDF_XACRO_IN  = "/tmp/cal/calibration.urdf.xacro"
 DEFAULT_CALIB_URDF_XACRO_OUT = "/tmp/cal/calibration.urdf.xacro_updated" 
 DEFAULT_YAML_CALIB_SYSTEM    = "/tmp/cal/result_step_3.yaml"
-DEFAULT_YAML_INITIAL_SYSTEM  = "/home/fmw-sh/git/cob_calibration/cob_robot_calibration/config/cob3-3/system.yaml"
+DEFAULT_YAML_INITIAL_SYSTEM  = "/home/fmw-ja/ros_workspace/01_Calibration/cob_calibration/cob_robot_calibration/config/cob3-3/system.yaml"
 ENABLE_DEBUG_OUTPUT = False
 
 class UpdateCobCalibrationUrdf():
@@ -91,6 +91,7 @@ class UpdateCobCalibrationUrdf():
         print "==> started " + NODE
         
         # get file names from parameter server
+	self.file_urdf_default=		rospy.get_param('~urdf_default')
         self.file_urdf_in =             rospy.get_param('~urdf_in',        DEFAULT_CALIB_URDF_XACRO_IN)
         self.file_urdf_out =            rospy.get_param('~urdf_out',       DEFAULT_CALIB_URDF_XACRO_OUT)
         self.file_yaml_calib_system =   rospy.get_param('~calib_system',   DEFAULT_YAML_CALIB_SYSTEM)
@@ -99,24 +100,25 @@ class UpdateCobCalibrationUrdf():
         
         # tfs2update stores the transform names [which need to be converted to (x, y, z, roll, pitch, yaw) 
         # and updated in the urdf] and their corresponding property name prefixes as used in calibration.urdf.xarco
-        self.tfs2update = {'arm_0_joint':                        'arm_', 
-                           'torso_0_joint':                      'torso_',  
-                           'head_color_camera_l_joint':          'cam_l_', 
+        self.tfs2update = {'arm_0_link':                        'offset_arm_', 
+                           'torso_base_link':                      'offset_torso_',  
+                           'cam_reference_link':          'offset_cam_ref_' 
                            #'head_color_camera_r_joint':          'cam_r_', 
-                           'head_cam3d_rgb_optical_frame_joint': 'cam3d_'}
+#                           'head_cam3d_link': 'offset_cam3d_'
+}
         
         # chains2process stores the dh chain names of chains which need to be updated and their corresponding
         # property names/segments as used in calibration.urdf.xarco
-        self.chains2update = {'arm_chain':   ['arm_1_ref',
-                                              'arm_2_ref',
-                                              'arm_3_ref',
-                                              'arm_4_ref',
-                                              'arm_5_ref',
-                                              'arm_6_ref',
-                                              'arm_7_ref'], 
-                              'torso_chain': ['torso_lower_neck_tilt_cal_offset',
-                                              'torso_pan_cal_offset',
-                                              'torso_upper_neck_tilt_cal_offset']}
+        self.chains2update = {'arm_chain':   ['offset_arm_1_ref',
+                                              'offset_arm_2_ref',
+                                              'offset_arm_3_ref',
+                                              'offset_arm_4_ref',
+                                              'offset_arm_5_ref',
+                                              'offset_arm_6_ref',
+                                              'offset_arm_7_ref'], 
+                              'torso_chain': ['offset_torso_lower_neck_tilt_cal_offset',
+                                              'offset_torso_pan_cal_offset',
+                                              'offset_torso_upper_neck_tilt_cal_offset']}
         
     def run(self):
         '''
@@ -145,7 +147,7 @@ class UpdateCobCalibrationUrdf():
             attributes2update[prefix+"yaw"]     = round(yaw, 10)
             
         # process dh chains
-        for chain in self.chains2update:
+        '''for chain in self.chains2update:
             segments = self.chains2update[chain]
             for id in range(len(segments)):
                 # process segment with id
@@ -159,9 +161,9 @@ class UpdateCobCalibrationUrdf():
                 
                 # add to attributes2update dict as "attribute name -> new_value" entries
                 attributes2update[segment] = new_value
-                
+           '''     
         # update calibration xml based on attributes2update dict
-        urdf_updater = calibration_urdf_updater.CalibrationUrdfUpdater(self.file_urdf_in, self.file_urdf_out, self.debug)
+        urdf_updater = calibration_urdf_updater.CalibrationUrdfUpdater(self.file_urdf_in, self.file_urdf_out, self.debug,self.file_urdf_default)
         urdf_updater.update(attributes2update)
         
     def _convert_transform(self, t):

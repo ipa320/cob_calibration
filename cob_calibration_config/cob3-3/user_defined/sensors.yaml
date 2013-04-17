@@ -1,0 +1,39 @@
+camera_chains:
+  - sensor_id: left
+    camera_id: left
+    chain:
+        before_chain: []
+        chains: [torso_chain, head_chain]
+        after_chain: [head_color_camera_l_link ]
+
+sensor_chains:
+  - sensor_id:    arm_chain
+    before_chain: []
+    after_chain:  [sdh_palm_link, arm_cb ]
+    chains: [arm_chain]
+
+
+chains:
+  - chain_id: torso_chain
+    sensor_id: torso_chain_kinematic
+    parent_frame: base_link
+    before_chain: [ torso_0_link ]
+    after_chain: []
+    links: [torso_0_link, torso_upper_neck_tilt_link]
+
+  - chain_id: head_chain
+    sensor_id: head_chain_kinematic
+    parent_frame: torso_upper_neck_tilt_link
+    before_chain: [ head_cover_link ]
+    after_chain: []
+    links: [head_cover_link, head_axis_link]
+
+  - chain_id: arm_chain
+    sensor_id: arm_chain_kinematic
+    parent_frame: base_link
+    before_chain: [ arm_0_link ]
+    after_chain: []
+    links: [arm_0_link, arm_7_link]
+
+
+

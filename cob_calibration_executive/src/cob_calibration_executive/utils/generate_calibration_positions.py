@@ -54,7 +54,7 @@
 #
 #################################################################
 PKG  = 'cob_calibration_executive'
-NODE = 'arm_ik_node'
+NODE = 'generate_calibration_positions'
 import roslib; roslib.load_manifest(PKG)
 import rospy
 
@@ -67,6 +67,7 @@ from kinematics_msgs.srv import GetPositionIK, GetPositionIKRequest
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import PoseStamped
 import tf
+import os
 
 def getIk(arm_ik, (t, q), link, seed=None):
     '''
@@ -89,6 +90,7 @@ def getIk(arm_ik, (t, q), link, seed=None):
     if joint_names == None:
         print "Could not get arm joint_names from parameter server."
         return None
+
         
     # if seed == None get current joint angles from arm as seed position
     if seed == None:
@@ -157,11 +159,19 @@ def rpy2q(r, p, y, axes=None):
 
 # main
 def main():
+    try:
+        filepath = rospy.get_param("arm_joint_configuration_path")
+    except:
+        pass
+    if filepath == None:
+        print "Could not get path to arm joint configuration file. Exiting"
+        return None
+
     rospy.init_node(NODE)
     print "==> started " + NODE
-    
+        
     # init
-    arm_ik = rospy.ServiceProxy('/arm_kinematics/get_ik', GetPositionIK)
+    arm_ik = rospy.ServiceProxy('/cob_arm_kinematics/get_ik', GetPositionIK)
     
     # translation and rotation for main calibration position
     # ------------------------------------------------------
@@ -259,6 +269,7 @@ def main():
     poses["robot_back_01"]  = (t_rob_bb, q_as2)
     poses["robot_back_02"]  = (t_rob_bb, q_as1)
     
+    print poses
     
     # converting to joint_positions
     # -----------------------------
@@ -268,6 +279,7 @@ def main():
     prev_state = [0.13771, -1.61107, 1.60103, -0.90346, 2.30279, -1.28408, -0.93369]
      
     arm_states = {}
+    no_solution=0
     for key in sorted(poses.keys()):
         print "--> calling getIk for '%s'" % key
         
@@ -283,6 +295,7 @@ def main():
                 break
         else: 
             print "--> ERROR no IK solution was found..."
+            no_solution+=1
     
     # convert to yaml_string manually (easier to achieve compact notation)
     # --------------------------------------------------------------------
@@ -300,8 +313,21 @@ def main():
     yaml_string += '''all_robot_back: ["robot_back_00", "robot_back_01", "robot_back_02"]\n'''
 
     # print joint angles
-    print "==> RESULT: joint_positions, please add to config/ROBOT/arm_joint_configurations.yaml"
-    print yaml_string
+    # print "==> RESULT: joint_positions, please add to config/ROBOT/arm_joint_configurations.yaml"
+    # print yaml_string
+    
+    # display warning if not all solutions were found
+    if no_solution!=0:
+        print 'Warning: for %s poses no solution was found'%no_solution
+    
+    
+    (head,tail)=os.path.split(filepath)
+    if not os.path.exists(head):
+        os.makedirs(head)
+
+    # save joint angles
+    with open(filepath, 'w') as f:
+        f.write(yaml_string)
 
 #    # DEBUG move arm
 #    # --------------
