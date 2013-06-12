@@ -1,13 +1,13 @@
 #!/usr/bin/env python
-#################################################################
-##\file
+#
+# \file
 #
 # \note
 #   Copyright (c) 2011-2012 \n
 #   Fraunhofer Institute for Manufacturing Engineering
 #   and Automation (IPA) \n\n
 #
-#################################################################
+#
 #
 # \note
 #   Project name: care-o-bot
@@ -23,7 +23,7 @@
 #
 # \date Date of creation: January 2012
 #
-#################################################################
+#
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -52,7 +52,7 @@
 # License LGPL along with this program.
 # If not, see <http://www.gnu.org/licenses/>.
 #
-#################################################################
+#
 PKG = 'cob_robot_calibration'
 import roslib
 roslib.load_manifest(PKG)
@@ -80,9 +80,9 @@ def get_chains(d, origin='base_link'):
 
     print " Trees: "
     print trees
-    #to_calibrate = list(set(to_calibrate))
+    # to_calibrate = list(set(to_calibrate))
     return trees
-    #return transformations, to_calibrate
+    # return transformations, to_calibrate
 
 
 def transform_chain_dict(d):
@@ -107,7 +107,7 @@ def build_tree(chain, kinematic_chains, origin):
         except IndexError:
             tree += kinematic_chain['before_chain']
         tree += [''.join(kinematic_chain['links'][0])]
-        tree += ['**']
+        tree += ['***']
         tree += [''.join(kinematic_chain['links'][1])]
         tree += [''.join(kinematic_chain['after_chain'])]
         tree = cleanup_tree(tree)
@@ -127,14 +127,25 @@ def cleanup_tree(tree):
     return new_tree
 
 
+def generate_chain_parameter(sensors):
+    for chain in sensors["chains"]:
+        chain_key = chain["chain_id"]
+        links = tuple(chain["links"])
+        print chain_key, links
+    raise( NotImplementedError("get parameters from end links"))
+    return parameter_dict
+
+
 def generate_transformation_dict(transformation_list, listener):
     transformation_dict = {}
     for i in range(len(transformation_list)):
         if transformation_list[i] != '**' and transformation_list[i] != '':
             try:
                 if transformation_list[i + 1] in ['', '**']:
+
                     continue
-                transformation_dict[transformation_list[i + 1]] = get_single_transform(transformation_list[i], transformation_list[i + 1], listener)
+                transformation_dict[transformation_list[i + 1]] = get_single_transform(
+                    transformation_list[i], transformation_list[i + 1], listener)
             except IndexError:
                 pass
     return transformation_dict
@@ -174,17 +185,18 @@ def __main__():
     sss = simple_script_server()
     sss.move("head", "back")
     minimal_system = rospy.get_param('minimal_system', None)
-    sensors = rospy.get_param('sensors', None)
+    sensors_path = rospy.get_param('sensors', None)
     output_system = rospy.get_param('output_system', None)
     free_system = rospy.get_param('free_system', None)
-
-    z = yaml.load(open(sensors, 'r'))
-    transformations = get_chains(z)
-    print z
+    with open(sensors_path, "r") as f:
+        sensors = yaml.load(f)
+    transformations = get_chains(sensors)
+    print sensors
     transformation_dict = generate_transformation_dict(
         transformations, listener)
     print transformation_dict
-    system = yaml.load(open(minimal_system, 'r'))
+    with open(minimal_system, "r") as f:
+        system = yaml.load(f)
 
     if 'transforms' in system:
 
@@ -197,6 +209,10 @@ def __main__():
         print '[ERROR]: Parameter checkerboards not found. Make sure it is set and try again'
         return
     system['transforms'] = t
+
+    dh_chains = generate_chain_parameter(sensors)
+
+    system['dh_chains'] = dh_chains
 
     free = system.copy()
 
@@ -214,7 +230,8 @@ def __main__():
         f.write(yaml.dump(system))
 
     with open(free_system, 'w') as f:
-        f.write('####### Use this file as template for free_0.yaml - free_2.yaml. #######\n')
+        f.write(
+            '####### Use this file as template for free_0.yaml - free_2.yaml. #######\n')
         f.write(yaml.dump(free))
 
 if __name__ == "__main__":
