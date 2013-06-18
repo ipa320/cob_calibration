@@ -330,7 +330,7 @@ class StereoCalibrator(Calibrator):
         res = self._rectify(camera_matrix_l, dist_coeffs_l, camera_matrix_r, dist_coeffs_r, (w_ref, h_ref), R, T, alpha)
         (rectification_matrix_l, rectification_matrix_r, projection_matrix_l, projection_matrix_r) = res
 
-e        # DEBUG: check types -> should all be np.ndarray
+#        # DEBUG: check types -> should all be np.ndarray
 #        print type(camera_matrix_l)
 #        print type(dist_coeffs_l)
 #        print type(rectification_matrix_l)
