@@ -98,8 +98,8 @@ class SingleChainCalc:
 
     def fk(self, joint_states):
         pose = matrix(numpy.eye(4))
-        trans = transformation.translation
-        rot = transformation.rotation
+        #trans = transformation.translation
+        #rot = transformation.rotation
 
         # Apply the 'before chain' transforms
         for before_chain_T in self._before_chain_Ts:
@@ -147,7 +147,7 @@ class FullChainCalcBlock:
 
         for chain in self._chains:
             for joint_state in m_chain:
-                if joint_state.chain_id == chain._config_dict["chain_id"]:
+                if joint_state.header.frame_id == chain._config_dict["chain_id"]:
                     pose *= chain.fk(joint_state)
         # Apply the 'after chain' transforms
         for after_chain_T in self._after_chain_Ts:
