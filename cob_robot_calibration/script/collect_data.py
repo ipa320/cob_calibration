@@ -69,6 +69,8 @@ from cv_bridge import CvBridge
 from cob_calibration_srvs.srv import Capture, CaptureResponse
 from cob_camera_calibration import Checkerboard, CheckerboardDetector, cv2util
 
+from pr2_controllers_msgs.msg import JointTrajectoryControllerState
+
 import tf
 CHECKERBOARD_NAME = "cb_9x6"
 CHECKERBOARD_CHAIN = "arm_chain"
@@ -98,7 +100,8 @@ class DataCollector():
             int(checkerboard["pattern_size"].split("x")[1]))
         with open(rospy.get_param("~sensors_yaml"), 'r') as a:
             sensors_yaml = yaml.load(a.read())
-        self._get_transformation_links(sensors_yaml)
+        #self._get_transformation_links(sensors_yaml)
+        self._create_transformation_callbacks(sensors_yaml)
         self.listener = tf.TransformListener()
 
        # CvBridge
@@ -127,16 +130,20 @@ class DataCollector():
         '''
         #print "DEBUG: callback left"
         self._left["image"] = image_raw
-#        if self._left_received == False:
-#            print "--> left sample received (this only prints once!)"
+        #if self._left_received == False:
+            #print "--> left sample received (this only prints once!)"
         self._left_received = True
 
-    def _get_transformation_links(self, sensors_yaml):
-        ## camera_chains
+    def _create_transformation_callbacks(self, sensors_yaml):
+        # kinematic chains
         self.transformations = {}
         for _chain in sensors_yaml["chains"]:
-                self.transformations[_chain["chain_id"]
-                                     ] = _chain["links"]
+            rospy.Subscriber(_chain["topic"], JointTrajectoryControllerState, self._callback_jointstate, _chain["chain_id"])
+
+
+    def _callback_jointstate(self, data, id):
+        self.transformations[id] = data
+        self.transformations[id].header.frame_id = id
 
     def run(self):
         '''
@@ -194,7 +201,7 @@ class DataCollector():
                 if not self._left_received:
                     print "--> still waiting for sample from left"
                 start_time = rospy.Time.now()
-	print "got sample"
+        print "got sample"
         latest_left = self._left
 
         self._torso_joint_msg_received = False
@@ -218,7 +225,9 @@ class DataCollector():
                 img_points_left.append(ImagePoint(x, y))
         else:
             # cb not found
-            return False
+
+            #return False
+            img_points_left = [[1,2],[2,3]]
 
         # create camera msg left
         # ----------------------
@@ -232,25 +241,7 @@ class DataCollector():
         #cam_msg_left.image_rect   = latest_left["image_rect"]
         #cam_msg_left.features    = # Not implemented here
 
-        # create chain msgs
         # ----------------------
-        transformations = []
-        print self.transformations
-        for (key, links) in self.transformations.iteritems():
-            chain_msg = ChainMeasurement()
-            chain_msg.chain_id = key
-            while not rospy.is_shutdown():
-                try:
-                    (
-                        trans, rot) = self.listener.lookupTransform(links[0], links[1],
-                                                                    rospy.Time(0))
-                    break
-                except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-		    print "error looking up transformation from ", links[0], " to ", links[1]
-                    rospy.sleep(0.5)
-            chain_msg.translation = trans
-            chain_msg.rotation = rot
-            transformations.append(chain_msg)
         # DEBUG publish pic
         # -----------------
         self._image_pub_left.publish(latest_left["image"])
@@ -262,7 +253,7 @@ class DataCollector():
         robot_msg.target_id = target_id
         robot_msg.chain_id = chain_id
         robot_msg.M_cam = [cam_msg_left]
-        robot_msg.M_chain = transformations
+        robot_msg.M_chain = self.transformations.values()
         self._robot_measurement_pub.publish(robot_msg)
 
         return True
