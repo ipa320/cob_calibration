@@ -63,7 +63,7 @@ class TestDhChain(LoadDhChain):
 
 
     def test_get_length(self):
-        self.assertEqual(self.dh_chain.get_length(), 15)
+        self.assertEqual(self.dh_chain.get_length(), 21)
 
     def test_free(self):
         free_config = [ {'xyzrpy' : [ 1, 0, 0, 0, 0, 0 ]},
@@ -146,6 +146,7 @@ class TestDhChain(LoadDhChain):
                                       [ 0, 0, 0, 1]] )
         self.assertAlmostEqual(numpy.linalg.norm(eef-eef_expected), 0.0, 6)
 
+
 class TestChainT(unittest.TestCase):
 
     def test_easy_identity(self):
@@ -187,6 +188,7 @@ class TestChainT(unittest.TestCase):
             self.assertAlmostEqual(numpy.linalg.norm(result-expected_result), 0.0, 4)
             print "DONE WITH TEST"
 
+    '''
     def test_hard(self):
         sample_nums = range(1,6)
         dh_filenames = ["test/data/chain_T_data/dh_%02u.txt" % n for n in sample_nums]
@@ -203,7 +205,7 @@ class TestChainT(unittest.TestCase):
             expected_result.shape = 4,4
 
             self.assertAlmostEqual(numpy.linalg.norm(result-expected_result), 0.0, 4, "Failed on %s" % dh_filename)
-
+    '''
 if __name__ == '__main__':
     import rostest
     rostest.unitrun('cob_robot_calibration_est', 'test_ChainT', TestChainT, coverage_packages=['cob_robot_calibration_est.dh_chain'])
