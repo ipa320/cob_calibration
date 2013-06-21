@@ -47,7 +47,8 @@ import roslib
 roslib.load_manifest('cob_robot_calibration_est')
 import rospy
 from cob_robot_calibration_est.full_chain import FullChainRobotParams
-from cob_robot_calibration_est.ChainMessage import ChainMessage
+from cob_robot_calibration_est.sensors.chain_sensor import ChainBundler, ChainSensor
+#from cob_robot_calibration_est.ChainMessage import ChainMessage
 import yaml
 import cv
 #import code
@@ -88,7 +89,6 @@ class CameraChainBundler:
         for cur_config in self._valid_configs:
             if cur_config["camera_id"] in [x.camera_id for x in M_robot.M_cam]:
                 if all([chain in [x.chain_id for x in M_robot.M_chain] for chain in cur_config["chain"]["chains"]]):
-#                    print "if cur_config[chain][chain_id]: ", cur_config["chain"]["chain_id"]
                     M_cam = M_robot.M_cam[[x.camera_id for x in M_robot.M_cam]
                                           .index(cur_config["camera_id"])]
                     M_chain = M_robot.M_chain
@@ -103,7 +103,7 @@ class CameraChainBundler:
         return sensors
 
 
-class CameraChainSensor:
+class CameraChainSensor(ChainSensor):
     def __init__(self, config_dict, M_cam, M_chain, config):
         """
         Generates a single sensor block for a single configuration
@@ -164,37 +164,7 @@ class CameraChainSensor:
         r = array(reshape(h_mat - z_mat, [-1, 1]))[:, 0]
         return r
 
-    def compute_residual_scaled(self, target_pts):
-        """
-        Computes the residual, and then scales it by sqrt(Gamma), where Gamma
-        is the information matrix for this measurement (Cov^-1).
-        """
-        r = self.compute_residual(target_pts)
-        gamma_sqrt = self.compute_marginal_gamma_sqrt(target_pts)
-        r_scaled = gamma_sqrt * matrix(r).T
-        return array(r_scaled.T)[0]
 
-    def compute_marginal_gamma_sqrt(self, target_pts):
-        """
-        Calculates the square root of the information matrix for the measurement of the
-        current set of system parameters at the passed in set of target points.
-        """
-        import scipy.linalg
-        cov = self.compute_cov(target_pts)
-        gamma = matrix(zeros(cov.shape))
-        num_pts = self.get_residual_length() / 2
-
-        for k in range(num_pts):
-            #print "k=%u" % k
-            first = 2 * k
-            last = 2 * k + 2
-            sub_cov = matrix(cov[first:last, first:last])
-            sub_gamma_sqrt_full = matrix(scipy.linalg.sqrtm(sub_cov.I))
-            sub_gamma_sqrt = real(sub_gamma_sqrt_full)
-            assert(scipy.linalg.norm(
-                sub_gamma_sqrt_full - sub_gamma_sqrt) < 1e-6)
-            gamma[first:last, first:last] = sub_gamma_sqrt
-        return gamma
 
     def get_residual_length(self):
         N = len(self._M_cam.image_points)
@@ -217,12 +187,8 @@ class CameraChainSensor:
 
         camera_pix = cv.fromarray(float64(
             [[[pt.x, pt.y]] for pt in self._M_cam.image_points]))
-        #print asarray(camera_pix)
-        #print asarray(cm)
-        #print asarray(dc)
         dst = cv.CreateMat(camera_pix.rows, camera_pix.cols, camera_pix.type)
         cv.UndistortPoints(camera_pix, dst, cm, dc, P=cm)
-        #print asarray(dst)
 
         return asarray(dst)
 
@@ -288,40 +254,8 @@ class CameraChainSensor:
         Input:
          - target_pts: 4xN matrix, storing N feature points of the target, in homogeneous coords
         '''
-        epsilon = 1e-8
-        #print "camera chain sensor"
-        #code.interact(local=locals())
-        if self._M_chain is not None:
-            M_chain = [chain for chain in self._M_chain if chain.chain_id in self._config_dict["chain"]["chains"]]
-            cm = ChainMessage()
-            inertial = cm.deflate(M_chain)
-            num_params = len(inertial)
-            #num_joints = len(self._M_chain.chain_state.position)
-            Jt = zeros([num_params, self.get_residual_length()])
-
-            #x = JointState()
-            #x.position = self._M_chain.chain_state.position[:]
-
-            ## Compute the Jacobian from the chain's joint angles to pixel residuals
-            #f0 = reshape(array(self._compute_expected(x, target_pts)), [-1])
-            f0 = reshape(array(self._compute_expected(
-                target_pts, cm.inflate(inertial))), [-1])
-            for i in range(num_params):
-                x = inertial[:]
-                #x.position = [
-                    #cur_pos for cur_pos in self._M_chain.chain_state.position]
-                x[i] += epsilon
-                #fTest = reshape(
-                      #array(self._compute_expected(x, target_pts)), [-1])
-                fTest = reshape(array(
-                    self._compute_expected(target_pts, cm.inflate(x))), [-1])
-                Jt[i] = (fTest - f0) / epsilon
-            #cov_angles = [x * x for x in self._chain.calc_block._chain._cov_dict['joint_angles']]
-            cov_angles = [0.01] * num_params
-
-            ## Transform the chain's covariance from joint angle space into pixel space using the just calculated jacobian
-            chain_cov = matrix(Jt).T * matrix(diag(cov_angles)) * matrix(Jt)
-
+        #chain cov
+        chain_cov = super(CameraChainSensor,self).compute_cov(target_pts)
         cam_cov = matrix(
             zeros([self.get_residual_length(), self.get_residual_length()]))
 
@@ -370,13 +304,15 @@ class CameraChainSensor:
             sparsity['transforms'][cur_transform_name] = [1, 1, 1, 1, 1, 1]
 
         sparsity['dh_chains'] = {}
-        #if self._M_chain is not None:
-            #chain_id = self._config_dict['chain']['chain_id']
-            #num_links = self._chain.calc_block._chain._M
+        chain_ids = self._config_dict['chains']
+        for chain in self._full_chain.calc_block._chains:
+            chain_id = chain._config_dict["chain_id"]
+            num_links = chain._chain._M
+            #num_links = self._full_chain.calc_block._chains._M
             #assert(num_links == len(self._M_chain.chain_state.position))
-            #sparsity['dh_chains'][chain_id] = {}
-            #sparsity['dh_chains'][chain_id]['dh'] = [[1, 1, 1, 1]] * num_links
-            #sparsity['dh_chains'][chain_id]['gearing'] = [1] * num_links
+            sparsity['dh_chains'][chain_id] = {}
+            sparsity['dh_chains'][chain_id]['dh'] = [[1, 1, 1, 1,1,1]] * num_links
+            sparsity['dh_chains'][chain_id]['gearing'] = [1] * num_links
 
         sparsity['rectified_cams'] = {}
         sparsity['rectified_cams'][self.sensor_id] = dict(
