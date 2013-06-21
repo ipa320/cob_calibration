@@ -33,7 +33,7 @@
 import numpy
 from numpy import matrix, vsplit, sin, cos, reshape, pi, array
 import rospy
-from PyKDL import Chain, Segment, Joint, Frame, Vector, Rotation, ChainFkSolverPos_recursive, JntArray
+from PyKDL import Chain, Segment, Joint, Frame, Vector, Rotation, ChainFkSolverPos_recursive, JntArray, RigidBodyInertia
 from functools import reduce
 
 class DhChain:
@@ -73,8 +73,10 @@ class DhChain:
             free_config = {}
         if 'dh' not in free_config:
             free_config['dh'] = [[0]*6]*self._M
-        else:
-            free_config['dh'] = [f["xyzrpy"] for f in free_config["dh"]]
+        #else:
+            #print free_config["dh"]
+            #print [f for f in free_config["dh"]]
+            #free_config['dh'] = [f["xyzrpy"] for f in free_config["dh"]]
         if 'gearing' not in free_config:
             free_config['gearing'] = [0]*self._M
         assert( len(free_config['dh']) == self._M)
@@ -90,7 +92,6 @@ class DhChain:
         # Convert int list into bool list
         flat_free = [x == 1 for x in flat_config]
 
-        #print flat_free
         return flat_free
 
     def params_to_config(self, param_vec):
@@ -130,7 +131,7 @@ class DhChain:
 
     # Returns # of params needed for inflation & deflation
     def get_length(self):
-        return self._M*5
+        return self._M*7
 
     # Returns 4x4 numpy matrix of the pose of the tip of
     # the specified link num. Assumes the last link's tip
@@ -143,7 +144,7 @@ class DhChain:
             link_num = self._M
 
 
-        pos_scaled = [cur_pos * cur_gearing for cur_pos, cur_gearing in zip(chain_state.position,self._gearing)]
+        pos_scaled = [cur_pos * cur_gearing for cur_pos, cur_gearing in zip(chain_state.actual.positions,self._gearing)]
 
         #pos_scaled = JntArray(pos_scaled)
         jnt_states = JntArray(len(pos_scaled))
@@ -151,8 +152,8 @@ class DhChain:
             jnt_states[i] = s
         self.build_chain()
         F1=Frame()
-        assert(0==self.fksolverpos.JntToCart(jnt_states,F1,link_num))
 
+        assert(0==self.fksolverpos.JntToCart(jnt_states,F1,link_num))
 
 
         out = []
@@ -170,22 +171,32 @@ class DhChain:
         for e in self._config:
             v = Vector(e["xyzrpy"][0], e["xyzrpy"][1], e["xyzrpy"][2])
             r = Rotation.RPY(e["xyzrpy"][3], e["xyzrpy"][4], e["xyzrpy"][5])
+            j = Joint(e["name"], Joint.None)
 
             f = Frame(r, v)
 
-            if e["type"] is "rotx":
-                j = Joint(Joint.RotX)
-            elif e["type"] is "roty":
-                j = Joint(Joint.RotY)
-            elif e["type"] is "rotz":
-                j = Joint(Joint.RotZ)
-            elif e["type"] is "transx":
-                j = Joint(Joint.TransX)
-            elif e["type"] is "transy":
-                j = Joint(Joint.TransY)
-            elif e["type"] is "transz":
-                j = Joint(Joint.TransZ)
-            self.chain.addSegment(Segment(j, f))
+            if e["type"] == "rotx":
+                axis = Vector(1.0, 0.0, 0.0)
+                j = Joint(e["name"],f.p, f.M * axis, Joint.RotAxis)
+            elif e["type"] == "roty":
+                axis = Vector(0.0, 1.0, 0.0)
+                j = Joint(e["name"],f.p, f.M * axis, Joint.RotAxis)
+            elif e["type"] == "rotz":
+                axis = Vector(0.0, 0.0, 1.0)
+                j = Joint(e["name"],f.p, f.M * axis, Joint.RotAxis)
+            elif e["type"] == "transx":
+                axis = Vector(1.0, 0.0, 0.0)
+                j = Joint(e["name"],f.p, f.M * axis, Joint.TransAxis)
+            elif e["type"] == "transy":
+                axis = Vector(0.0, 1.0, 0.0)
+                j = Joint(e["name"],f.p, f.M * axis, Joint.TransAxis)
+            elif e["type"] == "transz":
+                axis = Vector(0.0, 0.0, 1.0)
+                j = Joint(e["name"],f.p, f.M * axis, Joint.TransAxis)
+
+
+
+            self.chain.addSegment(Segment(e["name"]+"seg", j, f, RigidBodyInertia()))
         self.fksolverpos = ChainFkSolverPos_recursive(self.chain)
 
 
