@@ -1,12 +1,45 @@
+####### Use this file as template for free_0.yaml - free_2.yaml. #######
 checkerboards:
   cb_9x6: {corners_x: 0, corners_y: 0, spacing_x: 0, spacing_y: 0}
 dh_chains:
   arm_chain:
-    cov:
-      joint_angles: [0, 0, 0, 0, 0, 0, 0]
+    cov: [0, 0, 0, 0, 0, 0, 0]
+    dh:
+    - name: arm_1_joint
+      type: rotz
+      xyzrpy: [0, 0, 0, 0, 0, 0]
+    - name: arm_2_joint
+      type: rotz
+      xyzrpy: [0, 0, 0, 0, 0, 0]
+    - name: arm_3_joint
+      type: rotz
+      xyzrpy: [0, 0, 0, 0, 0, 0]
+    - name: arm_4_joint
+      type: rotz
+      xyzrpy: [0, 0, 0, 0, 0, 0]
+    - name: arm_5_joint
+      type: rotz
+      xyzrpy: [0, 0, 0, 0, 0, 0]
+    - name: arm_6_joint
+      type: rotz
+      xyzrpy: [0, 0, 0, 0, 0, 0]
+    - name: arm_7_joint
+      type: rotz
+      xyzrpy: [0, 0, 0, 0, 0, 0]
+    gearing: [0, 0, 0, 0, 0, 0, 0]
   torso_chain:
-    cov:
-      joint_angles: [0, 0, 0]
+    cov: [0, 0, 0]
+    dh:
+    - name: torso_lower_neck_tilt_joint
+      type: rotz
+      xyzrpy: [0, 0, 0, 0, 0, 0]
+    - name: torso_pan_joint
+      type: rotz
+      xyzrpy: [0, 0, 0, 0, 0, 0]
+    - name: torso_upper_neck_tilt_joint
+      type: rotz
+      xyzrpy: [0, 0, 0, 0, 0, 0]
+    gearing: [0, 0, 0]
 rectified_cams:
   kinect_rgb:
     baseline_shift: 0
@@ -27,9 +60,11 @@ rectified_cams:
     cy_shift: 0
     f_shift: 0
 transforms:
+  '***': [0, 0, 0, 0, 0, 0]
   arm_0_link: [0, 0, 0, 0, 0, 0]
+  arm_7_link: [0, 0, 0, 0, 0, 0]
   arm_cb: [0, 0, 0, 0, 0, 0]
   head_color_camera_l_link: [0, 0, 0, 0, 0, 0]
-  head_cover_link: [0, 0, 0, 0, 0, 0]
   sdh_palm_link: [0, 0, 0, 0, 0, 0]
-  torso_0_link: [0, 0, 0, 0, 0, 0]
+  torso_base_link: [0, 0, 0, 0, 0, 0]
+  torso_upper_neck_tilt_link: [0, 0, 0, 0, 0, 0]

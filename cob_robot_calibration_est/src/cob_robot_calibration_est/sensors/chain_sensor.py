@@ -42,12 +42,14 @@
 #      \
 #       before_chain_Ts -- target_chain -- after_chain_Ts -- checkerboard
 
-from numpy import reshape, array, zeros, diag, matrix, real
+from numpy import reshape, array, zeros, diag, matrix, real, ones
 import roslib
 roslib.load_manifest('cob_robot_calibration_est')
 import rospy
 from cob_robot_calibration_est.full_chain import FullChainRobotParams
-from cob_robot_calibration_est.ChainMessage import ChainMessage
+#from cob_robot_calibration_est.ChainMessage import ChainMessage
+from pr2_controllers_msgs.msg import JointTrajectoryControllerState
+from copy import deepcopy
 #import code
 
 
@@ -63,9 +65,11 @@ class ChainBundler:
         for cur_config in self._valid_configs:
             cur_chain_id = cur_config["sensor_id"]
             if cur_chain_id == M_robot.chain_id and \
-                    all([chain in [x.chain_id for x in M_robot.M_chain] for chain in cur_config['chains']]):
+                    all([chain in [x.header.frame_id for x in M_robot.M_chain] for chain in cur_config['chains']]):
                 rospy.logdebug("  Found block")
-                M_chain = M_robot.M_chain
+                #M_chain = M_robot.M_chain
+                M_chain = [c for c in M_robot.M_chain if c.header.frame_id in cur_config['chains']]
+
                 cur_sensor = ChainSensor(
                     cur_config, M_chain, M_robot.target_id, self._configs)
                 sensors.append(cur_sensor)
@@ -77,11 +81,7 @@ class ChainBundler:
 class ChainSensor:
     def __init__(self, config_dict, M_chain, target_id, config):
 
-   # print 'Config: '
-        #print config
 
-        #print 'Config_dict: '
-   # print config_dict
         self.sensor_type = "chain"
         self.sensor_id = config_dict["sensor_id"]
 
@@ -94,6 +94,7 @@ class ChainSensor:
             self._config_dict, self._config)
 
         self.terms_per_sample = 3
+
 
     def update_config(self, robot_params):
         self._full_chain.update_config(robot_params)
@@ -109,22 +110,30 @@ class ChainSensor:
         return r
 
     def compute_residual_scaled(self, target_pts):
+        """
+        Computes the residual, and then scales it by sqrt(Gamma), where Gamma
+        is the information matrix for this measurement (Cov^-1).
+        """
         r = self.compute_residual(target_pts)
         gamma_sqrt = self.compute_marginal_gamma_sqrt(target_pts)
         r_scaled = gamma_sqrt * matrix(r).T
         return array(r_scaled.T)[0]
 
     def compute_marginal_gamma_sqrt(self, target_pts):
+        """
+        Calculates the square root of the information matrix for the measurement of the
+        current set of system parameters at the passed in set of target points.
+        """
         import scipy.linalg
         # ----- Populate Here -----
         cov = self.compute_cov(target_pts)
         gamma = matrix(zeros(cov.shape))
-        num_pts = self.get_residual_length() / 3
+        num_pts = self.get_residual_length() / self.terms_per_sample
         #code.interact(local=locals())
         for k in range(num_pts):
             #print "k=%u" % k
-            first = 3 * k
-            last = 3 * k + 3
+            first = self.terms_per_sample * k
+            last = self.terms_per_sample * k + self.terms_per_sample
             sub_cov = matrix(cov[first:last, first:last])
             sub_gamma_sqrt_full = matrix(scipy.linalg.sqrtm(sub_cov.I))
             sub_gamma_sqrt = real(sub_gamma_sqrt_full)
@@ -140,53 +149,40 @@ class ChainSensor:
         Input:
          - target_pts: 4xN matrix, storing N feature points of the target, in homogeneous coords
         '''
+        _ones = ones([7, self.get_residual_length()])
+        cov = matrix(diag([0.01] * self.get_residual_length()))
+
         epsilon = 1e-8
-        #print "chain sensor"
-        if self._M_chain is not None:
-            M_chain = [chain for chain in self._M_chain if chain.chain_id in self._config_dict["chains"]]
-            cm = ChainMessage()
-            inertial = cm.deflate(M_chain)
-            num_params = len(inertial)
-            Jt = zeros([num_params, self.get_residual_length()])
 
-            x = inertial[:]
-            ## Compute the Jacobian from the chain's joint angles to pixel residuals
-            f0 = reshape(array(
-                self._calc_fk_target_pts(cm.inflate(x))[0:3, :].T), [-1])
-            for i in range(num_params):
-                x = inertial[:]
-                x[i] += epsilon
-                fTest = reshape(array(
-                    self._calc_fk_target_pts(cm.inflate(x))[0:3, :].T), [-1])
-                Jt[i] = (fTest - f0) / epsilon
-                #code.interact(local=locals())
-            cov_angles = [0.01] * num_params
+        i_joints = []
+        num_joints = 0
+        for i,c in enumerate(self._M_chain):
+            l = len(c.actual.positions)
+            i_joints.extend([i] * l)
+            num_joints+=l
 
-            ## Transform the chain's covariance from joint angle space into pixel space using the just calculated jacobian
-            chain_cov = matrix(Jt).T * matrix(diag(cov_angles)) * matrix(Jt)
+        #num_joints = sum(num_joints)
+        #num_joints = len(self._M_chain.actual.position)
+        Jt = zeros([num_joints, self.get_residual_length()])
 
-        return chain_cov
-        #_ones = ones([7, self.get_residual_length()])
-        #cov = matrix(diag([0.01] * self.get_residual_length()))
+        x = deepcopy(self._M_chain)
+        #x.actual.position = self._M_chain.actual.position[:]
 
-        #epsilon = 1e-8
+        f0 = reshape(array(self._calc_fk_target_pts(x)[0:3, :].T), [-1])
+        for i in range(num_joints):
+            x[i_joints[i]].header.frame_id = self._M_chain[i_joints[i]].header.frame_id
+            x[i_joints[i]].actual.positions = list(self._M_chain[i_joints[i]].actual.positions[:])
+            x[i_joints[i]].actual.positions[i] += epsilon
+            fTest = reshape(array(self._calc_fk_target_pts(x)[0:3, :].T), [-1])
+            Jt[i] = (fTest - f0) / epsilon
+        cov_angles = []
+        for c in self._full_chain.calc_block._chains:
+            cov_angles.extend([ x * x for x in c._chain._cov_dict])
 
-        #num_joints = len(self._M_chain.chain_state.position)
-        #Jt = zeros([num_joints, self.get_residual_length()])
-
-        #x = JointState()
-        #x.position = self._M_chain.chain_state.position[:]
-
-        #f0 = reshape(array(self._calc_fk_target_pts(x)[0:3, :].T), [-1])
-        #for i in range(num_joints):
-            #x.position = list(self._M_chain.chain_state.position[:])
-            #x.position[i] += epsilon
-            #fTest = reshape(array(self._calc_fk_target_pts(x)[0:3, :].T), [-1])
-            #Jt[i] = (fTest - f0) / epsilon
         #cov_angles = [x * x for x in self._full_chain.calc_block._chain._cov_dict['joint_angles']]
-        ##import code; code.interact(local=locals())
-        #cov = matrix(Jt).T * matrix(diag(cov_angles)) * matrix(Jt)
-        #return cov
+        #import code; code.interact(local=locals())
+        cov = matrix(Jt).T * matrix(diag(cov_angles)) * matrix(Jt)
+        return cov
 
     def get_residual_length(self):
         pts = self._checkerboard.generate_points()
@@ -217,8 +213,29 @@ class ChainSensor:
     def compute_expected(self, target_pts):
         return target_pts
 
-    # Build a dictionary that defines which parameters will in fact affect this measurement
     def build_sparsity_dict(self):
+        """
+        Build a dictionary that defines which parameters will in fact affect this measurement.
+
+        Returned dictionary should be of the following form:
+          transforms:
+            my_transformA: [1, 1, 1, 1, 1, 1]
+            my_transformB: [1, 1, 1, 1, 1, 1]
+          dh_chains:
+            my_chain:
+              dh:
+                - [1, 1, 1, 1]
+                - [1, 1, 1, 1]
+                       |
+                - [1, 1, 1, 1]
+              gearing: [1, 1, ---, 1]
+          rectified_cams:
+            my_cam:
+              baseline_shift: 1
+              f_shift: 1
+              cx_shift: 1
+              cy_shift: 1
+        """
         sparsity = dict()
         sparsity['transforms'] = {}
         chain_transform_names = [chain['before_chain'] + chain['after_chain'] for chain in self._config['chains']
@@ -227,15 +244,17 @@ class ChainSensor:
         for cur_transform_name in (self._config_dict['before_chain'] + self._config_dict['after_chain'] + chain_transform_names):
             sparsity['transforms'][cur_transform_name] = [1, 1, 1, 1, 1, 1]
 
-        '''
         sparsity['dh_chains'] = {}
-        chain_id = self._config_dict['chain_id']
-        num_links = self._full_chain.calc_block._chain._M
-        assert(num_links == len(self._M_chain.chain_state.position))
-        sparsity['dh_chains'][chain_id] = {}
-        sparsity['dh_chains'][chain_id]['dh'] = [[1, 1, 1, 1]] * num_links
-        sparsity['dh_chains'][chain_id]['gearing'] = [1] * num_links
-        '''
+        chain_ids = self._config_dict['chains']
+        for chain in self._full_chain.calc_block._chains:
+            chain_id = chain._config_dict["chain_id"]
+            num_links = chain._chain._M
+            #num_links = self._full_chain.calc_block._chains._M
+            #assert(num_links == len(self._M_chain.chain_state.position))
+            sparsity['dh_chains'][chain_id] = {}
+            sparsity['dh_chains'][chain_id]['dh'] = [[1, 1, 1, 1,1,1]] * num_links
+            sparsity['dh_chains'][chain_id]['gearing'] = [1] * num_links
+
         sparsity['checkerboards'] = {}
         sparsity['checkerboards'][self._target_id] = {'spacing_x': 1,
                                                       'spacing_y': 1}

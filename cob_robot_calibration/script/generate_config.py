@@ -1,13 +1,13 @@
 #!/usr/bin/env python
-#################################################################
-##\file
+#
+# \file
 #
 # \note
 #   Copyright (c) 2011-2012 \n
 #   Fraunhofer Institute for Manufacturing Engineering
 #   and Automation (IPA) \n\n
 #
-#################################################################
+#
 #
 # \note
 #   Project name: care-o-bot
@@ -23,7 +23,7 @@
 #
 # \date Date of creation: January 2012
 #
-#################################################################
+#
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -52,7 +52,7 @@
 # License LGPL along with this program.
 # If not, see <http://www.gnu.org/licenses/>.
 #
-#################################################################
+#
 PKG = 'cob_robot_calibration'
 import roslib
 roslib.load_manifest(PKG)
@@ -61,6 +61,7 @@ import rospy
 from simple_script_server import simple_script_server
 import yaml
 import tf
+from urdf_parser_py.urdf import URDF
 
 
 def get_chains(d, origin='base_link'):
@@ -80,9 +81,9 @@ def get_chains(d, origin='base_link'):
 
     print " Trees: "
     print trees
-    #to_calibrate = list(set(to_calibrate))
+    # to_calibrate = list(set(to_calibrate))
     return trees
-    #return transformations, to_calibrate
+    # return transformations, to_calibrate
 
 
 def transform_chain_dict(d):
@@ -107,7 +108,7 @@ def build_tree(chain, kinematic_chains, origin):
         except IndexError:
             tree += kinematic_chain['before_chain']
         tree += [''.join(kinematic_chain['links'][0])]
-        tree += ['**']
+        tree += ['***']
         tree += [''.join(kinematic_chain['links'][1])]
         tree += [''.join(kinematic_chain['after_chain'])]
         tree = cleanup_tree(tree)
@@ -127,14 +128,82 @@ def cleanup_tree(tree):
     return new_tree
 
 
+def generate_chain_parameter(sensors):
+    parameter_dict = {}
+    for chain in sensors["chains"]:
+        chain_key = chain["chain_id"]
+        links = tuple(chain["links"])
+        #print chain_key, links
+        parameter_dict[chain_key] = get_parameters(links)
+
+    #print parameter_dict
+    return parameter_dict
+
+
+def get_parameters(links):
+
+    robot = URDF.load_from_parameter_server()
+    chain = []
+    chain = extract_joints(robot, links[0], links[1], chain)
+    chain.reverse()
+    #for j in chain:
+        #print j.name
+    parameter_dict = {"dh": joint_to_parameter(chain),
+                      "cov": [0.01] * len(chain),
+                      "gearing": [1] * len(chain)}
+    return parameter_dict
+
+
+def joint_to_parameter(chain):
+    parameters = []
+    for index, joint in enumerate(chain):
+        t = ""
+        # print joint.name
+        if joint.joint_type == joint.REVOLUTE:
+            t += "rot"
+        elif joint.joint_type == "prismatic":
+            t += "trans"
+        if joint.axis == "1 0 0":
+            t += "x"
+        elif joint.axis == "0 1 0":
+            t += "y"
+        elif joint.axis == "0 0 1":
+            t += "z"
+        try:
+            xyzrpy = joint.origin.position + joint.origin.rotation
+            #print joint.name + ": " + t + ", " + str(xyzrpy)
+            parameters.append({"name": str(joint.name), "type": t, "xyzrpy": xyzrpy})
+        except IndexError:
+            pass
+    # print parameters
+    return parameters
+
+
+def extract_joints(robot, base, tip, chain=[]):
+    #print base, tip,
+    #for a in chain:
+        #print a.name,
+    #print
+    if tip == base:
+        for a in chain:
+            a.name
+        return chain
+    for key, joint in robot.joints.iteritems():
+        if joint.child == tip:
+            chain.append(joint)
+            return extract_joints(robot, base, joint.parent, chain)
+
+
 def generate_transformation_dict(transformation_list, listener):
     transformation_dict = {}
     for i in range(len(transformation_list)):
         if transformation_list[i] != '**' and transformation_list[i] != '':
             try:
                 if transformation_list[i + 1] in ['', '**']:
+
                     continue
-                transformation_dict[transformation_list[i + 1]] = get_single_transform(transformation_list[i], transformation_list[i + 1], listener)
+                transformation_dict[transformation_list[i + 1]] = get_single_transform(
+                    transformation_list[i], transformation_list[i + 1], listener)
             except IndexError:
                 pass
     return transformation_dict
@@ -160,7 +229,12 @@ def settozero(d):
         if isinstance(v, dict):
             v = settozero(v)
         elif isinstance(v, list):
-            v = [0] * len(v)
+            if isinstance(v[0], dict):
+                for v1 in v:
+                    print v1
+                    v1["xyzrpy"] = [0] * 6
+            else:
+                v = [0] * len(v)
         else:
             v = 0
         output[k] = v
@@ -171,20 +245,21 @@ def __main__():
     rospy.init_node('cob_robot_calibration_generate_cal')
     listener = tf.TransformListener()
     rospy.sleep(1)
-    sss = simple_script_server()
-    sss.move("head", "back")
+    # sss = simple_script_server()
+    # sss.move("head", "back")
     minimal_system = rospy.get_param('minimal_system', None)
-    sensors = rospy.get_param('sensors', None)
+    sensors_path = rospy.get_param('sensors', None)
     output_system = rospy.get_param('output_system', None)
     free_system = rospy.get_param('free_system', None)
-
-    z = yaml.load(open(sensors, 'r'))
-    transformations = get_chains(z)
-    print z
+    with open(sensors_path, "r") as f:
+        sensors = yaml.load(f)
+    transformations = get_chains(sensors)
+    print sensors
     transformation_dict = generate_transformation_dict(
         transformations, listener)
     print transformation_dict
-    system = yaml.load(open(minimal_system, 'r'))
+    with open(minimal_system, "r") as f:
+        system = yaml.load(f)
 
     if 'transforms' in system:
 
@@ -198,6 +273,14 @@ def __main__():
         return
     system['transforms'] = t
 
+    dh_chains = generate_chain_parameter(sensors)
+
+    system['dh_chains'] = dh_chains
+    with open(output_system, 'w') as f:
+        f.write('####### This file is autogenerated. Do not edit #######\n')
+        f.write(yaml.dump(system))
+
+
     free = system.copy()
 
     free = settozero(free)
@@ -209,12 +292,9 @@ def __main__():
 
     print yaml.dump(free)
     '''
-    with open(output_system, 'w') as f:
-        f.write('####### This file is autogenerated. Do not edit #######\n')
-        f.write(yaml.dump(system))
-
     with open(free_system, 'w') as f:
-        f.write('####### Use this file as template for free_0.yaml - free_2.yaml. #######\n')
+        f.write(
+            '####### Use this file as template for free_0.yaml - free_2.yaml. #######\n')
         f.write(yaml.dump(free))
 
 if __name__ == "__main__":
