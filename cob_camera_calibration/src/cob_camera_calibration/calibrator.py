@@ -323,7 +323,7 @@ class StereoCalibrator(Calibrator):
 #        stereo_flags |= cv2.CALIB_RATIONAL_MODEL          # Use 8 param rational distortion model instead of 5 param plumb bob model
         
         # run stereo calibration
-        res = cv2.stereoCalibrate(object_points, image_points_l, image_points_r, camera_matrix_l, dist_coeffs_l, camera_matrix_r, dist_coeffs_r, (w_ref, h_ref), flags=stereo_flags)
+        res = cv2.stereoCalibrate(object_points, image_points_l, image_points_r, (w_ref, h_ref), camera_matrix_l, dist_coeffs_l, camera_matrix_r, dist_coeffs_r, flags=stereo_flags)
         (rms_stereo, camera_matrix_l, dist_coeffs_l, camera_matrix_r, dist_coeffs_r, R, T, E, F) = res    
         
         # run stereo rectification
