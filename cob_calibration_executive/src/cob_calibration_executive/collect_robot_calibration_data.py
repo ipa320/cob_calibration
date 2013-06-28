@@ -169,7 +169,7 @@ def main():
     stiffnessM = SetJointStiffnessRequest()
     #print stiffnessM.joint_stiffness
 
-    stiffnessM.joint_stiffness = [2000, 2000, 2000, 2000, 2000, 2000,2000]
+    stiffnessM.joint_stiffness = [1500]*7
 
     jointstiffness_srv = rospy.ServiceProxy("/arm_controller/set_joint_stiffness",SetJointStiffness)
     rospy.wait_for_service("/arm_controller/set_joint_stiffness",2)
