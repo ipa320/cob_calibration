@@ -72,7 +72,7 @@ class DhChain:
         if free_config is None:
             free_config = {}
         if 'dh' not in free_config:
-            free_config['dh'] = [[0]*6]*self._M
+            free_config['dh']["xyzrpy"]= [[0]*6]*self._M
         #else:
             #print free_config["dh"]
             #print [f for f in free_config["dh"]]
@@ -83,7 +83,12 @@ class DhChain:
         assert( len(free_config['gearing']) == self._M )
 
         # Flatten the config
-        flat_config = sum(free_config['dh'], [])
+        flat_config =[]
+        if isinstance(free_config["dh"][0],dict):
+            for cfg in free_config["dh"]:
+                flat_config.extend(cfg["xyzrpy"])
+        else:
+            flat_config = sum(free_config['dh'], [])
 
         assert( len(flat_config) == self._M * 6)
 
