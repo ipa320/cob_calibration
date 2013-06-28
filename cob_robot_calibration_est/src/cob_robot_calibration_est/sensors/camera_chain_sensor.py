@@ -41,7 +41,7 @@
 #       checkerboard
 
 
-from numpy import matrix, reshape, array, zeros, real, float64, asarray, diag
+from numpy import matrix, reshape, array, zeros, real, float64, asarray, diag, ones
 
 import roslib
 roslib.load_manifest('cob_robot_calibration_est')
@@ -52,6 +52,7 @@ from cob_robot_calibration_est.sensors.chain_sensor import ChainBundler, ChainSe
 import yaml
 import cv
 #import code
+from copy import deepcopy
 
 
 class CameraChainBundler:
@@ -88,10 +89,10 @@ class CameraChainBundler:
         sensors = []
         for cur_config in self._valid_configs:
             if cur_config["camera_id"] in [x.camera_id for x in M_robot.M_cam]:
-                if all([chain in [x.chain_id for x in M_robot.M_chain] for chain in cur_config["chain"]["chains"]]):
+                if all([chain in [x.header.frame_id for x in M_robot.M_chain] for chain in cur_config["chain"]["chains"]]):
                     M_cam = M_robot.M_cam[[x.camera_id for x in M_robot.M_cam]
                                           .index(cur_config["camera_id"])]
-                    M_chain = M_robot.M_chain
+                    M_chain = [c for c in M_robot.M_chain if c.header.frame_id in cur_config["chain"]["chains"]]
                 else:
                     print "else cur_config[chain][chain_id]: ", cur_config["chain"]["chain_id"]
                     break
@@ -201,7 +202,7 @@ class CameraChainSensor(ChainSensor):
         if self._M_chain is not None:
             return self._compute_expected(target_pts)
         else:
-            return self._compute_expected(None, target_pts)
+            return self._compute_expected(target_pts, None)
 
     def _compute_expected(self, target_pts, M_chain=None):
         """
@@ -255,7 +256,7 @@ class CameraChainSensor(ChainSensor):
          - target_pts: 4xN matrix, storing N feature points of the target, in homogeneous coords
         '''
         #chain cov
-        chain_cov = super(CameraChainSensor,self).compute_cov(target_pts)
+        chain_cov = self.compute_chain_cov(target_pts)
         cam_cov = matrix(
             zeros([self.get_residual_length(), self.get_residual_length()]))
 
@@ -272,7 +273,45 @@ class CameraChainSensor(ChainSensor):
         else:
             cov = cam_cov
         return cov
+    def compute_chain_cov(self, target_pts):
 
+        _ones = ones([7, self.get_residual_length()])
+        cov = matrix(diag([0.01] * self.get_residual_length()))
+
+        epsilon = 1e-8
+
+
+
+        chain_cov = None
+        if self._M_chain is not None:
+            i_joints = []
+            num_joints = 0
+            for i,c in enumerate(self._M_chain):
+                l = len(c.actual.positions)
+                i_joints.extend([i] * l)
+                num_joints+=l
+
+            #num_joints = sum(num_joints)
+            #num_joints = len(self._M_chain.actual.position)
+            Jt = zeros([num_joints, self.get_residual_length()])
+
+            x = deepcopy(self._M_chain)
+            # Compute the Jacobian from the chain's joint angles to pixel residuals
+            f0 = reshape(array(self._compute_expected(target_pts, x)), [-1])
+            for i in range(num_joints):
+                x[i_joints[i]].header.frame_id = self._M_chain[i_joints[i]].header.frame_id
+                x[i_joints[i]].actual.positions = list(self._M_chain[i_joints[i]].actual.positions[:])
+                x[i_joints[i]].actual.positions[i] += epsilon
+                fTest = reshape(array(self._compute_expected(target_pts, x)), [-1])
+                Jt[i] = (fTest - f0)/epsilon
+            cov_angles = []
+
+            for c in self._chain.calc_block._chains:
+                cov_angles.extend([ x * x for x in c._chain._cov_dict])
+
+            # Transform the chain's covariance from joint angle space into pixel space using the just calculated jacobian
+            chain_cov = matrix(Jt).T * matrix(diag(cov_angles)) * matrix(Jt)
+        return chain_cov
     def build_sparsity_dict(self):
         """
         Build a dictionary that defines which parameters will in fact affect this measurement.
@@ -304,8 +343,8 @@ class CameraChainSensor(ChainSensor):
             sparsity['transforms'][cur_transform_name] = [1, 1, 1, 1, 1, 1]
 
         sparsity['dh_chains'] = {}
-        chain_ids = self._config_dict['chains']
-        for chain in self._full_chain.calc_block._chains:
+        chain_ids = self._config_dict["chain"]['chains']
+        for chain in self._chain.calc_block._chains:
             chain_id = chain._config_dict["chain_id"]
             num_links = chain._chain._M
             #num_links = self._full_chain.calc_block._chains._M
