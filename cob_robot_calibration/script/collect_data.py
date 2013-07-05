@@ -1,13 +1,13 @@
 #!/usr/bin/env python
-#################################################################
-##\file
+#
+# \file
 #
 # \note
 #   Copyright (c) 2011-2012 \n
 #   Fraunhofer Institute for Manufacturing Engineering
 #   and Automation (IPA) \n\n
 #
-#################################################################
+#
 #
 # \note
 #   Project name: care-o-bot
@@ -25,7 +25,7 @@
 #
 # \date Date of creation: January 2012
 #
-#################################################################
+#
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -54,7 +54,7 @@
 # License LGPL along with this program.
 # If not, see <http://www.gnu.org/licenses/>.
 #
-#################################################################
+#
 PKG = 'cob_robot_calibration'
 NODE = 'collect_data_node'
 import roslib
@@ -77,6 +77,7 @@ CHECKERBOARD_CHAIN = "arm_chain"
 
 
 class DataCollector():
+
     '''
     @summary: Collects data for robot calibration.
 
@@ -100,16 +101,17 @@ class DataCollector():
             int(checkerboard["pattern_size"].split("x")[1]))
         with open(rospy.get_param("~sensors_yaml"), 'r') as a:
             sensors_yaml = yaml.load(a.read())
-        #self._get_transformation_links(sensors_yaml)
+        # self._get_transformation_links(sensors_yaml)
         self._create_transformation_callbacks(sensors_yaml)
-        self.listener = tf.TransformListener()
+        #self.listener = tf.TransformListener()
 
        # CvBridge
         self.bridge = CvBridge()
 
         # initialize private storage
-        self._left = {}
-        self._left_received = False
+        self._images = {}
+        self._images_received = {}
+
         self.counter = 1
 
         #  init publisher / subscriber
@@ -120,26 +122,39 @@ class DataCollector():
 
         # left camera
         rospy.Subscriber(
-            rospy.get_param("~cameras")["reference"]["topic"], Image, self._callback_left)
-
+            rospy.get_param("~cameras")["reference"]["topic"],
+            Image,
+            self._callback_left,
+            rospy.get_param("~cameras")["reference"]["name"])
+        self._images[rospy.get_param("~cameras")["reference"]["name"]] = {}
+        self._images_received[rospy.get_param(
+            "~cameras")["reference"]["name"]] = False
+        for camera in rospy.get_param("~cameras")["further"]:
+            rospy.Subscriber(
+                camera["topic"],
+                Image,
+                self._callback_image,
+                camera["name"])
+            self._images[camera["name"]] = {}
+            self._images_received[camera["name"]] = True
         print "==> done with initialization"
 
-    def _callback_left(self, image_raw):
+    def _callback_image(self, image_raw, id):
         '''
         Callback function for left camera message filter
         '''
-        #print "DEBUG: callback left"
-        self._left["image"] = image_raw
-        #if self._left_received == False:
-            #print "--> left sample received (this only prints once!)"
-        self._left_received = True
+        # print "DEBUG: callback left"
+        self._images[id]["image"] = image_raw
+        # if self._left_received == False:
+            # print "--> left sample received (this only prints once!)"
+        self._images_received[id] = True
 
     def _create_transformation_callbacks(self, sensors_yaml):
         # kinematic chains
         self.transformations = {}
         for _chain in sensors_yaml["chains"]:
-            rospy.Subscriber(_chain["topic"], JointTrajectoryControllerState, self._callback_jointstate, _chain["chain_id"])
-
+            rospy.Subscriber(_chain[
+                             "topic"], JointTrajectoryControllerState, self._callback_jointstate, _chain["chain_id"])
 
     def _callback_jointstate(self, data, id):
         self.transformations[id] = data
@@ -152,7 +167,8 @@ class DataCollector():
         rospy.sleep(1)
         # Start service
         rospy.Service('/collect_data/capture', Capture, self._collect)
-        rospy.loginfo("service '/collect_data/capture' started, waiting for requests...")
+        rospy.loginfo(
+            "service '/collect_data/capture' started, waiting for requests...")
         rospy.spin()
 
     def _collect(self, data):
@@ -189,70 +205,88 @@ class DataCollector():
         @type  square_size: float
         '''
         # capture measurements
+
+
         # --------------------
-        self._left_received = False
-        self._right_received = False
-        self._kinect_rgb_received = False
-        start_time = rospy.Time.now()
-        while (not self._left_received):
-            rospy.sleep(0.005)
-            # print warning every 2 seconds if one of the messages is still missing...
-            if start_time + rospy.Duration(2.0) < rospy.Time.now():
-                if not self._left_received:
-                    print "--> still waiting for sample from left"
-                start_time = rospy.Time.now()
-        print "got sample"
-        latest_left = self._left
-
-        self._torso_joint_msg_received = False
-        self._arm_joint_msg_received = False
-        # set up checkerboard and checkerboard detector
-        # ---------------------------------------------
-        checkerboard = Checkerboard(pattern_size, square_size)
-        checkerboard_detector = CheckerboardDetector(checkerboard)
-
-        # detect cb left
-        # --------------
-        cvImage = self.bridge.imgmsg_to_cv(latest_left["image"], "mono8")
-        image = cv2util.cvmat2np(cvImage)
-
-        corners = checkerboard_detector.detect_image_points(
-            image, is_grayscale=True)
-        if corners is not None:
-            print "cb found: left"
-            img_points_left = []
-            for (x, y) in corners.reshape(-1, 2):
-                img_points_left.append(ImagePoint(x, y))
-        else:
-            # cb not found
-
-            #return False
-            img_points_left = [[1,2],[2,3]]
-
-        # create camera msg left
-        # ----------------------
-        cam_msg_left = CameraMeasurement()
-        cam_msg_left.camera_id = "left"
-        cam_msg_left.header.stamp = latest_left["image"].header.stamp
-        #cam_msg_left.cam_info = latest_left["camera_info"]
-        cam_msg_left.image_points = img_points_left
-        cam_msg_left.verbose = False
-        #cam_ms_leftg.image        = latest_left["image_color"]
-        #cam_msg_left.image_rect   = latest_left["image_rect"]
-        #cam_msg_left.features    = # Not implemented here
-
-        # ----------------------
-        # DEBUG publish pic
-        # -----------------
-        self._image_pub_left.publish(latest_left["image"])
-
         # create robot measurement msg and publish
         # -----------------
         robot_msg = RobotMeasurement()
         robot_msg.sample_id = sample_id
         robot_msg.target_id = target_id
         robot_msg.chain_id = chain_id
-        robot_msg.M_cam = [cam_msg_left]
+
+
+        # --------------------
+        # receive images
+        # -----------------
+        for v in self._images_received.values():
+            v = False
+        for v in self.transformations.received.values():
+            v = False
+        print self._images_received
+
+
+
+        start_time = rospy.Time.now()
+        while (not all(self._images_received.values()) or not all(self.transformations.values())):
+            rospy.sleep(0.005)
+            # print warning every 2 seconds if one of the messages is still
+            # missing...
+            if start_time + rospy.Duration(2.0) < rospy.Time.now():
+                for name, v in self._images_received.iteritems():
+                    if not v:
+                        print "--> still waiting for sample from %s"%name
+                for name, v in self._transformations_received.iteritems():
+                    if not v:
+                        print "--> still waiting for sample from %s"%name
+            start_time = rospy.Time.now()
+        print "got sample"
+        #latest_left = self._left
+
+        # set up checkerboard and checkerboard detector
+        # ---------------------------------------------
+        checkerboard = Checkerboard(pattern_size, square_size)
+        checkerboard_detector = CheckerboardDetector(checkerboard)
+
+        # detect cb
+        # --------------
+        for name, image in self._images.iteritems():
+            image = image["image"]
+            cvImage = self.bridge.imgmsg_to_cv(image, "mono8")
+            image = cv2util.cvmat2np(cvImage)
+
+            corners = checkerboard_detector.detect_image_points(
+                image, is_grayscale=True)
+            if corners is not None:
+                print "cb found: %"%name
+                img_points = []
+                for (x, y) in corners.reshape(-1, 2):
+                    img_points.append(ImagePoint(x, y))
+            else:
+                # cb not found
+                return False
+
+            # create camera msg left
+            # ----------------------
+            cam_msg = CameraMeasurement()
+            cam_msg.camera_id = name
+            cam_msg.header.stamp = image.header.stamp
+            cam_msg.cam_info = image["camera_info"]
+            cam_msg.image_points = img_points
+            cam_msg.verbose = False
+            robot_msg.M_cam.append(cam_msg)
+            cam_msg.image        = image["image_color"]
+            # cam_msg.image_rect   = latest_left["image_rect"]
+            # cam_msg.features    = # Not implemented here
+
+        #----------------------
+        #DEBUG publish pic
+        #-----------------
+        #self._image_pub_left.publish(latest_left["image"])
+
+        #----------------------
+        # Fill robot_msg
+        #----------------------
         robot_msg.M_chain = self.transformations.values()
         self._robot_measurement_pub.publish(robot_msg)
 
