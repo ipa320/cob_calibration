@@ -124,7 +124,7 @@ class DataCollector():
         rospy.Subscriber(
             rospy.get_param("~cameras")["reference"]["topic"],
             Image,
-            self._callback_left,
+            self._callback_image,
             rospy.get_param("~cameras")["reference"]["name"])
         self._images[rospy.get_param("~cameras")["reference"]["name"]] = {}
         self._images_received[rospy.get_param(
@@ -151,14 +151,19 @@ class DataCollector():
 
     def _create_transformation_callbacks(self, sensors_yaml):
         # kinematic chains
+
         self.transformations = {}
+        self.transformations_received = {}
         for _chain in sensors_yaml["chains"]:
             rospy.Subscriber(_chain[
                              "topic"], JointTrajectoryControllerState, self._callback_jointstate, _chain["chain_id"])
+	    self.transformations_received[_chain["chain_id"]]=False
 
     def _callback_jointstate(self, data, id):
         self.transformations[id] = data
         self.transformations[id].header.frame_id = id
+	self.transformations_received[id] = True
+
 
     def run(self):
         '''
@@ -219,10 +224,10 @@ class DataCollector():
         # --------------------
         # receive images
         # -----------------
-        for v in self._images_received.values():
-            v = False
-        for v in self.transformations.received.values():
-            v = False
+        for v in self._images_received:
+            self._images_received[v] = False
+        for v in self.transformations_received:
+            self.transformations_received[v] = False
         print self._images_received
 
 
@@ -252,13 +257,14 @@ class DataCollector():
         # --------------
         for name, image in self._images.iteritems():
             image = image["image"]
+	    #print image.header
             cvImage = self.bridge.imgmsg_to_cv(image, "mono8")
-            image = cv2util.cvmat2np(cvImage)
+            imagecv = cv2util.cvmat2np(cvImage)
 
             corners = checkerboard_detector.detect_image_points(
-                image, is_grayscale=True)
+                imagecv, is_grayscale=True)
             if corners is not None:
-                print "cb found: %"%name
+                print "cb found: %s"%name
                 img_points = []
                 for (x, y) in corners.reshape(-1, 2):
                     img_points.append(ImagePoint(x, y))
@@ -270,12 +276,16 @@ class DataCollector():
             # ----------------------
             cam_msg = CameraMeasurement()
             cam_msg.camera_id = name
+	    #print "crash before"
             cam_msg.header.stamp = image.header.stamp
-            cam_msg.cam_info = image["camera_info"]
+	    #print "crash after"
+            #cam_msg.cam_info = image["camera_info"]
             cam_msg.image_points = img_points
             cam_msg.verbose = False
             robot_msg.M_cam.append(cam_msg)
-            cam_msg.image        = image["image_color"]
+            cam_msg.image        = image
+	    # print cam_msg.camera_id
+	    #print cam_msg.header
             # cam_msg.image_rect   = latest_left["image_rect"]
             # cam_msg.features    = # Not implemented here
 
@@ -288,6 +298,7 @@ class DataCollector():
         # Fill robot_msg
         #----------------------
         robot_msg.M_chain = self.transformations.values()
+	
         self._robot_measurement_pub.publish(robot_msg)
 
         return True
