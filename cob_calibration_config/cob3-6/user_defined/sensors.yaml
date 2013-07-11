@@ -20,6 +20,7 @@ chains:
     before_chain: [ torso_base_link ]
     after_chain: []
     links: [torso_base_link, torso_upper_neck_tilt_link]
+    topic: /torso_controller/state
 
   - chain_id: head_chain
     sensor_id: head_chain_kinematic
@@ -34,6 +35,7 @@ chains:
     before_chain: [ arm_0_link ]
     after_chain: []
     links: [arm_0_link, arm_7_link]
+    topic: /arm_controller/state
 
 
 
