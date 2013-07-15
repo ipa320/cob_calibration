@@ -1,0 +1,87 @@
+<robot name="calibration_object">
+
+  <link name="checkerboard">
+    <inertial>
+      <origin xyz="0 0 0.2025" />
+      <mass value="0.25" />
+      <inertia  ixx="0.001" ixy="0.0"  ixz="0.0"  iyy="0.001"  iyz="0.0"  izz="0.001" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0.2025" />
+      <geometry>
+        <box size="0.3 0.4 0.005"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.2025" />
+      <geometry>
+        <box size="0.3 0.4 0.05"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <gazebo reference="checkerboard">
+    <material>Gazebo/Red</material>
+  </gazebo>
+
+  <joint name="frustum1_joint" type="fixed" >
+    <parent link="checkerboard" />
+    <child link="frustum1" />
+    <origin xyz="0 0 0" rpy="0 0 0" />
+  </joint>
+
+  <link name="frustum1">
+    <inertial>
+      <origin xyz="0 -0.2 0" />
+      <mass value="0.35" />
+      <inertia  ixx="0.001" ixy="0.0"  ixz="0.0"  iyy="0.001"  iyz="0.0"  izz="0.001" />
+    </inertial>
+    <visual>
+      <origin xyz="0 -0.2 0" />
+      <geometry>
+        <mesh filename="/home/fxm-dm/Blender/stl/unit_frustum.stl" scale="0.1 0.1 0.2"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 -0.2 0" />
+      <geometry>
+        <mesh filename="/home/fxm-dm/Blender/stl/unit_frustum.stl" scale="0.1 0.1 0.2"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <gazebo reference="frustum1">
+    <material>Gazebo/Blue</material>
+  </gazebo>
+
+  <joint name="frustum2_joint" type="fixed" >
+    <parent link="checkerboard" />
+    <child link="frustum2" />
+    <origin xyz="0 0 0" rpy="0 0 0" />
+  </joint>
+
+  <link name="frustum2">
+    <inertial>
+      <origin xyz="0 0.2  0"/>
+      <mass value="0.35" />
+      <inertia  ixx="0.001" ixy="0.0"  ixz="0.0"  iyy="0.001"  iyz="0.0"  izz="0.001" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0.2 0"/>
+      <geometry>
+        <mesh filename="/home/fxm-dm/Blender/stl/unit_frustum.stl" scale="0.1 0.1 0.2"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0.2 0"/>
+      <geometry>
+        <mesh filename="/home/fxm-dm/Blender/stl/unit_frustum.stl" scale="0.1 0.1 0.2"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <gazebo reference="frustum2">
+    <material>Gazebo/Green</material>
+  </gazebo>
+
+</robot>

@@ -1,0 +1,63 @@
+<robot name="border">
+
+  <link name="border"/>
+
+  <joint name="borders_joint" type="fixed" >
+    <parent link="border" />
+    <child link="front" />
+    <origin xyz="3.005 -0.25 0.2" rpy="0 0 0" />
+  </joint>
+
+  <link name="front">
+    <inertial>
+      <origin xyz="0 0 0" />
+      <mass value="0.1" />
+      <inertia  ixx="0.001" ixy="0.0"  ixz="0.0"  iyy="0.001"  iyz="0.0"  izz="0.001" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0"/>
+      <geometry>
+        <box size="0.01 3.5 0.4"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0"/>
+      <geometry>
+        <box size="0.01 3.5 0.4"/>
+      </geometry>
+    </collision>
+  </link>
+  <gazebo reference="front">
+    <material>Gazebo/Green</material>
+  </gazebo>
+
+  <joint name="border_joint" type="fixed" >
+    <parent link="front" />
+    <child link="left" />
+    <origin xyz="-2.005 -1.755 0" rpy="0 0 0" />
+  </joint>
+
+  <link name="left">
+    <inertial>
+      <origin xyz="0 0 0" />
+      <mass value="0.1" />
+      <inertia  ixx="0.001" ixy="0.0"  ixz="0.0"  iyy="0.001"  iyz="0.0"  izz="0.001" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0"/>
+      <geometry>
+        <box size="4 0.01 0.4"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0"/>
+      <geometry>
+        <box size="4 0.01 0.4"/>
+      </geometry>
+    </collision>
+  </link>
+  <gazebo reference="left">
+    <material>Gazebo/Green</material>
+  </gazebo>
+
+</robot>
