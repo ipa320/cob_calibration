@@ -24,12 +24,13 @@ from visualize_laser_scan import Get_laserscan, Visualize_laserscan, Detect_cali
 cal_obj_pose = ((1,0,0),(0,0,0,1)) #												set approximate position of calibration object to test results
 scanner_location = 'front' #														Specify 'front' or 'rear' for the location of the laser scanner
 scan_amount = 30 # 																	Amount of scans to be merged
-resolution = 100 # 																	resolution of the laser scan image
+resolution = 200 # 																	resolution of the laser scan image
 border = 20 # 																		border of pixels around the image
+max_laser_point_dist = 4.0 # 																maximum distance for detecting calibration object
 frustum = {} #																		frustum properties
 frustum["dim"] = (0.1*resolution, 0.05*resolution, 0.2*resolution) #				dimensions of frustum (bottom_radius, top_radius, height)
 frustum["amount"] = 3 # 															Amount of frustums on calibration object
-frustum["dist"] = 0.45*resolution #													distance in meters between centers of frustums
+frustum["dist"] = 0.38*resolution #													distance in meters between centers of frustums
 frustum["min_dist"] = frustum["dist"]-(frustum["dim"][0]-frustum["dim"][1]) #		minimum distance in centimeters between detected frustums
 frustum["max_dist"] = frustum["dist"]+(frustum["dim"][0]-frustum["dim"][1]) #		maximum distance in centimeters between detected frustums
 
@@ -77,7 +78,7 @@ class Listener():
 										self.cal_obj_pose.pose.orientation.z,
 										self.cal_obj_pose.pose.orientation.w))
 			except(rospy.ROSException):
-				self.cal_obj_pose = cal_obj_pose
+				real_cal_obj_pose = cal_obj_pose
 				print "Running in real-live mode"
 			
 			# get pose of laser scanner with respect to base
@@ -107,7 +108,7 @@ class Listener():
 			print "-> Scan received"
 			
 			# create and draw an image from laser scan data
-			visualize = Visualize_laserscan(resolution, border, laserscan_pose)
+			visualize = Visualize_laserscan(resolution, border, max_laser_point_dist, laserscan_pose)
 			image, origin = visualize.convert_to_image(scan)
 			print "-> Image received"
 			

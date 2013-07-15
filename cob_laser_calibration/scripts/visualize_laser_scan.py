@@ -39,9 +39,10 @@ class Get_laserscan():
 
 
 class Visualize_laserscan():
-	def __init__(self, resolution, border, laserscan_pose):
+	def __init__(self, resolution, border, max_laser_point_dist, laserscan_pose):
 		self.res = resolution
 		self.border = border
+		self.max_laser_point_dist = max_laser_point_dist
 		self.base_pose = abs(laserscan_pose[0][0]) * self.res, abs(laserscan_pose[0][1]) * self.res #####################################
 		self.base_size = max(self.base_pose[0], self.base_pose[1])
 		self.clear()
@@ -58,6 +59,8 @@ class Visualize_laserscan():
 			self.angles.append(self.angles[-1] + scan.angle_increment)
 		for distance, angle in zip(scan.ranges, self.angles):
 			if distance != 0.0:
+				if distance > self.max_laser_point_dist:
+					distance = self.max_laser_point_dist
 				self.x.append(distance * cos(angle) * self.res)
 				self.y.append(distance * sin(angle) * self.res)
 				self.points.append([self.x[-1], self.y[-1]])
@@ -107,34 +110,35 @@ class Detect_calibration_object():
 	def detect_circles(self):
 		self.gray = cv2.equalizeHist(cv2.cvtColor(self.image, cv.CV_BGR2GRAY))
 		self.circles = cv2.HoughCircles(self.gray, cv.CV_HOUGH_GRADIENT, 2, int(self.frustum["min_dist"]), param1=180, param2=24, minRadius=int(self.frustum["dim"][1]), maxRadius=int(self.frustum["dim"][0]))
-		temp_circles = []
-		for i in range(0,len(self.circles[0])):
-			temp_circles.append((self.circles[0][i][1], self.circles[0][i][0], self.circles[0][i][2]))
-		check_for_false_detections = True
-		while check_for_false_detections:
-			check_for_false_detections = False
-			for circle_1 in temp_circles:
-				frustums_detected = 0
-				for circle_2 in temp_circles:
-					dist = sqrt((circle_1[0]-circle_2[0])**2+(circle_1[1]-circle_2[1])**2)
-					if self.frustum["min_dist"] <= dist <= self.frustum["max_dist"] and dist != 0.0:
-						frustums_detected += 1
-				if frustums_detected < self.frustum["amount"]-1:
-					temp_circles.remove(circle_1)
-					check_for_false_detections = True
-		self.circles = temp_circles
-		if len(self.circles) == self.frustum["amount"]:
-			for circle in self.circles:
-				cv2.circle(self.image, (circle[1], circle[0]), int(self.frustum["dim"][1]), (127, 0, 127), 1)
-				cv2.circle(self.image, (circle[1], circle[0]), int(self.frustum["dim"][0]), (127, 0, 127), 1)
-				cv2.circle(self.image, (circle[1], circle[0]), int(self.frustum["min_dist"]), (127, 127, 0), 1)
-				cv2.circle(self.image, (circle[1], circle[0]), int(self.frustum["max_dist"]), (127, 127, 0), 1)
-				cv2.circle(self.image, (circle[1], circle[0]), int(circle[2]), (0, 0, 255), 1)
-			return self.circles
-		else:
-			print "Calibration object has exactly %i frustums but %i frustums were detected" %(self.frustum["amount"], len(self.circles))
-			self.circles = None
-			return self.circles
+		if self.circles is not None:
+			temp_circles = []
+			for i in range(0,len(self.circles[0])):
+				temp_circles.append((self.circles[0][i][1], self.circles[0][i][0], self.circles[0][i][2]))
+			check_for_false_detections = True
+			while check_for_false_detections:
+				check_for_false_detections = False
+				for circle_1 in temp_circles:
+					frustums_detected = 0
+					for circle_2 in temp_circles:
+						dist = sqrt((circle_1[0]-circle_2[0])**2+(circle_1[1]-circle_2[1])**2)
+						if self.frustum["min_dist"] <= dist <= self.frustum["max_dist"] and dist != 0.0:
+							frustums_detected += 1
+					if frustums_detected < self.frustum["amount"]-1:
+						temp_circles.remove(circle_1)
+						check_for_false_detections = True
+			self.circles = temp_circles
+			if len(self.circles) == self.frustum["amount"]:
+				for circle in self.circles:
+					cv2.circle(self.image, (circle[1], circle[0]), int(self.frustum["dim"][1]), (127, 0, 127), 1)
+					cv2.circle(self.image, (circle[1], circle[0]), int(self.frustum["dim"][0]), (127, 0, 127), 1)
+					cv2.circle(self.image, (circle[1], circle[0]), int(self.frustum["min_dist"]), (127, 127, 0), 1)
+					cv2.circle(self.image, (circle[1], circle[0]), int(self.frustum["max_dist"]), (127, 127, 0), 1)
+					cv2.circle(self.image, (circle[1], circle[0]), int(circle[2]), (0, 0, 255), 1)
+				return self.circles
+			else:
+				print "Calibration object has exactly %i frustums but %i frustums were detected" %(self.frustum["amount"], len(self.circles))
+		self.circles = None
+		return self.circles
 
 	def determine_cal_obj_pose(self):
 		self.frustum_distances = []
