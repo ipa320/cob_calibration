@@ -1,12 +1,9 @@
 <launch>
 
   <!-- send xml to param server -->
-  <!--param name="calibration_object" textfile="$(find cob_laser_calibration)/objects/cal_obj_6d.urdf" /-->
-  <param name="calibration_object" textfile="$(find cob_laser_calibration)/objects/cal_obj_3d.urdf" />
-  <param name="border" textfile="$(find cob_laser_calibration)/objects/border.urdf" />
+  <param name="calibration_object" textfile="$(find cob_laser_calibration)/objects/cal_obj.urdf" />
 
   <!-- push robot_description to factory and spawn robot in gazebo -->
-  <node name="spawn_cal_obj" pkg="gazebo" type="spawn_model" args="-param calibration_object -urdf -model calibration_object -x 1.5 -z 0.02" respawn="false" output="screen" />
-  <node name="spawn_border" pkg="gazebo" type="spawn_model" args="-param border -urdf -model border" respawn="false" output="screen" />
+  <node name="spawn_cal_obj" pkg="gazebo" type="spawn_model" args="-param calibration_object -urdf -model calibration_object -x 1.5" respawn="false" output="screen" />
 
 </launch>

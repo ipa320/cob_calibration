@@ -1,0 +1,119 @@
+<?xml version="1.0" ?>
+<robot name="calibration_object">
+
+	<!-- Parameters -->
+	<property name="cylinder_origin" value="0.2" />
+	<property name="cylinder_length" value="0.2" />
+	<property name="cylinder_radius" value="0.125" />
+
+	<link name="checkerboard">
+		<visual>
+			<origin xyz="0 0 ${cylinder_length+0.0025}" />
+			<geometry>
+				<box size="0.3 0.4 0.005"/>
+			</geometry>
+		</visual>
+		<collision>
+			<origin xyz="0 0 ${cylinder_length+0.0025}" />
+			<geometry>
+				<box size="0.3 0.4 0.005"/>
+			</geometry>
+		</collision>
+		<inertial>
+			<origin xyz="0 0 ${cylinder_length+0.0025}" />
+			<mass value="0.5" />
+			<inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0" />
+		</inertial>
+	</link>
+	<gazebo reference="checkerboard">
+		<material>Gazebo/Red</material>
+	</gazebo>
+
+	<joint name="cylinder_1_joint" type="fixed">
+		<parent link="checkerboard" />
+		<child link="cylinder_1" />
+		<origin xyz="0 0 0" />
+	</joint>
+
+	<link name="cylinder_1">
+		<visual>
+			<origin xyz="${cylinder_origin} 0 0.1" />
+			<geometry>
+				<cylinder length="${cylinder_length}" radius="${cylinder_radius-0.05}" />
+			</geometry>
+		</visual>
+		<collision>
+			<origin xyz="${cylinder_origin} 0 0.1" />
+			<geometry>
+				<cylinder length="${cylinder_length}" radius="${cylinder_radius-0.5}" />
+			</geometry>
+		</collision>
+		<inertial>
+			<origin xyz="${cylinder_origin} 0 0.1" />
+			<mass value="1" />
+			<inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0" />
+		</inertial>
+	</link>
+	<gazebo reference="checkerboard">
+		<material>Gazebo/Green</material>
+	</gazebo>
+
+	<joint name="cylinder_2_joint" type="fixed">
+		<parent link="checkerboard" />
+		<child link="cylinder_2" />
+		<origin xyz="0 0 0" />
+	</joint>
+
+	<link name="cylinder_2">
+		<visual>
+			<origin xyz="${-cylinder_origin} ${-cylinder_origin} 0.1" />
+			<geometry>
+				<cylinder length="${cylinder_length}" radius="${cylinder_radius}" />
+			</geometry>
+		</visual>
+		<collision>
+			<origin xyz="${-cylinder_origin} ${-cylinder_origin} 0.1" />
+			<geometry>
+				<cylinder length="${cylinder_length}" radius="${cylinder_radius}" />
+			</geometry>
+		</collision>
+		<inertial>
+			<origin xyz="${-cylinder_origin} ${-cylinder_origin} 0.1" />
+			<mass value="1" />
+			<inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0" />
+		</inertial>
+	</link>
+	<gazebo reference="checkerboard">
+		<material>Gazebo/Blue</material>
+	</gazebo>
+
+	<joint name="cylinder_3_joint" type="fixed">
+		<parent link="checkerboard" />
+		<child link="cylinder_3" />
+		<origin xyz="0 0 0" />
+	</joint>
+
+	<link name="cylinder_3">		
+		<visual>
+			<origin xyz="${-cylinder_origin} ${cylinder_origin} 0.1" />
+			<geometry>
+				<cylinder length="${cylinder_length}" radius="${cylinder_radius}" />
+			</geometry>
+		</visual>
+		<collision>
+			<origin xyz="${-cylinder_origin} ${cylinder_origin} 0.1" />
+			<geometry>
+				<cylinder length="${cylinder_length}" radius="${cylinder_radius}" />
+			</geometry>
+		</collision>
+		<inertial>
+			<origin xyz="${-cylinder_origin} ${cylinder_origin} 0.1" />
+			<mass value="1" />
+			<inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0" />
+		</inertial>
+	</link>
+	<gazebo reference="checkerboard">
+		<material>Gazebo/Blue</material>
+	</gazebo>
+
+</robot>
