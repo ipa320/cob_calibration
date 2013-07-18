@@ -157,8 +157,8 @@ class VisibilityCheckerNode():
             response.every = True
             response.master = True
 
-        elif visible[0]:
-            response.master = True
+        #elif visible[0]:
+        #   response.master = True
         return response
 
     def run(self):

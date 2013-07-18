@@ -139,6 +139,7 @@ class StereoCalibrationNode():
         detector = CheckerboardDetector(board)
         attributes2update = {}
         output = ""
+        camera_ref_saved = False;
         for image_prefix_dep, camera_name_dep, frame_id_dep, output_file_dep, baseline_prop_prefix in zip(self.image_prefixes_dep, self.camera_names_dep, self.frame_ids_dep, self.output_files_dep, self.baseline_prop_prefixes_dep):
             if image_prefix_dep is not None:
                 output += self.camera_name_ref +" -> " + camera_name_dep + ": \n"
@@ -173,9 +174,11 @@ class StereoCalibrationNode():
                 if output_file_dep is not None:
 
                     # save results
-                    camera_info_ref.save_camera_yaml_file(self.output_file_ref)
-                    print "==> saved left results to:", self.output_file_ref
-                    #output += "==> saved left results to:", self.output_file_ref
+                    if not camera_ref_saved:
+                        camera_info_ref.save_camera_yaml_file(self.output_file_ref)
+                        print "==> saved left results to:", self.output_file_ref
+                        camera_ref_saved = True
+                        #output += "==> saved left results to:", self.output_file_ref
 
                     camera_info_dep.save_camera_yaml_file(output_file_dep)
                     print "==> saved " + camera_name_dep + " results to:", output_file_dep

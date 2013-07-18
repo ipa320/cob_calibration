@@ -6,6 +6,12 @@ camera_chains:
         chains: [torso_chain]
         after_chain: [head_axis_link, cam_reference_link, head_color_camera_l_link ]
 
+  - sensor_id: cam3d
+    camera_id: cam3d
+    chain:
+        before_chain: []
+        chains: [torso_chain]
+        after_chain: [head_axis_link, cam_reference_link, head_cam3d_link ]
 sensor_chains:
   - sensor_id:    arm_chain
     before_chain: []
