@@ -1,0 +1,118 @@
+#!/usr/bin/env python
+### Details ###
+# Script: Detect the pose of the calibration object with respect to the base
+# Author: Daniel Maeki (ipa-fxm-dm)
+# Supervisor: Felix Messmer (ipa-fxm)
+### Imports ###
+### Global variables ###
+#												Specify 'front' or 'rear' for the location of the laser scanner
+# 														Resolution of the laser scan image (setting the resolution higher will improve the accuracy)
+# 															Amount of scans to be merged for average scan
+# 														Amount of succeeded detections needed for completion
+# 															Amount of failed detections needed before giving up
+# 																Border of pixels around the image
+# 												Maximum range of each laser point in meters
+#												Color of line that will help detecting the calibration object
+#																Properties of the cylinders from the calibration object in meters
+#		Radii of cylinders (small, medium=2*small, large=3*small)
+#								Angles of cylinders (small, medium, large) with respect to calibration object centre
+#														Height of the cylinders
+#												Distance between the centers of the cylinders
+### TODO: Create script, using this script for returning the calibration object pose, that determines all x, y and z coordinates for each point on the checkerboard.
+# Activate transform listener
+# 1. Get pose of laser scanner with respect to base
+#print "laserscan_pose: ", laserscan_pose
+# 2. Get raw data from laser scanner, create callback function
+# 3. Loop calibration object detection until either the success_counter or the fail_counter has exceeded its limit
+# 4. Get average scan (amount of scans is specified in scan_amount) and remove all null detections
+# Creates a brief period between each laser scan allowing more variation
+# 5. Create and draw an image from laser scan data
+# 6. Find calibration object from the image and determine it's cartesian pose with respect to the laser scanner
+#print "cal_obj_pose: ", cal_obj_pose
+# 7. Convert the calibration object pose with respect to the laser scanner into Euler coordinates
+# 8. Calculate average pose and standard deviation
+# 9. Draw calibration object
+# 11. Print and display results
+# Image becomes too large for viewing when resolution is above 200.
+#return avg_calibration_object_pose
+#!/usr/bin/env python
+### Details ###
+# Script: Visualize laser scan
+# Author: Daniel Maeki (ipa-fxm-dm)
+# Supervisor: Felix Messmer (ipa-fxm)
+### Imports ###
+# 4.1 Each time this class is initiated, all data will be set to zero
+# 4.2 Each time this function is run, a new average using the new laser scan is calculated
+# 5.1 Setup variables and reset all data for new calculations
+# 5.3 Using the average laser scan measurements, all laser scan points are given x and y coordinates.
+# 5.3.1 By incrementing the angle until the maximum angle, we can easily compute the x and y coordinates
+# 5.3.2 Remove empty detections and calculate the x and y coordinates for each point using the distance and angle
+# 5.4 Create image and set origin as the laser scanner in the image
+# 5.5 Here we draw a line between each 2 points so that we can later on detect the circles of the cylinders.
+### POSSIBLE_IMPROVEMENT: Instead of plainly connecting each point, create smoother lines. This might improve the circle detection
+# 5.5.1 Before colouring the pixels between each two points, we calculate the distance and angle between every two points.
+# 5.5.2 A pixel has a value of one so each round we add cos(angle) to the x-axis and sin(angle) to the y-axis until we reach the next point.
+# 5.6 The fixed objects in the image are the laser scanner and the base
+# position of laser scanner
+# center of base
+# location of base
+# 5.2 This is the main function of this class
+# 5.7 Before drawing the calibration object into the image, we first calculate the needed
+### TODO: The yaw value for visualization is not correct, this should be corrected but it has no influence on the calibration results
+# 5.8 If the resolution is 200 or smaller, we visualize the end result containing the; laser scan, fixed objects and calibration object
+#!/usr/bin/env python
+### Details ###
+# Script: Detect cylinders of calibration object
+# Author: Daniel Maeki (ipa-fxm-dm)
+# Supervisor: Felix Messmer (ipa-fxm)
+### Imports ###
+# 6.1 Setup variables and reset all data for new calculations
+# 6.4 BLABLABLA
+# 6.3 BLABLABLA
+# Detect circles from image
+# Remove all circles that are not part of the calibration object
+# if circle_2 is not in the correct distance of circle_1, continue
+# if circle_2 has same radius, continue
+# if circle pair is found, create third circle
+# 2=s,m,l and 1=s,m,l
+# 2=s,m and 1=m,l
+# 2=s and 1=m,l
+# 2=s and 1=l
+# 2=s and 1=m
+# 2=m and 1=l
+# 2=s,m,l and 1=s,m,l
+# 2=m,l and 1=s,m
+# 2=l and 1=s,m
+# 2=l and 1=s
+# 2=l and 1=m
+# 2=m and 1=s
+# don't remove circle_1
+# If circle is in visible area, remove
+#print "Calibration object has exactly 3 cylinders but %i cylinders were detected" %len(self.circles)
+# 6.2 This is the main function of this class
+# 6.2.1 Added all three cylinders and deviding them by three will give us the center coordinates of the calibration object
+# 6.2.2 Here we estimate an average yaw by getting the arctangent of the cylinder and calibration object center
+# large
+# small
+# medium
+# filter bad detections
+# 6.3 BLABLABLA
+# Detect circles from image
+# Remove all circles that are not part of the calibration object
+# If circle is within the distance between cylinders and has not the same radius, add to temp_circles
+# If circle is not in invisible area, remove
+# 6.2 This is the main function of this class
+# self.cylinders[0] = large, self.cylinders[1] = small, yaw = medium
+# self.cylinders[0] = large, self.cylinders[1] = medium, yaw = small
+# self.cylinders[0] = medium, self.cylinders[1] = small, yaw = large
+# self.cylinders[0] = small, self.cylinders[1] = large, yaw = medium
+# self.cylinders[0] = small, self.cylinders[1] = medium, yaw = large
+# self.cylinders[0] = medium, self.cylinders[1] = large, yaw = small
+# + pi
+#!/usr/bin/env python
+### Details ###
+# Script: Save results from determine_cal_obj_pose.py to a file
+# Author: Daniel Maeki (ipa-fxm-dm)
+# Supervisor: Felix Messmer (ipa-fxm)
+### Notes ###
+# This script does not work, I have only copied code that I used in another script into here for easy access and potential usage later on.

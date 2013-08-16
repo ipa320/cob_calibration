@@ -1,0 +1,8 @@
+<launch>
+
+  <param name="cal_obj_pose_verification" textfile="$(find cob_laser_calibration)/objects/cal_obj_pose_verification.urdf" />
+
+  <!-- You can change the spawning pose of the calibration object by modifying args -->
+  <node name="spawn_cal_obj_pose_verification" pkg="gazebo" type="spawn_model" args="-param cal_obj_pose_verification -urdf -model cal_obj_pose_verification -x 1.4416 -y -0.02088 -Y 6.2780475" respawn="false" output="screen" />
+
+</launch>

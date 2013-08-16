@@ -9,7 +9,7 @@
 	- when viewing the calibration object from above, the large cylinder must at the bottom align with the x-axis, the small cylinder on the left side and the medium cylinder on the right side
 -->
 
-<robot name="calibration_object">
+<robot name="cal_obj_pose_verification">
 
 	<link name="checkerboard">
 		<visual>
@@ -18,12 +18,6 @@
 				<box size="0.4 0.3 0.005"/>
 			</geometry>
 		</visual>
-		<collision>
-			<origin xyz="0 0 0.2025" />
-			<geometry>
-				<box size="0.4 0.3 0.005"/>
-			</geometry>
-		</collision>
 		<inertial>
 			<origin xyz="0 0 0.2025" />
 			<mass value="0.5" />
@@ -31,7 +25,8 @@
 		</inertial>
 	</link>
 	<gazebo reference="checkerboard">
-		<material>Gazebo/Black</material>
+		<material><color rgba="0.81 0.81 0.81 0.0"/></material>
+		<turnGravityOff>true</turnGravityOff>
 	</gazebo>
 
 	<joint name="cylinder_1_joint" type="fixed">
@@ -47,12 +42,6 @@
 				<cylinder length="0.2" radius="0.09" />
 			</geometry>
 		</visual>
-		<collision>
-			<origin xyz="0.1732 0 0.1" />
-			<geometry>
-				<cylinder length="0.2" radius="0.09" />
-			</geometry>
-		</collision>
 		<inertial>
 			<origin xyz="0.1732 0 0.1" />
 			<mass value="1" />
@@ -60,7 +49,8 @@
 		</inertial>
 	</link>
 	<gazebo reference="cylinder_1">
-		<material>Gazebo/Red</material>
+		<material><color rgba="0.81 0.81 0.81 0.0"/></material>
+		<turnGravityOff>true</turnGravityOff>
 	</gazebo>
 
 	<joint name="cylinder_2_joint" type="fixed">
@@ -76,12 +66,6 @@
 				<cylinder length="0.2" radius="0.06" />
 			</geometry>
 		</visual>
-		<collision>
-			<origin xyz="-0.1732 0.2 0.1" />
-			<geometry>
-				<cylinder length="0.2" radius="0.06" />
-			</geometry>
-		</collision>
 		<inertial>
 			<origin xyz="-0.1732 0.2 0.1" />
 			<mass value="1" />
@@ -89,7 +73,8 @@
 		</inertial>
 	</link>
 	<gazebo reference="cylinder_2">
-		<material>Gazebo/Green</material>
+		<material><color rgba="0.81 0.81 0.81 0.0"/></material>
+		<turnGravityOff>true</turnGravityOff>
 	</gazebo>
 
 	<joint name="cylinder_3_joint" type="fixed">
@@ -105,12 +90,6 @@
 				<cylinder length="0.2" radius="0.03" />
 			</geometry>
 		</visual>
-		<collision>
-			<origin xyz="-0.1732 -0.2 0.1" />
-			<geometry>
-				<cylinder length="0.2" radius="0.03" />
-			</geometry>
-		</collision>
 		<inertial>
 			<origin xyz="-0.1732 -0.2 0.1" />
 			<mass value="1" />
@@ -118,7 +97,8 @@
 		</inertial>
 	</link>
 	<gazebo reference="cylinder_3">
-		<material>Gazebo/Blue</material>
+		<material><color rgba="0.81 0.81 0.81 0.0"/></material>
+		<turnGravityOff>true</turnGravityOff>
 	</gazebo>
 
 </robot>

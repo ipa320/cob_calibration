@@ -1,9 +1,8 @@
 <launch>
 
-  <!-- send xml to param server -->
   <param name="calibration_object" textfile="$(find cob_laser_calibration)/objects/cal_obj.urdf" />
 
-  <!-- push robot_description to factory and spawn robot in gazebo -->
+  <!-- You can change the spawning pose of the calibration object by modifying args -->
   <node name="spawn_cal_obj" pkg="gazebo" type="spawn_model" args="-param calibration_object -urdf -model calibration_object -x 1.5" respawn="false" output="screen" />
 
 </launch>
