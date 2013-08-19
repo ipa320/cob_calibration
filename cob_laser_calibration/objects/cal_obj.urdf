@@ -1,12 +1,13 @@
 
 <!--
 	The Calibration object can be changed as desired, however it must fulfill some conditions:
-	- the calibration object must exist of three cylinders (small, medium and large) and one checkerboard
-	- the checkerboard has to be placed on top of the cylinders
-	- the cylinders have to be setup up straight, so that they are standing
-	- the size of the cylinder radii must grow linear, meaning, medium=2*small and large=3*small
-	- the centers of the cylinders must be positioned in an equilateral triangle
-	- when viewing the calibration object from above, the large cylinder must at the bottom align with the x-axis, the small cylinder on the left side and the medium cylinder on the right side
+	- The calibration object must exist of three cylinders (small, medium and large) and one checkerboard.
+	- The checkerboard has to be placed on top of the cylinders so that it is visible to the camera.
+	- The cylinders have to be setup straight, so that they are standing.
+	- The size of the cylinder radii must grow linearly, meaning, medium=2*small and large=3*small.
+	- The centers of the cylinders must be positioned in an equilateral triangle.
+	- When viewing the calibration object from above, the large cylinder must be at the bottom aligned on the y-axis with the center of the calibration object, the small cylinder on the left side and the medium cylinder on the right side.
+	- The center of the triangle and the center of the checkerboard are aligned in the z-axis with the checkerboard orientated so that one of its short sides points towards the large cylinder.
 -->
 
 <robot name="calibration_object">
@@ -32,6 +33,7 @@
 	</link>
 	<gazebo reference="checkerboard">
 		<material>Gazebo/Black</material>
+		<turnGravityOff>true</turnGravityOff>
 	</gazebo>
 
 	<joint name="cylinder_1_joint" type="fixed">
@@ -61,6 +63,7 @@
 	</link>
 	<gazebo reference="cylinder_1">
 		<material>Gazebo/Red</material>
+		<turnGravityOff>true</turnGravityOff>
 	</gazebo>
 
 	<joint name="cylinder_2_joint" type="fixed">
@@ -90,6 +93,7 @@
 	</link>
 	<gazebo reference="cylinder_2">
 		<material>Gazebo/Green</material>
+		<turnGravityOff>true</turnGravityOff>
 	</gazebo>
 
 	<joint name="cylinder_3_joint" type="fixed">
@@ -119,6 +123,7 @@
 	</link>
 	<gazebo reference="cylinder_3">
 		<material>Gazebo/Blue</material>
+		<turnGravityOff>true</turnGravityOff>
 	</gazebo>
 
 </robot>

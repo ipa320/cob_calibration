@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
-### Details ###
+### DETAILS ###
 # Script: Save results from determine_cal_obj_pose.py to a file
 # Author: Daniel Maeki (ipa-fxm-dm)
 # Supervisor: Felix Messmer (ipa-fxm)
 
-### Notes ###
+### NOTES ###
 # This script does not work, I have only copied code that I used in another script into here for easy access and potential usage later on.
+
 
 class Save_detections():
 	

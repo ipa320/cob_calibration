@@ -1,12 +1,7 @@
 
 <!--
-	The Calibration object can be changed as desired, however it must fulfill some conditions:
-	- the calibration object must exist of three cylinders (small, medium and large) and one checkerboard
-	- the checkerboard has to be placed on top of the cylinders
-	- the cylinders have to be setup up straight, so that they are standing
-	- the size of the cylinder radii must grow linear, meaning, medium=2*small and large=3*small
-	- the centers of the cylinders must be positioned in an equilateral triangle
-	- when viewing the calibration object from above, the large cylinder must at the bottom align with the x-axis, the small cylinder on the left side and the medium cylinder on the right side
+	This is a copy of the cal_obj.urdf where the the collisions are removed and the colours are made white.
+	Spawn this for verifying the detected calibration object pose.
 -->
 
 <robot name="cal_obj_pose_verification">
@@ -25,7 +20,7 @@
 		</inertial>
 	</link>
 	<gazebo reference="checkerboard">
-		<material><color rgba="0.81 0.81 0.81 0.0"/></material>
+		<material>Gazebo/White</material>
 		<turnGravityOff>true</turnGravityOff>
 	</gazebo>
 
@@ -49,7 +44,7 @@
 		</inertial>
 	</link>
 	<gazebo reference="cylinder_1">
-		<material><color rgba="0.81 0.81 0.81 0.0"/></material>
+		<material>Gazebo/White</material>
 		<turnGravityOff>true</turnGravityOff>
 	</gazebo>
 
@@ -73,7 +68,7 @@
 		</inertial>
 	</link>
 	<gazebo reference="cylinder_2">
-		<material><color rgba="0.81 0.81 0.81 0.0"/></material>
+		<material>Gazebo/White</material>
 		<turnGravityOff>true</turnGravityOff>
 	</gazebo>
 
@@ -97,7 +92,7 @@
 		</inertial>
 	</link>
 	<gazebo reference="cylinder_3">
-		<material><color rgba="0.81 0.81 0.81 0.0"/></material>
+		<material>Gazebo/White</material>
 		<turnGravityOff>true</turnGravityOff>
 	</gazebo>
 
