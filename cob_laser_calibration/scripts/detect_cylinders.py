@@ -24,9 +24,10 @@ from math import pi, sin, cos, hypot, atan2
 # The function 'detect_cal_obj_cylinders' is working properly but should still be cleaned up
 
 
+### SCRIPT ###
 class Detect_calibration_object():
 	
-	# 6.1 Setup variables
+	# 6.0 Setup variables and purge the data needed for new calculations
 	def __init__(self, resolution, origin, cylinder, line_color):
 		self.res = resolution
 		self.origin = origin
@@ -41,14 +42,13 @@ class Detect_calibration_object():
 		self.line_color = line_color
 		self.clear()
 	
-	# Purge the data needed for new calculations
 	def clear(self):
 		self.cal_obj_pose = None
 		self.cylinders = None
 		self.circles = None
 	
-	# 6.4 This function filters all circles that are in the visible area of the laser scanner because these circles can not be part of the calibration object
-	### TODO: There is a flaw in this function where it is going outside the laser scan image resulting in an error, this has to be fixed
+	# 6.3 This function filters all circles that are in the visible area of the laser scanner because these circles can not be part of the calibration object
+	# TODO: There is a flaw in this function where it is going outside the laser scan image resulting in an error, this has to be fixed
 	def filter_circles(self, circles):
 		circles_to_filter = circles
 		filtered_circles = []
@@ -72,7 +72,7 @@ class Detect_calibration_object():
 					next_color = (self.image[next_x][next_y][0], self.image[next_x][next_y][1], self.image[next_x][next_y][2])
 					# Get the current distance between the current position and the starting position
 					next_dist = hypot(circle[0]-next_x, circle[1]-next_y)
-				# If the distance is 
+				# If the line color is not the same as the border color, the circle can not be a plausible cylinder
 				if next_color != self.line_color:
 					filtered_circles.append(circle)
 		except(Exception), e:
@@ -81,14 +81,14 @@ class Detect_calibration_object():
 			print "next_y = ", next_y
 			print "origin = ", self.origin
 		
-		# Remove all circles that which are no plausible cylinder of the calibration object
+		# Remove all circles which are no plausible cylinder of the calibration object
 		for circle in filtered_circles:
 			circles_to_filter.remove(circle)
 		
 		return circles_to_filter
 	
-	# 6.3 Detect all cylinders by using the opencv function for detecting circles in the laser scan image
-	### TODO: This function is working properly but should still be cleaned up
+	# 6.2 Detect all cylinders of the calibration object by using an opencv function called HoughCircles that detects all circular objects in the laser scan image
+	# TODO: This function is working properly but should still be cleaned up
 	def detect_cal_obj_cylinders(self):
 		# Set parameter depending on resolution
 		if self.res <= 200:
@@ -101,7 +101,7 @@ class Detect_calibration_object():
 						int(self.min_dist), param1=180, param2=parameter2,
 						minRadius=int(self.min_rad), maxRadius=int(self.max_rad))
 		
-		# Remove all circles that are not part of the calibration object
+		# Eliminate all circles that are can not be part of the calibration object
 		if self.circles is not None:
 			temp_circles = []
 			for i in range(0,len(self.circles[0])):
@@ -114,7 +114,7 @@ class Detect_calibration_object():
 			while True:
 				third_circles = []
 				check_for_false_detections = True
-				# Loop until no false cylinder detection can be removed anymore
+				# Loop until no falsely detected circle is observed anymore
 				while check_for_false_detections:
 					check_for_false_detections = False
 					# Check for each pair of cylinders if they could be part of the calibration object
@@ -156,10 +156,10 @@ class Detect_calibration_object():
 										# circle_1 = small, circle_2 = medium
 										third_circles.append([circle_1[0]+dist*sin(pi/3), circle_1[1]+dist*cos(-pi/3), self.cylinder_radii[2]])
 								
-								# If plausable pair is found, don't remove circle_1
+								# If plausible pair is found, don't remove circle_1
 								remove_circle = False
 						if remove_circle:
-							# If no plausable cylinde rpair is found, remove circle_1
+							# If no plausible cylinder pair is found, remove circle_1
 							temp_circles.remove(circle_1)
 							check_for_false_detections = True
 				
@@ -220,18 +220,18 @@ class Detect_calibration_object():
 		
 		return self.circles
 	
-	# 6.2 This is the main function of this class, here we extract the positions of the cylinders and convert this into the calibration object pose
+	# 6.1 This is the main function of this class, here we extract the positions of the cylinders and convert this into the calibration object pose
 	def detect_cal_object(self, image):
 		self.image = image
-		# detect cylinders positions
+		# Detect the positions of the cylinders
 		self.cylinders = self.detect_cal_obj_cylinders()
 		if self.cylinders is not None:
 			
-			# 6.2.1 Adding all three cylinders and deviding them by three will give us the center coordinates of the calibration object
+			# Adding all three cylinders and deviding them by three will give us the center coordinates of the calibration object
 			cal_obj_pose_x = (self.cylinders[0][0] + self.cylinders[1][0] + self.cylinders[2][0]) / 3
 			cal_obj_pose_y = (self.cylinders[0][1] + self.cylinders[1][1] + self.cylinders[2][1]) / 3
 			
-			# 6.2.2 Here we estimate an average yaw by getting the arctangent of the cylinder and calibration object center
+			# Here we estimate an average yaw by getting the arctangent of the cylinder and calibration object center
 			yaws = []
 			cal_obj_pose_yaw = 0
 			counter = 0
@@ -272,110 +272,5 @@ class Detect_calibration_object():
 						self.cal_obj_pose = None
 		
 		return self.image, self.cal_obj_pose
+	
 
-
-
-'''
-
-	# 6.3 BLABLABLA
-	def detect_cal_obj_cylinders(self):
-		# Detect circles from image
-		if self.res <= 200:
-			parameter2 = 18
-		else:
-			parameter2 = 34
-		self.gray = cv2.equalizeHist(cv2.cvtColor(self.image, cv.CV_BGR2GRAY))
-		self.circles = cv2.HoughCircles(self.gray, cv.CV_HOUGH_GRADIENT, 2,
-						int(self.min_dist), param1=180, param2=parameter2,
-						minRadius=int(self.min_rad), maxRadius=int(self.max_rad))
-		
-		# Remove all circles that are not part of the calibration object
-		if self.circles is not None:
-			temp_circles = []
-			for i in range(0,len(self.circles[0])):
-				temp_circles.append((self.circles[0][i][1], self.circles[0][i][0], self.circles[0][i][2]))
-			
-			self.circles = temp_circles
-			print "Amount of plausible cylinders = ", len(self.circles)
-			
-			# If circle is within the distance between cylinders and has not the same radius, add to temp_circles
-			check_change = 0
-			while True:
-				temp_circles = []
-				for circle_1 in self.circles:
-					rad_min_diff = circle_1[2] - self.cylinder_rad_diff
-					rad_max_diff = circle_1[2] + self.cylinder_rad_diff
-					for circle_2 in self.circles:
-						dist = hypot(circle_1[0]-circle_2[0], circle_1[1]-circle_2[1])
-						if (self.min_dist < dist < self.max_dist) and not (rad_min_diff < circle_2[2] < rad_max_diff):
-							if circle_1 not in temp_circles:
-								temp_circles.append(circle_1)
-				
-				# If circle is not in invisible area, remove
-				temp_circles = self.filter_circles(temp_circles)
-				
-				self.circles = temp_circles
-				if self.circles is not None:
-					print "Amount of plausible cylinders = ", len(self.circles)
-					if check_change == len(self.circles):
-						break
-					check_change = len(self.circles)
-				else:
-					print "Amount of plausible cylinders = 0"
-					break
-			
-			if len(self.circles) != 2 and len(self.circles) != 3:
-				self.circles = None
-		
-		return self.circles
-
-
-	# 6.2 This is the main function of this class
-	def detect_cal_object(self, image):
-		self.image = image
-		self.cylinders = self.detect_cal_obj_cylinders()
-		if self.cylinders is not None:
-			
-			invalid_result = False
-			rad_min_diff = self.cylinders[0][2] - self.cylinder_rad_diff
-			rad_max_diff = self.cylinders[0][2] + self.cylinder_rad_diff
-			if self.cylinders[1][2] < rad_min_diff:
-				if self.cylinder_radii[2] < rad_max_diff+self.cylinder_radii[0]:
-					if self.cylinders[1][2] < rad_min_diff-self.cylinder_radii[0]:
-						# self.cylinders[0] = large, self.cylinders[1] = small, yaw = medium
-						angle_xy = -60
-						angle_yaw = self.cyl_angles[1]
-					else:
-						# self.cylinders[0] = large, self.cylinders[1] = medium, yaw = small
-						angle_xy = 60
-						angle_yaw = self.cyl_angles[0]
-				else:
-					# self.cylinders[0] = medium, self.cylinders[1] = small, yaw = large
-						angle_xy = 60
-						angle_yaw = self.cyl_angles[2]
-			elif self.cylinders[1][2] > rad_max_diff:
-				if self.cylinder_radii[0] > rad_min_diff-self.cylinder_radii[0]:
-					if self.cylinders[1][2] > rad_max_diff+self.cylinder_radii[0]:
-						# self.cylinders[0] = small, self.cylinders[1] = large, yaw = medium
-						angle_xy = 60
-						angle_yaw = self.cyl_angles[1]
-					else:
-						# self.cylinders[0] = small, self.cylinders[1] = medium, yaw = large
-						angle_xy = -60
-						angle_yaw = self.cyl_angles[2]
-				else:
-					# self.cylinders[0] = medium, self.cylinders[1] = large, yaw = small
-						angle_xy = -60
-						angle_yaw = self.cyl_angles[0]
-			else:
-				invalid_result = True
-				self.cylinders = []
-				
-			if not invalid_result:
-				dist = (self.cyl_dist/2) / cos(60/180*pi)
-				cal_obj_pose_x = self.cylinders[0][0]+dist*sin(angle_xy/180*pi)
-				cal_obj_pose_y = self.cylinders[0][1]+dist*cos(angle_xy/180*pi)
-				cal_obj_pose_yaw = atan2(cal_obj_pose_y-self.cylinders[0][1], cal_obj_pose_x-self.cylinders[0][0]) + angle_yaw
-				self.cal_obj_pose = (self.origin[0]-cal_obj_pose_x)/self.res, (self.origin[1]-cal_obj_pose_y)/self.res, cal_obj_pose_yaw# + pi
-
-'''

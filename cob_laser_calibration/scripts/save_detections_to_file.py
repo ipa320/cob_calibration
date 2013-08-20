@@ -9,6 +9,7 @@
 # This script does not work, I have only copied code that I used in another script into here for easy access and potential usage later on.
 
 
+### SCRIPT ###
 class Save_detections():
 	
 	def write_detection():

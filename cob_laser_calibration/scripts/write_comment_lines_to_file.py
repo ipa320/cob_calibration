@@ -9,6 +9,7 @@
 # Run script from this file's directory
 
 
+### SCRIPT ###
 file_names = ['determine_cal_obj_pose', 'visualize_laser_scan', 'detect_cylinders', 'save_detections_to_file']
 open('../README/comment_lines.txt', 'w').close() # <-- create or purge file
 
@@ -18,6 +19,10 @@ for name in file_names:
 	fileHandle.close()
 	comment_lines = []
 	for line in all_lines:
+		if '### ' in line:
+			comment_lines.append("\n")
+		if '#!' in line:
+			comment_lines.append("\n\n\n\n")
 		for char in line:
 			# If the character '#' is in the current line, copy everything behind it.
 			if char == '#':

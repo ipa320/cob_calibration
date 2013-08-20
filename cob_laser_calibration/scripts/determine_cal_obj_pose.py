@@ -38,12 +38,19 @@ cylinder["dist"] = 0.4*resolution											# Distance between the centers of th
 # Create script, using this script for returning the calibration object pose, that determines all x, y and z coordinates for each point on the checkerboard.
 
 
+### SCRIPT ###
 class Detect_cal_obj_pose():
+	# 0. Init is the first function that is run in every class. Here we set the needed variables to their initial values.
 	def __init__(self):
 		rospy.init_node(NODE)
 		scan = None
 		image = None
-		assert scanner_location == 'front' or scanner_location == 'rear'
+		try:
+			assert scanner_location == 'front' or scanner_location == 'rear'
+		except(AssertionError):
+			print "\n\n\n--> The laser scanner location is not set to either 'front' or 'rear'"
+			print "--> Modify this in 'determine_cal_obj_pose.py' located in the 'cob_laser_calibration' package\n\n\n"
+			exit()
 
 	def callback(self, data):
 		self.laserscan = data
@@ -74,7 +81,7 @@ class Detect_cal_obj_pose():
 			print "Error message: ", e
 			exit()
 		
-		# 3. Loop calibration object detection until either the success_counter or the fail_counter has exceeded its limit
+		# 3. Loop calibration object detection until either the success_counter or the fail_counter exceeds its limit
 		successful_detections = []
 		succes_counter = 0
 		fail_counter = 0
@@ -93,14 +100,14 @@ class Detect_cal_obj_pose():
 			image, origin = visualize.convert_to_image(scan)
 			print "--> Image received"
 				
-			# 6. Find calibration object from the image and determine it's x, y and yaw coordinates with respect to the laser scanner
+			# 6. Find the calibration object from the image and determine it's x, y and yaw coordinates with respect to the laser scanner
 			detect = Detect_calibration_object(resolution, origin, cylinder, line_color)
 			image, cal_obj_pose = detect.detect_cal_object(image)
 			#print "cal_obj_pose: ", cal_obj_pose
 				
-			# 7. Convert the calibration object pose with respect to the laser scanner into Euler coordinates
+			# 7. Convert the calibration object pose with respect to the laser scanner into Euler coordinates with respect to the base
 			if cal_obj_pose is not None:
-				# Depending on the 'front' or 'rear' laser scanner, add or substract the laser scan pose to the calibration object pose
+				# 7. Depending on the 'front' or 'rear' laser scanner, we add or subtract the base position to/from the calibration object pose
 				if scanner_location == 'front':
 					cal_obj_position = [cal_obj_pose[0]+laserscan_pose[0][0], cal_obj_pose[1]+laserscan_pose[0][1], cylinder["height"]]
 				elif scanner_location == 'rear':
@@ -110,27 +117,28 @@ class Detect_cal_obj_pose():
 				# Calibration object pose converted into Euler coordinates
 				successful_detections.append(cal_obj_pose)
 				
+				# If a successful detection was made, increment succes_counter
 				succes_counter += 1
 				print "succes_counter = ", succes_counter
 				print "--> Calibration object pose received\n"
 			else:
+				# If the detect_cal_object returned an empty cal_obj_pose, then increment fail_counter
 				fail_counter += 1
 				print "! fail_counter = ", fail_counter
 				print "--> Could not detect calibration object correctly...\n"
 		
-		# 8. Calculate average pose and standard deviation
+		# 8. Calculate average of all successful detections
 		avg_calibration_object_pose = [[0,0,0],[0,0,0]]
 		counter = 0
-		# Calculate average of all successful detections
 		for detection in successful_detections:
 			for i in range(0,len(detection)):
 				for j in range(0,len(detection[i])):
 					avg_calibration_object_pose[i][j] = (avg_calibration_object_pose[i][j] * counter + detection[i][j]) / (counter + 1)
 			counter += 1
 		
+		# 9. Calculate standard deviation of all successful detections
 		deviation = [[0,0,0],[0,0,0]]
 		counter = 0
-		# Calculate standard deviation of all successful detections
 		for detection in successful_detections:
 			print detection
 			for i in range(0,len(detection)):
@@ -138,25 +146,24 @@ class Detect_cal_obj_pose():
 					deviation[i][j] = (deviation[i][j] * counter + (detection[i][j] - avg_calibration_object_pose[i][j])) / (counter + 1)
 			counter += 1
 		
-		# 9. Set pose for image and draw calibration object in image
-		cal_obj_pose_for_img = avg_calibration_object_pose[0][0], avg_calibration_object_pose[0][1], avg_calibration_object_pose[1][2]
-		image = visualize.draw_calibration_object(image, cal_obj_pose_for_img)
-		
-		# 11. Print and display results
+		# 10. Print and display results
 		if fail_counter == fail_amount:
 			print "\n\n>>> !!! Calibration object pose detected UNsuccessfully \n"
 		elif succes_counter == success_amount:
 			print "\n>>> Calibration object pose detected successfully\n"
-		
 		print "Calibration object pose = ", avg_calibration_object_pose
 		print "Standard deviation = ", deviation
 		print "\n>>> End \n"
-		
-		if resolution <= 200: # Image becomes too large for viewing when resolution is above 200
+		# Only view the image if the resolution is under 200 because the image becomes too large for viewing if the resolution is above 200
+		if resolution <= 200:
+			# Set the calibration object pose for the image and draw the calibration object in the image
+			cal_obj_pose_for_img = avg_calibration_object_pose[0][0], avg_calibration_object_pose[0][1], avg_calibration_object_pose[1][2]
+			image = visualize.draw_calibration_object(image, cal_obj_pose_for_img)
 			print "Select the image window and press a key to continue\n"
+			# View image
 			visualize.show_image(image)
 		
-		#return avg_calibration_object_pose # <-- This value is used for to determine all x,y and z coordinates of the checkerboard which are needed for the calibration algorithm
+		#return avg_calibration_object_pose # <-- This value is used to determine all x,y and z coordinates of the checkerboard which are needed for the calibration algorithm
 
 
 ### MAIN ###

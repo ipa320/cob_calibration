@@ -25,12 +25,13 @@ from sensor_msgs.msg import LaserScan
 # The yaw value for visualization is not correct, this should be corrected but it has no influence on the calibration end results, it is purely for visualization.
 
 
+### SCRIPT ###
 class Get_laserscan():
 	
+	# 4.1 When initialized, purge the data needed for new calculations
 	def __init__(self):
 		self.clear()
 	
-	# Purge the data needed for new calculations
 	def clear(self):
 		self.result = LaserScan()
 		self.counter = 0
@@ -39,7 +40,12 @@ class Get_laserscan():
 	def append_laserscan(self, laserscan):
 		# Check if the laser scan message is indeed the same message
 		if self.result.header.frame_id is not "":
-			assert self.result.header.frame_id == laserscan.header.frame_id
+			try:
+				assert self.result.header.frame_id == laserscan.header.frame_id
+			except(AssertionError):
+				print "\n\n\n--> The 'LaserScan' message used for calculating the average laser scan, is not the same"
+				print "--> Check if both scripts have specified the correct path to this 'LaserScan' message\n\n\n"
+				exit()
 			# Calculate average
 			self.result.ranges = list((np.array(self.result.ranges) * self.counter + np.array(laserscan.ranges)) / (self.counter + 1))
 		else:
@@ -55,7 +61,7 @@ class Get_laserscan():
 
 class Visualize_laserscan():
 	
-	# 5.1 Setup variables
+	# 5.0 Setup variables and purge the data needed for new calculations
 	def __init__(self, resolution, border, max_laser_point_dist, laserscan_pose, cylinder, line_color):
 		self.res = resolution
 		self.border = border
@@ -73,20 +79,19 @@ class Visualize_laserscan():
 		self.line_color = line_color
 		self.clear()
 	
-	# Purge the data needed for new calculations
 	def clear(self):
 		self.raw_image = None
 		self.points = []
 		self.x = []
 		self.y = []
 	
-	# 5.3 Using the average laser scan measurements we can calculate the x and y coordinates for all laser scan points
+	# 5.2 Using the average laser scan measurements we can calculate the x and y coordinates for all laser scan points
 	def calculate_image_points(self, scan):
 		self.angles = [scan.angle_min]
-		# 5.3.1 Increment the angle until the maximum angle is reach
+		# Increment the angle until the maximum angle is reach
 		while self.angles[-1] <= scan.angle_max:
 			self.angles.append(self.angles[-1] + scan.angle_increment)
-		# 5.3.2 Calculate the x and y coordinates for each point using the distance and angle
+		# Calculate the x and y coordinates for each point using the distance and angle
 		for distance, angle in zip(scan.ranges, self.angles):
 			# Skip all empty detections
 			if distance != 0.0:
@@ -97,7 +102,7 @@ class Visualize_laserscan():
 				self.y.append(distance * sin(angle) * self.res)
 				self.points.append([self.x[-1], self.y[-1]])
 	
-	# 5.4 Create image and set origin as the laser scanner in the image
+	# 5.3 Create image and set origin as the laser scanner in the image
 	def create_image(self):
 		# Here we first calculate what the maximum range is for both x and y values
 		self.x_range = max(abs(min(self.x)), max(self.x)) + self.border
@@ -111,24 +116,24 @@ class Visualize_laserscan():
 		# Create image
 		self.raw_image = np.zeros((int(self.x_range + self.border + self.base_size * 2), int(self.y_range * 2), 3), np.uint8)
 	
-	# 5.5 Interpolate laser scan points, here we draw a line between each 2 points so that we can later on detect the circles of the cylinders.
-	### POSSIBLE_IMPROVEMENT: Instead of plainly connecting each point, create smoother lines. This might improve the circle detection
+	# 5.4 Interpolate laser scan points, here we draw a line between each 2 points so that we can later on detect the circles of the cylinders.
+	# POSSIBLE_IMPROVEMENT: Instead of plainly connecting each point, create smoother lines. This might improve the circle detection
 	def interpolate_points(self):
 		for i in range(0,len(self.points)-1):
-			# 5.5.1 Before colouring the pixels between each two points, we calculate the distance and angle between every two points.
+			# Before colouring the pixels between each two points, we calculate the distance and angle between every two points.
 			dist = hypot(self.points[i+1][0]-self.points[i][0], self.points[i+1][1]-self.points[i][1])
 			angle = atan2((self.points[i+1][1]-self.points[i][1]), (self.points[i+1][0]-self.points[i][0]))
 			next_x = self.points[i][0]
 			next_y = self.points[i][1]
 			next_dist = 0
-			# 5.5.2 A pixel has a value of one so each round we add cos(angle) to the x-axis and sin(angle) to the y-axis until we reach the next point.
+			# A pixel has a value of one so each round we add cos(angle) to the x-axis and sin(angle) to the y-axis until we reach the next point.
 			while next_dist <= dist:
 				self.raw_image[int(round(next_x))][int(round(next_y))] = self.line_color
 				next_x += cos(angle)
 				next_y += sin(angle)
 				next_dist = hypot(self.points[i][0]-next_x, self.points[i][1]-next_y)
 	
-	# 5.6 Draw the fixed objects in the image, the laser scanner and the base
+	# 5.5 Draw the fixed objects in the image, the laser scanner and the base
 	def draw_fixed_objects(self):
 		# Draw laser scanner
 		cv2.circle(self.raw_image, (int(self.origin[1]), int(self.origin[0])), 4, (255, 255, 0), 4)
@@ -138,7 +143,7 @@ class Visualize_laserscan():
 		cv2.rectangle(self.raw_image, (int(self.base_pose[1]-self.base_size), int(self.base_pose[0]-self.base_size)),
 			(int(self.base_pose[1]+self.base_size), int(self.base_pose[0]+self.base_size)), (127, 127, 127), 1)
 	
-	# 5.2 This is the main function of this class
+	# 5.1 This is the main function of this class
 	def convert_to_image(self, laserscan):
 		self.calculate_image_points(laserscan)
 		self.create_image()
@@ -146,8 +151,8 @@ class Visualize_laserscan():
 		self.draw_fixed_objects()
 		return self.raw_image, self.origin
 	
-	# 5.7 Draw calibration object from detected average calibration object pose
-	### TODO: The yaw value for visualization is not correct, this should be corrected but it has no influence on the calibration end results, it is purely for visualization.
+	# 10.1 Draw calibration object from detected average calibration object pose
+	# TODO: The yaw value for visualization is not correct, this should be corrected but it has no influence on the calibration end results, it is purely for visualization.
 	def draw_calibration_object(self, image, cal_obj_pose):
 		# Set and draw x and y coordinates in image of the detected calibration object pose.
 		cal_obj_pose_in_image = self.base_pose[1] - cal_obj_pose[1] * self.res, self.base_pose[0] - cal_obj_pose[0] * self.res, cal_obj_pose[2]
@@ -157,14 +162,14 @@ class Visualize_laserscan():
 			cyl_x = self.cyl_dist * cos(self.cyl_angles[i]+cal_obj_pose_in_image[2]) + cal_obj_pose_in_image[0]
 			cyl_y = self.cyl_dist * sin(self.cyl_angles[i]+cal_obj_pose_in_image[2]) + cal_obj_pose_in_image[1]
 			cv2.circle(image, (int(cyl_x), int(cyl_y)), int(self.cylinder_radii[i]), (0, 0, 255), 1)
-		# Draw the minimun and maximum distance distance of the cylinders with respect to the center
+		# Draw the minimun and maximum distance of the cylinders with respect to the center
 		cv2.circle(image, (int(cal_obj_pose_in_image[0]), int(cal_obj_pose_in_image[1])), int(self.cyl_dist-self.cylinder_radii[0]), (255, 255, 0), 1)
 		cv2.circle(image, (int(cal_obj_pose_in_image[0]), int(cal_obj_pose_in_image[1])), int(self.cyl_dist+self.cylinder_radii[0]), (255, 255, 0), 1)
 		# Draw line between calibration object pose and base pose
 		cv2.line(image, (int(cal_obj_pose_in_image[0]), int(cal_obj_pose_in_image[1])),  (int(self.base_pose[1]), int(self.base_pose[0])), (255, 0, 0), 1)
 		return image
 	
-	# 5.8 If the resolution is 200 or smaller, we visualize the end result containing the; laser scan, fixed objects and calibration object
+	# 10.2 If the resolution is 200 or smaller, we visualize the end result containing the; laser scan, fixed objects and calibration object
 	def show_image(self, image):
 		cv.ShowImage("laser_scan", cv.fromarray(image))
 		# Wait until a key is pressed before closing the image and continuing the script

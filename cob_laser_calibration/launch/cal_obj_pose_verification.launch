@@ -3,6 +3,6 @@
   <param name="cal_obj_pose_verification" textfile="$(find cob_laser_calibration)/objects/cal_obj_pose_verification.urdf" />
 
   <!-- Before spawning this object, set the -x, -y and -Y values to the detected calibration object pose values in order to verify the results -->
-  <node name="spawn_cal_obj_pose_verification" pkg="gazebo" type="spawn_model" args="-param cal_obj_pose_verification -urdf -model cal_obj_pose_verification -x 0.0 -y 0.0 -Y 0.0" respawn="false" output="screen" />
+  <node name="spawn_cal_obj_pose_verification" pkg="gazebo" type="spawn_model" args="-param cal_obj_pose_verification -urdf -model cal_obj_pose_verification -x 0.0 -y 0.0 -Y 0.0" output="screen" />
 
 </launch>
