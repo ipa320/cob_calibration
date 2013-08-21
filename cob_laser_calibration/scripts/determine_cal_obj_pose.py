@@ -15,13 +15,14 @@ from math import pi
 from sensor_msgs.msg import LaserScan
 from visualize_laser_scan import Get_laserscan, Visualize_laserscan
 from detect_cylinders import Detect_calibration_object
+from pose_to_checkerboard_points import Convert_cal_obj_pose
 
 ### GLOBAL VARIABLES ###
 scanner_location = 'front'												# Specify 'front' or 'rear' for the location of the laser scanner
 resolution = 1000														# Resolution of the laser scan image (setting the resolution higher will improve the accuracy)
 scan_amount = 20														# Amount of scans to be merged for average scan
 success_amount = 6														# Amount of succeeded detections needed for completion
-fail_amount = 54														# Amount of failed detections needed before giving up
+fail_amount = 1														# Amount of failed detections needed before giving up
 border = 100															# Border of pixels around the image
 max_laser_point_dist = 3.2												# Maximum range of each laser point in meters
 line_color = (0, 255, 255)												# Color of line that will help detecting the calibration object
@@ -146,14 +147,21 @@ class Detect_cal_obj_pose():
 					deviation[i][j] = (deviation[i][j] * counter + (detection[i][j] - avg_calibration_object_pose[i][j])) / (counter + 1)
 			counter += 1
 		
+		# Convert the detected calibration object pose into the checkerboard points
+		convert = Convert_cal_obj_pose(avg_calibration_object_pose)
+		checkerboard_points = convert.pose_to_points()
+		
 		# 10. Print and display results
 		if fail_counter == fail_amount:
 			print "\n\n>>> !!! Calibration object pose detected UNsuccessfully \n"
 		elif succes_counter == success_amount:
-			print "\n>>> Calibration object pose detected successfully\n"
-		print "Calibration object pose = ", avg_calibration_object_pose
-		print "Standard deviation = ", deviation
-		print "\n>>> End \n"
+			print "\n\n>>> Calibration object pose detected successfully\n"
+		print "\nCalibration object pose = ", avg_calibration_object_pose
+		print "\nStandard deviation = ", deviation
+		print "\n\nCheckerboard_points:"
+		for point in checkerboard_points:
+			print point
+		print "\n\n>>> End \n"
 		# Only view the image if the resolution is under 200 because the image becomes too large for viewing if the resolution is above 200
 		if resolution <= 200:
 			# Set the calibration object pose for the image and draw the calibration object in the image
@@ -162,8 +170,6 @@ class Detect_cal_obj_pose():
 			print "Select the image window and press a key to continue\n"
 			# View image
 			visualize.show_image(image)
-		
-		#return avg_calibration_object_pose # <-- This value is used to determine all x,y and z coordinates of the checkerboard which are needed for the calibration algorithm
 
 
 ### MAIN ###
