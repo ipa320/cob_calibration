@@ -8,6 +8,7 @@
 ### IMPORTS ###
 import roslib
 import rospy
+from math import sin, cos
 
 ### POSSIBLE_IMPROVEMENTS ###
 # ---
@@ -24,7 +25,20 @@ class Convert_cal_obj_pose():
 	
 	def pose_to_points(self):
 		checkerboard_dims = rospy.get_param('checkerboard', None)
-		# from center of checkerboard, get the upper left point and start point_list by first going to the right and then one down and going to the right again and so on..
-		print checkerboard_dims
-		checkerboard_points = self.cal_obj_pose
+		
+		square_size = checkerboard_dims['square_size']
+		y_points_amount = checkerboard_dims['checkerboards']['cb_9x6']['corners_y']
+		x_points_amount = checkerboard_dims['checkerboards']['cb_9x6']['corners_x']
+		checkerboard_center = [self.cal_obj_pose[0][0], self.cal_obj_pose[0][1]]
+		first_checkerboard_point = checkerboard_center
+		first_checkerboard_point[0] -= cos(self.cal_obj_pose[1][2])*x_points_amount/2*square_size
+		first_checkerboard_point[1] -= cos(self.cal_obj_pose[1][2])*y_points_amount/2*square_size
+		
+		checkerboard_points = []
+		for i in range(0,y_points_amount):
+			for j in range(0,x_points_amount):
+				checkerboard_point_x = first_checkerboard_point[0]+cos(self.cal_obj_pose[1][2])*j*square_size
+				checkerboard_point_y = first_checkerboard_point[1]+cos(self.cal_obj_pose[1][2])*i*square_size
+				checkerboard_points.append([checkerboard_point_x, checkerboard_point_y, self.cal_obj_pose[0][2]])
+		
 		return checkerboard_points

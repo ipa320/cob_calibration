@@ -22,7 +22,7 @@ scanner_location = 'front'												# Specify 'front' or 'rear' for the locati
 resolution = 1000														# Resolution of the laser scan image (setting the resolution higher will improve the accuracy)
 scan_amount = 20														# Amount of scans to be merged for average scan
 success_amount = 6														# Amount of succeeded detections needed for completion
-fail_amount = 1														# Amount of failed detections needed before giving up
+fail_amount = 54														# Amount of failed detections needed before giving up
 border = 100															# Border of pixels around the image
 max_laser_point_dist = 3.2												# Maximum range of each laser point in meters
 line_color = (0, 255, 255)												# Color of line that will help detecting the calibration object
@@ -58,7 +58,7 @@ class Detect_cal_obj_pose():
 
 	def run(self):
 		
-		print "\n\n\n\n\n>>> Start \n"
+		print "\n\n\n>>> Start \n\n\n"
 		
 		# Activate transform listener
 		tf_listener = tf.TransformListener()
@@ -120,13 +120,13 @@ class Detect_cal_obj_pose():
 				
 				# If a successful detection was made, increment succes_counter
 				succes_counter += 1
-				print "succes_counter = ", succes_counter
-				print "--> Calibration object pose received\n"
+				print "--> SUCCESFULLY received calibration object pose\n"
+				print "! SUCCES_counter = %i\n\n" %succes_counter
 			else:
 				# If the detect_cal_object returned an empty cal_obj_pose, then increment fail_counter
 				fail_counter += 1
-				print "! fail_counter = ", fail_counter
-				print "--> Could not detect calibration object correctly...\n"
+				print "--> FAILED to receive calibration object pose\n"
+				print "! FAIL_counter = %i\n\n" %fail_counter
 		
 		# 8. Calculate average of all successful detections
 		avg_calibration_object_pose = [[0,0,0],[0,0,0]]
@@ -141,7 +141,6 @@ class Detect_cal_obj_pose():
 		deviation = [[0,0,0],[0,0,0]]
 		counter = 0
 		for detection in successful_detections:
-			print detection
 			for i in range(0,len(detection)):
 				for j in range(0,len(detection[i])):
 					deviation[i][j] = (deviation[i][j] * counter + (detection[i][j] - avg_calibration_object_pose[i][j])) / (counter + 1)
@@ -153,15 +152,24 @@ class Detect_cal_obj_pose():
 		
 		# 10. Print and display results
 		if fail_counter == fail_amount:
-			print "\n\n>>> !!! Calibration object pose detected UNsuccessfully \n"
+			print "\n\n>>> FAILED to detect calibration object pose successfully"
 		elif succes_counter == success_amount:
-			print "\n\n>>> Calibration object pose detected successfully\n"
-		print "\nCalibration object pose = ", avg_calibration_object_pose
-		print "\nStandard deviation = ", deviation
+			print "\n\n>>> SUCCEEDED to detect calibration object pose successfully"
+		print "\n\nSuccessful_detections:"
+		for detection in successful_detections:
+			print detection
+		print "\n\nCalibration object pose:"
+		print avg_calibration_object_pose
+		print "\n\nStandard deviation:"
+		print deviation
 		print "\n\nCheckerboard_points:"
 		for point in checkerboard_points:
 			print point
-		print "\n\n>>> End \n"
+		if fail_counter == fail_amount:
+			print "\n\n>>> FAILED to detect calibration object pose successfully"
+		elif succes_counter == success_amount:
+			print "\n\n>>> SUCCEEDED to detect calibration object pose successfully"
+		print "\n\n\n>>> End \n\n\n"
 		# Only view the image if the resolution is under 200 because the image becomes too large for viewing if the resolution is above 200
 		if resolution <= 200:
 			# Set the calibration object pose for the image and draw the calibration object in the image
