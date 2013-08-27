@@ -14,7 +14,8 @@ from math import sin, cos
 # ---
 
 ### TODO ###
-# ---
+# Check if the positions of each checkerboard_point is correct
+# Check if order of checkerboard_points is correct
 
 
 ### SCRIPT ###

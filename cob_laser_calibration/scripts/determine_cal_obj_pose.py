@@ -22,7 +22,7 @@ scanner_location = 'front'												# Specify 'front' or 'rear' for the locati
 resolution = 1000														# Resolution of the laser scan image (setting the resolution higher will improve the accuracy)
 scan_amount = 20														# Amount of scans to be merged for average scan
 success_amount = 6														# Amount of succeeded detections needed for completion
-fail_amount = 54														# Amount of failed detections needed before giving up
+fail_amount = success_amount * 11										# Amount of failed detections needed for returning a failed result.
 border = 100															# Border of pixels around the image
 max_laser_point_dist = 3.2												# Maximum range of each laser point in meters
 line_color = (0, 255, 255)												# Color of line that will help detecting the calibration object
@@ -36,7 +36,7 @@ cylinder["dist"] = 0.4*resolution											# Distance between the centers of th
 # ---
 
 ### TODO ###
-# Create script, using this script for returning the calibration object pose, that determines all x, y and z coordinates for each point on the checkerboard.
+# ---
 
 
 ### SCRIPT ###
@@ -173,9 +173,9 @@ class Detect_cal_obj_pose():
 		# Only view the image if the resolution is under 200 because the image becomes too large for viewing if the resolution is above 200
 		if resolution <= 200:
 			# Set the calibration object pose for the image and draw the calibration object in the image
-			cal_obj_pose_for_img = avg_calibration_object_pose[0][0], avg_calibration_object_pose[0][1], avg_calibration_object_pose[1][2]
+			cal_obj_pose_for_img = -avg_calibration_object_pose[0][0], -avg_calibration_object_pose[0][1], -avg_calibration_object_pose[1][2]
 			image = visualize.draw_calibration_object(image, cal_obj_pose_for_img)
-			print "Select the image window and press a key to continue\n"
+			print "Select the image window and press a key to exit\n"
 			# View image
 			visualize.show_image(image)
 

@@ -21,8 +21,7 @@ from sensor_msgs.msg import LaserScan
 # Instead of plainly connecting each point, create smoother lines. This might improve the circle detection
 
 ### TODO ###
-# Convert all python list calculation into numpy calculations, speeding up the overall process
-# The yaw value for visualization is not correct, this should be corrected but it has no influence on the calibration end results, it is purely for visualization.
+# Convert all python list calculation into numpy calculations, speeding up the overall process (optional)
 
 
 ### SCRIPT ###
@@ -152,7 +151,6 @@ class Visualize_laserscan():
 		return self.raw_image, self.origin
 	
 	# 10.1 Draw calibration object from detected average calibration object pose
-	# TODO: The yaw value for visualization is not correct, this should be corrected but it has no influence on the calibration end results, it is purely for visualization.
 	def draw_calibration_object(self, image, cal_obj_pose):
 		# Set and draw x and y coordinates in image of the detected calibration object pose.
 		cal_obj_pose_in_image = self.base_pose[1] - cal_obj_pose[1] * self.res, self.base_pose[0] - cal_obj_pose[0] * self.res, cal_obj_pose[2]
