@@ -19,7 +19,7 @@ from pose_to_checkerboard_points import Convert_cal_obj_pose
 
 ### GLOBAL VARIABLES ###
 scanner_location = 'front'												# Specify 'front' or 'rear' for the location of the laser scanner
-resolution = 1000														# Resolution of the laser scan image (setting the resolution higher will improve the accuracy)
+resolution = 200														# Resolution of the laser scan image (setting the resolution higher will improve the accuracy)
 scan_amount = 20														# Amount of scans to be merged for average scan
 success_amount = 6														# Amount of succeeded detections needed for completion
 fail_amount = success_amount * 11										# Amount of failed detections needed for returning a failed result.

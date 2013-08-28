@@ -68,13 +68,8 @@ class Visualize_laserscan():
 		self.base_pose = abs(laserscan_pose[0][0]) * self.res, abs(laserscan_pose[0][1]) * self.res
 		self.base_size = max(self.base_pose[0], self.base_pose[1])
 		self.cylinder_radii = cylinder["radii"]
-		self.cylinder_rad_diff = self.cylinder_radii[0]/3
-		self.min_rad = self.cylinder_radii[0] - self.cylinder_rad_diff
-		self.max_rad = self.cylinder_radii[2] + self.cylinder_rad_diff
 		self.cyl_angles = cylinder["angles"]
 		self.cyl_dist = (cylinder["dist"]/2) / cos(pi/6)
-		self.min_dist = cylinder["dist"] - (self.cylinder_radii[0]/2)
-		self.max_dist = cylinder["dist"] + (self.cylinder_radii[0]/2)
 		self.line_color = line_color
 		self.clear()
 	
@@ -121,6 +116,8 @@ class Visualize_laserscan():
 		for i in range(0,len(self.points)-1):
 			# Before colouring the pixels between each two points, we calculate the distance and angle between every two points.
 			dist = hypot(self.points[i+1][0]-self.points[i][0], self.points[i+1][1]-self.points[i][1])
+			#if dist > self.cylinder_radii[0]:
+			#	continue
 			angle = atan2((self.points[i+1][1]-self.points[i][1]), (self.points[i+1][0]-self.points[i][0]))
 			next_x = self.points[i][0]
 			next_y = self.points[i][1]

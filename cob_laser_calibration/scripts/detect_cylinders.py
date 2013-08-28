@@ -19,8 +19,8 @@ from math import pi, sin, cos, hypot, atan2
 # ---
 
 ### TODO ###
-# Convert all python list calculation into numpy calculations, speeding up the overall process
-# There is a flaw in function 'filter_circles', it is going outside the laser scan image resulting in an error, this has to be fixed
+# Convert all python list calculation into numpy calculations, speeding up the overall process (optional)
+# There is a flaw in function 'filter_circles', it is going outside the laser scan image resulting in an error, this has to be fixed (may not be true anymore)
 # The function 'detect_cal_obj_cylinders' is working properly but should still be cleaned up
 
 
@@ -37,8 +37,8 @@ class Detect_calibration_object():
 		self.max_rad = self.cylinder_radii[2] + self.cylinder_rad_diff
 		self.cyl_angles = cylinder["angles"]
 		self.cyl_dist = cylinder["dist"]
-		self.min_dist = self.cyl_dist - (self.cylinder_radii[0])
-		self.max_dist = self.cyl_dist + (self.cylinder_radii[0])
+		self.min_dist = self.cyl_dist - self.cylinder_radii[0]
+		self.max_dist = self.cyl_dist + self.cylinder_radii[0]
 		self.line_color = line_color
 		self.clear()
 	
@@ -64,16 +64,19 @@ class Detect_calibration_object():
 				next_color = (self.image[next_x][next_y][0], self.image[next_x][next_y][1], self.image[next_x][next_y][2])
 				next_dist = 0
 				# Loop until border is crossed or until the distance between the current position and the staring position is too large
-				while next_color != self.line_color and next_dist <= self.max_rad+self.max_dist:
+				add = True
+				while next_dist <= self.cyl_dist*2:
 					# Calculate the next pixel's x and y value
 					next_x -= cos(angle)
 					next_y -= sin(angle)
 					# Get the color of the next pixel
 					next_color = (self.image[next_x][next_y][0], self.image[next_x][next_y][1], self.image[next_x][next_y][2])
+					if next_color == self.line_color:
+						add = False
+						break
 					# Get the current distance between the current position and the starting position
 					next_dist = hypot(circle[0]-next_x, circle[1]-next_y)
-				# If the line color is not the same as the border color, the circle can not be a plausible cylinder
-				if next_color != self.line_color:
+				if add:
 					filtered_circles.append(circle)
 		except(Exception), e:
 			print "Error: ", e
@@ -112,7 +115,6 @@ class Detect_calibration_object():
 			prev_len = 0
 			# Loop until no change for 3 rounds is observed
 			while True:
-				third_circles = []
 				check_for_false_detections = True
 				# Loop until no falsely detected circle is observed anymore
 				while check_for_false_detections:
@@ -131,31 +133,6 @@ class Detect_calibration_object():
 							elif rad_min_diff < circle_2[2] < rad_max_diff:
 								continue
 							else:
-								# Plausible circle pair is found, now determine position of third circle
-								# Depending on the radii of circle_1 and circle_2, we can determine the position of the third cylinder
-								if circle_2[2] < circle_1[2]:
-									if circle_2[2] < self.cylinder_radii[0]+self.cylinder_rad_diff:
-										if circle_1[2] > self.cylinder_radii[2]-self.cylinder_rad_diff:
-											# circle_1 = large, circle_2 = small
-											third_circles.append([circle_1[0]+dist*sin(pi/3), circle_1[1]+dist*cos(-pi/3), self.cylinder_radii[1]])
-										else:
-											# circle_1 = medium, circle_2 = small
-											third_circles.append([circle_1[0]+dist*sin(pi/3), circle_1[1]+dist*cos(pi/3), self.cylinder_radii[2]])
-									else:
-										# circle_1 = large, circle_2 = medium
-										third_circles.append([circle_1[0]+dist*sin(pi/3), circle_1[1]+dist*cos(pi/3), self.cylinder_radii[0]])
-								elif circle_2[2] > circle_1[2]:
-									if circle_2[2] > self.cylinder_radii[2]-self.cylinder_rad_diff:
-										if circle_1[2] < self.cylinder_radii[0]+self.cylinder_rad_diff:
-											# circle_1 = small, circle_2 = large
-											third_circles.append([circle_1[0]+dist*sin(pi/3), circle_1[1]+dist*cos(pi/3), self.cylinder_radii[1]])
-										else:
-											# circle_1 = medium, circle_2 = large
-											third_circles.append([circle_1[0]+dist*sin(pi/3), circle_1[1]+dist*cos(-pi/3), self.cylinder_radii[0]])
-									else:
-										# circle_1 = small, circle_2 = medium
-										third_circles.append([circle_1[0]+dist*sin(pi/3), circle_1[1]+dist*cos(-pi/3), self.cylinder_radii[2]])
-								
 								# If plausible pair is found, don't remove circle_1
 								remove_circle = False
 						if remove_circle:
@@ -163,7 +140,44 @@ class Detect_calibration_object():
 							temp_circles.remove(circle_1)
 							check_for_false_detections = True
 				
-				# When no false detection can be removed anymore, check for each third cylinder if they could be part of the calibration object
+				# Plausible circle pair is found, now determine position of third circle
+				# Depending on the radii of circle_1 and circle_2, we can determine the position of the third cylinder
+				third_circles = []
+				for circle_1 in temp_circles:
+					for circle_2 in temp_circles:
+						if circle_1 == circle_2:
+							continue
+						
+						theta = atan2((circle_2[1] - circle_1[1]), (circle_2[0] - circle_1[0]))
+						
+						if circle_1[2] > circle_2[2]:
+							if circle_1[2] > self.cylinder_radii[2]-self.cylinder_rad_diff:
+								if circle_2[2] < self.cylinder_radii[0]+self.cylinder_rad_diff:
+									# circle_1 = large, circle_2 = small
+									third_circles.append([((-self.cyl_dist)*cos((-pi/3)+theta)+circle_1[0]), ((-self.cyl_dist)*sin((-pi/3)+theta)+circle_1[1]), self.cylinder_radii[1]])
+								elif circle_2[2] < self.cylinder_radii[1]+self.cylinder_rad_diff:
+									# circle_1 = large, circle_2 = medium
+									third_circles.append([(self.cyl_dist*cos(pi/3+theta)+circle_1[0]), (self.cyl_dist*sin(pi/3+theta)+circle_1[1]), self.cylinder_radii[0]])
+							elif circle_1[2] > self.cylinder_radii[1]-self.cylinder_rad_diff:
+								if circle_2[2] < self.cylinder_radii[0]+self.cylinder_rad_diff:
+									# circle_1 = medium, circle_2 = small
+									third_circles.append([(self.cyl_dist*cos(pi/3+theta)+circle_1[0]), (self.cyl_dist*sin(pi/3+theta)+circle_1[1]), self.cylinder_radii[2]])
+						elif circle_1[2] < circle_2[2]:
+							if circle_1[2] < self.cylinder_radii[0]+self.cylinder_rad_diff:
+								if circle_2[2] > self.cylinder_radii[2]-self.cylinder_rad_diff:
+									# circle_1 = small, circle_2 = large
+									third_circles.append([(self.cyl_dist*cos(pi/3+theta)+circle_1[0]), (self.cyl_dist*sin(pi/3+theta)+circle_1[1]), self.cylinder_radii[1]])
+								elif circle_2[2] > self.cylinder_radii[1]-self.cylinder_rad_diff:
+									# circle_1 = small, circle_2 = medium
+									third_circles.append([((-self.cyl_dist)*cos((-pi/3)+theta)+circle_1[0]), ((-self.cyl_dist)*sin((-pi/3)+theta)+circle_1[1]), self.cylinder_radii[2]])
+							elif circle_1[2] < self.cylinder_radii[1]+self.cylinder_rad_diff:
+								if circle_2[2] > self.cylinder_radii[2]-self.cylinder_rad_diff:
+									# circle_1 = medium, circle_2 = large
+									third_circles.append([((-self.cyl_dist)*cos((-pi/3)+theta)+circle_1[0]), ((-self.cyl_dist)*sin((-pi/3)+theta)+circle_1[1]), self.cylinder_radii[0]])
+				
+				#print "third_circle_amount = ", len(third_circles)
+				
+				# Check for each third cylinder if they could be part of the calibration object
 				undetected_circles = []
 				for circle_3 in third_circles:
 					add_circle = True
@@ -172,7 +186,7 @@ class Detect_calibration_object():
 					for circle in temp_circles:
 						dist = hypot(circle[0]-circle_3[0], circle[1]-circle_3[1])
 						# If circle is not in the correct distance of circle_3, don't add the third circle
-						if dist < self.min_dist:
+						if not self.min_dist < dist:
 							add_circle = False
 						# If circle has a radius which is too similar to circle_3, don't add the third circle
 						elif rad_min_diff < circle[2] < rad_max_diff:
@@ -180,6 +194,8 @@ class Detect_calibration_object():
 					if add_circle:
 						# Append the thrid cylinder to the undetected circles because it was not detected by the opencv function
 						undetected_circles.append(circle_3)
+				
+				#print "undetected_circle_amount = ", len(undetected_circles)
 				
 				# Append each third cylinder to temp.circles that could be part of the calibration object
 				for circle in undetected_circles:
@@ -246,7 +262,7 @@ class Detect_calibration_object():
 				elif self.min_rad+self.cylinder_radii[0] < cylinder[2] < self.max_rad-self.cylinder_radii[0]:
 				# If current cylinder is the medium cylinder then:
 					yaw = atan2((cal_obj_pose_y - cylinder[1]), (cal_obj_pose_x - cylinder[0])) + self.cyl_angles[1]
-				# This will set all yaw to the same value so that it will be possible to calculate an average
+				# This will set all yaw to the same Pi range so that it will be possible to calculate an average
 				if yaw == 0:
 					self.cal_obj_pose = None
 					return self.image, self.cal_obj_pose
