@@ -157,9 +157,9 @@ class Visualize_laserscan():
 			cyl_x = self.cyl_dist * cos(self.cyl_angles[i]+cal_obj_pose_in_image[2]) + cal_obj_pose_in_image[0]
 			cyl_y = self.cyl_dist * sin(self.cyl_angles[i]+cal_obj_pose_in_image[2]) + cal_obj_pose_in_image[1]
 			cv2.circle(image, (int(cyl_x), int(cyl_y)), int(self.cylinder_radii[i]), (0, 0, 255), 1)
+			cv2.circle(image, (int(cyl_x), int(cyl_y)), 1, (255, 255, 255), 2)
 		# Draw the minimun and maximum distance of the cylinders with respect to the center
-		cv2.circle(image, (int(cal_obj_pose_in_image[0]), int(cal_obj_pose_in_image[1])), int(self.cyl_dist-self.cylinder_radii[0]), (255, 255, 0), 1)
-		cv2.circle(image, (int(cal_obj_pose_in_image[0]), int(cal_obj_pose_in_image[1])), int(self.cyl_dist+self.cylinder_radii[0]), (255, 255, 0), 1)
+		cv2.circle(image, (int(cal_obj_pose_in_image[0]), int(cal_obj_pose_in_image[1])), int(self.cyl_dist), (255, 255, 0), 1)
 		# Draw line between calibration object pose and base pose
 		cv2.line(image, (int(cal_obj_pose_in_image[0]), int(cal_obj_pose_in_image[1])),  (int(self.base_pose[1]), int(self.base_pose[0])), (255, 0, 0), 1)
 		return image

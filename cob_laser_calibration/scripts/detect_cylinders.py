@@ -288,5 +288,4 @@ class Detect_calibration_object():
 						self.cal_obj_pose = None
 		
 		return self.image, self.cal_obj_pose
-	
 
