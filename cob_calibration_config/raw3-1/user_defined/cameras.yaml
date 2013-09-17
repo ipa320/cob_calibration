@@ -1,21 +1,10 @@
 reference:
-        name: left
-        topic: /stereo/left/image_raw
-        file_prefix: left_
-        calibration_data_file: left.yaml
-        frame_id: /head_color_camera_l_link
-        property: cam_ref_      # in calibration_data
+    name: cam3d
+    topic: /cam3d/rgb/image_color
+    file_prefix: kinect_
+    frame_id: /head_cam3d_link
+    property: cam3d
 
-further:
-       -        name: right
-                topic: /stereo/right/image_raw
-                file_prefix: right_
-                calibration_data_file: right.yaml
-                frame_id: /head_color_camera_l_link
-                property: cam_r_
-       -        name: cam3d
-                topic: /cam3d/rgb/image_raw
-                file_prefix: kinect_
-                frame_id: /head_cam3d_link
-                calibration_data_file: cam3d.yaml
-                property: cam3d
+#don't specify an empty "further", due to marshalling error
+#further:
+

@@ -90,9 +90,13 @@ class ImageCaptureNode():
         self.camera = [self.cams['reference']['topic']]
 
         self.file_prefix = [self.cams['reference']['file_prefix']]
-        for cam in self.cams["further"]:
-            self.camera.append(cam["topic"])
-            self.file_prefix.append(cam["file_prefix"])
+        if self.cams.has_key("further"):
+            rospy.loginfo("FURTHER cameras specified")        
+            for cam in self.cams["further"]:
+                self.camera.append(cam["topic"])
+                self.file_prefix.append(cam["file_prefix"])
+        else:
+            rospy.logwarn("No FURTHER cameras specified")
 
         self.numCams = len(self.camera)
         # Init images
