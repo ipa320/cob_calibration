@@ -63,6 +63,32 @@ import numpy as np
 import tf
 from cob_camera_calibration import Checkerboard, CheckerboardDetector, StereoCalibrator, CalibrationData#, CalibrationUrdfUpdater
 from cob_calibration_urdf_update.calibration_urdf_updater import CalibrationUrdfUpdater
+class kinematic_utils():
+    def __init__(self):
+        self.t = tf.TransformListener()
+        rospy.sleep(2)
+    def get_parent(self, tip):
+        #print t.getFrameStrings()
+        frames = {}
+        for f_descr in self.t.allFramesAsString().split("\n"):
+            f_pair = f_descr.split(" exists with parent ")
+            try:
+                f_pair[0] = f_pair[0][6:]
+                f_pair[1] = f_pair[1][:-1]
+                frames[f_pair[0]]=f_pair[1]
+
+            except:
+                pass
+        self.parent=frames[tip]
+
+    def get_tf_to_parent(self, reference_link):
+        (T,R) = self.t.lookupTransform(reference_link,self.parent, rospy.Time(0))
+        R = tf.transformations.quaternion_matrix(R)
+        T = tf.transformations.translation_matrix(T)
+        M = tf.transformations.concatenate_matrices(R,T)
+
+        return M
+
 
 
 class StereoCalibrationNode():
@@ -186,9 +212,22 @@ class StereoCalibrationNode():
 
                 # convert baseline (invert transfrom as T and R bring right frame into left
                 # and we need transform from left to right for urdf!)
+
                 M = np.matrix(np.vstack((np.hstack(
                     (R, T)), [0.0, 0.0, 0.0, 1.0])))  # 4x4 homogeneous matrix
+
+                # TODO: tests with real hardware samples
+                # compute transformation from reference to parent frame of camera
+                k_u = kinematic_utils()
+                k_u.get_parent(frame_id_dep)
+                M_parent = np.matrix(k_u.get_tf_to_parent(self.frame_id_ref))
+
+                # resulting transformation
                 M_inv = M.I
+                M_result = M_inv * M_parent
+                # urdf specifies origin -> inverse
+                M_inv = M_result.I
+
                 T_inv = np.array(
                     M_inv[:3, 3]).flatten().tolist()  # T as list (x, y, z)
                 R_inv = list(tf.transformations.euler_from_matrix(
