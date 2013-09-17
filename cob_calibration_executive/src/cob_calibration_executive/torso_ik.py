@@ -38,7 +38,9 @@ class TorsoIK():
         self.limits = []
         for jn in self.joint_names:
             self.limits.append(
-                min(np.abs(robot.joints[jn].limits.lower), robot.joints[jn].limits.upper)*0.99)
+                (robot.joints[jn].limits.lower, robot.joints[jn].limits.upper))
+
+        print self.limits
 
     def compute_maximum_angles(self):
         """docstring for compute_maximum_angles"""
@@ -46,17 +48,17 @@ class TorsoIK():
         self.max_angles = {'p': 0, 't': 0}
 
         for info in joint_info:
-            self.max_angles[info[0]] += info[1]
+            self.max_angles[info[0]] += info[1][1]
 
-    def calculate_ik(self, target_angles):
-        return self.limit_ik(self._calculate_ik_unlimited(target_angles))
+    #def calculate_ik(self, target_angles):
+        #return self.limit_ik(self._calculate_ik_unlimited(target_angles))
 
-    def limit_ik(self, ik):
-        ik_new = []
+    def valid_ik(self, ik):
         for index, angle in enumerate(ik):
-            ik_new.append(float(self.sgn(ik[index]) * self.limits[index] if np.abs(
-                ik[index]) > self.limits[index] else ik[index]))
-        return ik_new
+            if self.limits[index][0] > ik[index] or \
+               self.limits[index][1] < ik[index]:
+                return False
+        return True
 
     def _calculate_ik_unlimited(self, target_angles):
         return [target_angles[x] / self.n_joints[x] for x in self.configuration]
