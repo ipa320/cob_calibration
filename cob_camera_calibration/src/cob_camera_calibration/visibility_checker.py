@@ -89,8 +89,12 @@ class VisibilityCheckerNode():
         # Get params from ros parameter server or use default
         self.cams = rospy.get_param("~cameras")
         self.camera = [self.cams["reference"]["topic"]]
-        for cam in self.cams["further"]:
-            self.camera.append(cam["topic"])
+        if self.cams.has_key("further"):
+            rospy.loginfo("FURTHER cameras specified")
+            for cam in self.cams["further"]:
+                 self.camera.append(cam["topic"])
+        else:
+            rospy.logwarn("No FURTHER cameras specified")
         self.numCams = len(self.camera)
 
         # Init images
