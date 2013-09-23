@@ -261,16 +261,18 @@ class DataCollector():
             cvImage = self.bridge.imgmsg_to_cv(image, "mono8")
             imagecv = cv2util.cvmat2np(cvImage)
 
-            corners = checkerboard_detector.detect_image_points(
-                imagecv, is_grayscale=True)
-            if corners is not None:
+            try:
+                corners = checkerboard_detector.detect_image_points(
+                    imagecv, is_grayscale=True)
+            except:
+                # cb not found
+                rospy.logwarn("No calibration pattern found for: '%s'"%name)
+                return False
+            else:
                 print "cb found: %s"%name
                 img_points = []
                 for (x, y) in corners.reshape(-1, 2):
                     img_points.append(ImagePoint(x, y))
-            else:
-                # cb not found
-                return False
 
             # create camera msg left
             # ----------------------
@@ -298,7 +300,7 @@ class DataCollector():
         # Fill robot_msg
         #----------------------
         robot_msg.M_chain = self.transformations.values()
-	
+
         self._robot_measurement_pub.publish(robot_msg)
 
         return True
