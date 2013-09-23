@@ -6,12 +6,6 @@ camera_chains:
         chains: [torso_chain]
         after_chain: [head_axis_link, cam_reference_link, head_color_camera_l_link ]
 
-  - sensor_id: cam3d
-    camera_id: cam3d
-    chain:
-        before_chain: []
-        chains: [torso_chain]
-        after_chain: [head_axis_link, cam_reference_link, head_cam3d_link ]
 sensor_chains:
   - sensor_id:    arm_chain
     before_chain: []
@@ -27,14 +21,6 @@ chains:
     after_chain: []
     links: [torso_base_link, torso_upper_neck_tilt_link]
     topic: /torso_controller/state
-
-  #- chain_id: head_chain
-    #sensor_id: head_chain_kinematic
-    #parent_frame: torso_upper_neck_tilt_link
-    #before_chain: [ head_cover_link ]
-    #after_chain: []
-    #links: [head_cover_link, head_axis_link]
-    #topic: /head_controller/state
 
   - chain_id: arm_chain
     sensor_id: arm_chain_kinematic
