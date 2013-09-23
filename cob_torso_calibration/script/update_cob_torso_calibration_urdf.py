@@ -106,28 +106,31 @@ class UpdateCobTorsoCalibrationUrdf():
 
     def run(self):
         '''
-        Start the update process. Values are calculated from torso joint state. Therefor the actual torso jointstate copied to the output file
+        Start the update process. Values are calculated from torso joint state. Therefore the actual torso jointstate copied to the output file
         '''
 
         attributes2update = {}
-        (X, Y, Z), (
-            a1, a2, a3, a4, a5, a6, a7) = self.ts.calc_references(self.debug)
-        attributes2update["torso_lower_neck_tilt_ref"] = X
-        attributes2update["torso_pan_ref"] = Y
-        attributes2update["torso_upper_neck_tilt_ref"] = Z
+        torso, arm = self.ts.calc_references(self.debug)
+        if not torso is None:
+            (X, Y, Z) = torso
+            attributes2update["def_torso_lower_neck_tilt_ref"] = X
+            attributes2update["def_torso_pan_ref"] = Y
+            attributes2update["def_torso_upper_neck_tilt_ref"] = Z
 
-        attributes2update["arm_1_ref"] = a1
-        attributes2update["arm_2_ref"] = a2
-        attributes2update["arm_3_ref"] = a3
-        attributes2update["arm_4_ref"] = a4
-        attributes2update["arm_5_ref"] = a5
-        attributes2update["arm_6_ref"] = a6
-        attributes2update["arm_7_ref"] = a7
+        if not arm is None:
+            (a1, a2, a3, a4, a5, a6, a7) = arm
+            attributes2update["arm_1_ref"] = a1
+            attributes2update["arm_2_ref"] = a2
+            attributes2update["arm_3_ref"] = a3
+            attributes2update["arm_4_ref"] = a4
+            attributes2update["arm_5_ref"] = a5
+            attributes2update["arm_6_ref"] = a6
+            attributes2update["arm_7_ref"] = a7
         if self.debug:
             print attributes2update
         # update calibration xml based on attributes2update dict
         urdf_updater = calibration_urdf_updater.CalibrationUrdfUpdater(
-            self.file_urdf_in, self.file_urdf_out, self.debug)
+            self.file_urdf_in, self.file_urdf_out, True)
         urdf_updater.update_references(attributes2update)
 
 
