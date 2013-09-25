@@ -132,7 +132,7 @@ class CameraChainSensor():
         with open(path) as f:
             self._yaml = yaml.load(f)
         self._distortion = self._yaml['distortion_coefficients']['data']
-        self._camera_matrix = self._yaml['projection_matrix']['data']
+        self._camera_matrix = self._yaml['camera_matrix']['data']
 
         self.terms_per_sample = 2
 
@@ -207,7 +207,7 @@ class CameraChainSensor():
         """
         cm = cv.CreateMat(3, 3, cv.CV_32F)
         cv.Set(cm, 0)
-        cm_t = reshape(matrix(self._camera_matrix, float64), (3, 4))[:3, :3]
+        cm_t = reshape(matrix(self._camera_matrix, float64), (3, 3))[:3, :3]
         for x in range(3):
             for y in range(3):
                 cm[x, y] = cm_t[x, y]
