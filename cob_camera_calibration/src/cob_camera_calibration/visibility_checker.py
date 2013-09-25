@@ -149,8 +149,12 @@ class VisibilityCheckerNode():
 
             cvImage = self.bridge.imgmsg_to_cv(image, 'rgb8')
             img_raw = cv2util.cvmat2np(cvImage)
-            visible.append(self.detector.detect_image_points(
-                img_raw, False, True) is not None)
+            try:
+                self.detector.detect_image_points( img_raw, False, True)
+                visible.append(True)
+            except self.detector.NoPatternFoundException:
+                rospy.logwarn("No cb found")
+                visible.append(False)
             # grab image messages
         #print '%s checkerboards found --> return %s'%(sum(visible),all(visible))
         response = VisibleResponse()

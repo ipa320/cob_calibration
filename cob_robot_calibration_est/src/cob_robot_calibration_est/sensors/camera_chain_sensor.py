@@ -104,7 +104,7 @@ class CameraChainBundler:
         return sensors
 
 
-class CameraChainSensor(ChainSensor):
+class CameraChainSensor():
     def __init__(self, config_dict, M_cam, M_chain, config):
         """
         Generates a single sensor block for a single configuration
@@ -165,7 +165,36 @@ class CameraChainSensor(ChainSensor):
         r = array(reshape(h_mat - z_mat, [-1, 1]))[:, 0]
         return r
 
+    def compute_residual_scaled(self, target_pts):
+        """
+        Computes the residual, and then scales it by sqrt(Gamma), where Gamma
+        is the information matrix for this measurement (Cov^-1).
+        """
+        r = self.compute_residual(target_pts)
+        gamma_sqrt = self.compute_marginal_gamma_sqrt(target_pts)
+        r_scaled = gamma_sqrt * matrix(r).T
+        return array(r_scaled.T)[0]
 
+    def compute_marginal_gamma_sqrt(self, target_pts):
+        """
+        Calculates the square root of the information matrix for the measurement of the
+        current set of system parameters at the passed in set of target points.
+        """
+        import scipy.linalg
+        cov = self.compute_cov(target_pts)
+        gamma = matrix(zeros(cov.shape))
+        num_pts = self.get_residual_length()/2
+
+        for k in range(num_pts):
+            #print "k=%u" % k
+            first = 2*k
+            last = 2*k+2
+            sub_cov = matrix(cov[first:last, first:last])
+            sub_gamma_sqrt_full = matrix(scipy.linalg.sqrtm(sub_cov.I))
+            sub_gamma_sqrt = real(sub_gamma_sqrt_full)
+            assert(scipy.linalg.norm(sub_gamma_sqrt_full - sub_gamma_sqrt) < 1e-6)
+            gamma[first:last, first:last] = sub_gamma_sqrt
+        return gamma
 
     def get_residual_length(self):
         N = len(self._M_cam.image_points)

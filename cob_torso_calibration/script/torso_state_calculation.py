@@ -122,7 +122,7 @@ class JointState():
         '''
         self.counter = 0
         self.armcounter = 0
-        while self.counter < self.maxcounter or self.armcounter < self.maxcounter:
+        while self.counter < self.maxcounter:#or self.armcounter < self.maxcounter:
             rospy.sleep(0.1)
             print "waiting for samples", self.armcounter, self.counter
 
@@ -131,6 +131,14 @@ class JointState():
             #print "Std Deviation for pan is ", numpy.std(self.tpr)
             #print "Std Deviation for upper_neck_tilt is ", numpy.std(self.tuntr)
 
-        print list(np.average(self.torsoPositions, 0)), list(np.average(self.armPositions, 0))
+        try:
+            arm=np.average(self.armPositions,0)
+        except:
+            arm=None
+        try:
+            torso=np.average(self.torsoPositions,0)
+        except:
+            torso=None
+        print torso, arm
 
-        return list(np.average(self.torsoPositions, 0)), list(np.average(self.armPositions, 0))
+        return torso, arm
