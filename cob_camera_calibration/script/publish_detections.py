@@ -29,8 +29,6 @@ class Cb_marker_publish():
                        "/stereo/right/image_raw", "/cam3d/rgb/image_raw"]
 
         self.info_topics = [t.replace("image_raw","camera_info") for t in self.topics]
-        print self.topics
-        print self.info_topics
 
         self.images = dict.fromkeys(self.topics)
         self.camera_infos = dict.fromkeys(self.topics)
@@ -78,6 +76,8 @@ class Cb_marker_publish():
             for topic in self.topics:
                 # pick color as defined before
                 c = self.colors[self.topics.index(topic)]
+                if self.images[topic] is None:
+                    continue
 
                 try:
                     # compute pose of detected pattern
@@ -89,9 +89,7 @@ class Cb_marker_publish():
                 else:
                     rmat = np.array(p[0])
                     rmat = np.append(rmat, [[0,0,0]],0)
-                    print rmat
                     rmat = np.append(rmat, [[0],[0],[0],[1]],1)
-                    print rmat
                     q = tf.transformations.quaternion_from_matrix(rmat)
                     msg = Marker()
                     msg.type = Marker.SPHERE_LIST
@@ -113,7 +111,6 @@ class Cb_marker_publish():
                     msg.color = c
                     msg.points = self.points
                     msgs.markers.append(msg)
-
             self.pub.publish(msgs)
 
             rate.sleep()
