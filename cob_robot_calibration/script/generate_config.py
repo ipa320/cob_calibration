@@ -62,7 +62,8 @@ from simple_script_server import simple_script_server
 import yaml
 import tf
 from urdf_parser_py.urdf import URDF
-
+from cob_robot_calibration_est.single_transform import SingleTransform
+from numpy import array
 
 def get_chains(d, origin='base_link'):
     print '[INFO]: %s was selected as root frame' % origin
@@ -200,10 +201,13 @@ def generate_transformation_dict(transformation_list, listener):
         if transformation_list[i] != '**' and transformation_list[i] != '':
             try:
                 if transformation_list[i + 1] in ['', '**']:
-
                     continue
-                transformation_dict[transformation_list[i + 1]] = get_single_transform(
-                    transformation_list[i], transformation_list[i + 1], listener)
+                transform = get_single_transform(transformation_list[i], transformation_list[i + 1], listener)
+                t = SingleTransform()
+                t.inflate_rpy(array(transform))
+                transform = t.deflate()
+
+                transformation_dict[transformation_list[i + 1]] = transform
             except IndexError:
                 pass
     return transformation_dict
