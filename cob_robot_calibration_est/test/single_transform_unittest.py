@@ -86,6 +86,12 @@ class TestSingleTransform(unittest.TestCase):
         self.assertAlmostEqual( config[0], 1, 6)
         self.assertAlmostEqual( config[1], 0, 6)
 
+    def test_equality(self):
+	for i in range(5):
+	     st = SingleTransform()
+             p = numpy.rand.random(3)
+             self.assertAlmostEqual(numpy.linalg.norm(st.inflate(p, True)-st.inflate_old(p)),0.0,6)
+
 
     def test_easy_trans_1(self):
         st = SingleTransform([1, 2, 3, 0, 0, 0])

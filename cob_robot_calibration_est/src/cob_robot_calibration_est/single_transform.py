@@ -56,11 +56,40 @@ class SingleTransform:
         return param_vec.T.tolist()[0]
 
     # Convert column vector of params into config/home/fmw-ja/.ros/test_results/cob_robot_calibration_est/TEST-test_SingleTransform.xml
-    def inflate(self, p):
-        assert(p.size == 6)
-        T=tf.transformations.compose_matrix(angles=[p[3,0],p[4,0],p[5,0]],translate=[p[0,0],p[1,0],p[2,0]])
-        self.transform = T
+    def inflate(self, p, ret=False):
+        # assert(p.size == 6)
+        # T=tf.transformations.compose_matrix(angles=[p[3,0],p[4,0],p[5,0]],translate=[p[0,0],p[1,0],p[2,0]])
+        # self.transform = T
         
+        '''
+        complex calculation of 4x4 homogeneus transformation matrix by Willow Garage Inc.
+        for simplification with use of tf see inflate(self,p)
+        '''
+        p=reshape(matrix([eval(str(x))for x in p],float),(-1,1))
+
+
+	
+        # Init output matrix
+        T = matrix( zeros((4,4), float ))
+        T[3,3] = 1.0
+
+        # Copy position into matrix
+        T[0:3,3] = p[0:3,0]
+
+        # Renormalize the rotation axis to be unit length
+        a = tf.transformations.unit_vector(p[3:6,0])
+        rot_angle= tf.transformations.vector_norm(p[3:6,0])
+
+
+        # Built rotation matrix
+        c = cos(rot_angle) ;
+        s = sin(rot_angle) ;
+
+        R = tf.transformations.rotation_matrix(rot_angle,a)
+        T[0:3,0:3] = R ;
+       	self.transformation = T 
+	if ret:
+            return T
     def inflate_old(self,p):
         
         '''
