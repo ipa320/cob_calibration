@@ -117,8 +117,7 @@ class DataCollector():
         #  init publisher / subscriber
         self._robot_measurement_pub = rospy.Publisher(
             "/robot_measurement", RobotMeasurement)
-        self._image_pub_left = rospy.Publisher(
-            "/robot_measurement_image_left", Image)  # DEBUG
+ 
 
         # left camera
         rospy.Subscriber(
