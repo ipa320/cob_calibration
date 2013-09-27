@@ -218,15 +218,16 @@ class StereoCalibrationNode():
 
                 # TODO: tests with real hardware samples
                 # compute transformation from reference to parent frame of camera
-                k_u = kinematic_utils()
-                k_u.get_parent(frame_id_dep)
-                M_parent = np.matrix(k_u.get_tf_to_parent(self.frame_id_ref))
+                # k_u = kinematic_utils()
+                # k_u.get_parent(frame_id_dep)
+                # M_parent = np.matrix(k_u.get_tf_to_parent(self.frame_id_ref))
 
-                # resulting transformation
+                # # resulting transformation
                 M_inv = M.I
-                M_result = M_inv * M_parent
-                # urdf specifies origin -> inverse
-                M_inv = M_result.I
+                # M_result = M_inv * M_parent
+                # # urdf specifies origin -> inverse
+                # M_inv = M_result.I
+
 
                 T_inv = np.array(
                     M_inv[:3, 3]).flatten().tolist()  # T as list (x, y, z)
