@@ -158,6 +158,7 @@ def main():
     # init
     print "--> initializing sss"
     sss = simple_script_server()
+    '''
     sss.init("base")
     sss.init("torso")
     sss.init("head")
@@ -175,7 +176,7 @@ def main():
     rospy.wait_for_service("/arm_controller/set_joint_stiffness",2)
     print stiffnessM.joint_stiffness
     print jointstiffness_srv(stiffnessM)
-
+    '''
     print "--> setup care-o-bot for capture"
     sss.move("head", "back")
 
