@@ -26,9 +26,11 @@ class Cb_marker_publish():
 
         self.pub = rospy.Publisher("cb_detections", MarkerArray)
         self.topics = ["/stereo/left/image_raw",
-                       "/stereo/right/image_raw", "/cam3d/rgb/image_raw"]
+                       "/stereo/right/image_raw", "/cam3d/rgb/image_color"]
 
         self.info_topics = [t.replace("image_raw","camera_info") for t in self.topics]
+        self.info_topics = [t.replace("image_color","camera_info") for t in self.info_topics]
+        print self.info_topics
 
         self.images = dict.fromkeys(self.topics)
         self.camera_infos = dict.fromkeys(self.topics)
