@@ -130,22 +130,19 @@ class StereoCalibrationNode():
         self.camera_names_dep = []
         self.frame_ids_dep = []
         self.output_files_dep = []
+        self.baseline_prop_prefixes_dep = []
         for cam in self.cameras["further"]:
             self.image_prefixes_dep.append(cam.get("file_prefix", None))
             self.camera_names_dep.append(cam.get("name", None))
             self.frame_ids_dep.append(cam.get("frame_id", None))
             self.output_files_dep.append(
                 self.output_path + cam.get("calibration_data_file", None) if "calibration_data_file" in cam else None)
+            self.baseline_prop_prefixes_dep.append(cam.get("property", None))
 
         self.calibration_offset_urdf = rospy.get_param(
             '~calibration_offset_urdf', "")
         self.calibration_default_urdf = rospy.get_param(
             '~calibration_default_urdf', "")
-
-        self.baseline_prop_prefixes_dep = [rospy.get_param(
-            '~baseline_prop_prefix', "cam_r_"),
-            rospy.get_param('~baseline_prop_prefix', "cam3d_"),
-            rospy.get_param('~baseline_prop_prefix', "cam3d_ir_")]
 
         self.alpha = rospy.get_param(
             '~alpha', 0.0)
@@ -168,6 +165,7 @@ class StereoCalibrationNode():
         camera_ref_saved = False;
         for image_prefix_dep, camera_name_dep, frame_id_dep, output_file_dep, baseline_prop_prefix in zip(self.image_prefixes_dep, self.camera_names_dep, self.frame_ids_dep, self.output_files_dep, self.baseline_prop_prefixes_dep):
             if image_prefix_dep is not None:
+                print "Calibrating %s: \n\t Frame: %s \n\t Output File: %s \n\t Baseline Prefix: %s"%(camera_name_dep,frame_id_dep,output_file_dep, baseline_prop_prefix)
                 output += self.camera_name_ref +" -> " + camera_name_dep + ": \n"
                 calibrator = StereoCalibrator(board, detector, self.folder,
                                               self.image_prefix_ref, image_prefix_dep)
@@ -264,8 +262,8 @@ class StereoCalibrationNode():
                     print "T (in xyz):\n", T_inv
         # save baseline
         if (self.calibration_offset_urdf != "" and self.calibration_default_urdf != ""):
-            print self.calibration_offset_urdf
-            print self.calibration_default_urdf
+            for p in attributes2update.iteritems():
+                print "%s: %s"%p
             urdf_updater = CalibrationUrdfUpdater(self.calibration_offset_urdf,
                                                   self.calibration_offset_urdf,
                                                   debug = self.verbose,
