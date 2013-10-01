@@ -17,6 +17,4 @@ further:
                 topic: /cam3d/rgb/image_color
                 file_prefix: kinect_
                 frame_id: /head_cam3d_link
-                calibration_data_file: cam3d.yaml
-                frame_id: /head_color_camera_l_link
-                property: cam3d
+                property: cam3d_
