@@ -1,0 +1,17 @@
+<package>
+  <description brief="cob_laser_calibration">
+
+     cob_laser_calibration
+
+  </description>
+  <author>Daniel Mäki</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/cob_laser_calibration</url>
+  
+  <depend package="rospy"/>
+  <depend package="roscpp"/>
+  <depend package="sensor_msgs"/>
+  <depend package="tf"/>
+
+</package>

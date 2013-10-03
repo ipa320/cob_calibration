@@ -1,0 +1,4 @@
+
+<launch>
+	<rosparam param="checkerboard" file="$(find cob_calibration_config)/common/cb9x6x03.yaml" />
+</launch>
