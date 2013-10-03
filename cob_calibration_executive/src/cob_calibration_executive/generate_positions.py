@@ -63,14 +63,19 @@ import rospy
 from kinematics_msgs.srv import GetPositionIK, GetPositionIKRequest
 from geometry_msgs.msg import PoseStamped
 from pr2_controllers_msgs.msg import JointTrajectoryControllerState
+from moveit_msgs.msg import PositionIKRequest
+from moveit_msgs.srv import GetPositionIK as GetPositionIKMoveit
+
 import tf
 import numpy as np
 import yaml
 import os
+import math
 from cob_calibration_executive.torso_ik import TorsoIK
 
 from simple_script_server import simple_script_server
 
+from random import shuffle  #shuffle links to look at
 
 #board       = Checkerboard(self.pattern_size, self.square_size)
 #checkerboard_detector=CheckerboardDetector()
@@ -78,17 +83,13 @@ from simple_script_server import simple_script_server
 def getIk(arm_ik, (t, q), link, seed=None):
     '''
     query arm_ik server for joint_position which put arm_7_link to pose
-
     @param arm_ik: arm_ik service proxy
     @param t: translation
     @param q: rotation as quaternion
     @param link: frame in which pose (t, q) is defined
     @param seed: initial joint positions for ik calculation, in None current joint pos of arm is used.
-
     @return: tuple of joint_positions or None if ik was not found
     '''
-    #print link
-
     # get joint names for arm from parameter server
     joint_names = None
     try:
@@ -112,29 +113,32 @@ def getIk(arm_ik, (t, q), link, seed=None):
         seed = msg.actual.positions
 
     # create and send ik request
-    req = GetPositionIKRequest()
+    req = PositionIKRequest()
+    req.group_name = "arm"
     req.timeout = rospy.Duration(1.0)
-    req.ik_request.ik_link_name = link
-    req.ik_request.ik_seed_state.joint_state.position = seed
-    req.ik_request.ik_seed_state.joint_state.name = msg.joint_names
-    req.ik_request.pose_stamped.header.frame_id = 'arm_0_link'
-    req.ik_request.pose_stamped.pose.position.x = t[0]
-    req.ik_request.pose_stamped.pose.position.y = t[1]
-    req.ik_request.pose_stamped.pose.position.z = t[2]
-    req.ik_request.pose_stamped.pose.orientation.x = q[0]
-    req.ik_request.pose_stamped.pose.orientation.y = q[1]
-    req.ik_request.pose_stamped.pose.orientation.z = q[2]
-    req.ik_request.pose_stamped.pose.orientation.w = q[3]
+    req.ik_link_name = link
+    #req.ik_link_names = msg.joint_names
+    req.robot_state.joint_state.position = seed
+    req.robot_state.joint_state.name = msg.joint_names
+    req.pose_stamped.header.frame_id = 'base_link'
+    req.pose_stamped.pose.position.x = t[0]
+    req.pose_stamped.pose.position.y = t[1]
+    req.pose_stamped.pose.position.z = t[2]
+    req.pose_stamped.pose.orientation.x = q[0]
+    req.pose_stamped.pose.orientation.y = q[1]
+    req.pose_stamped.pose.orientation.z = q[2]
+    req.pose_stamped.pose.orientation.w = q[3]
+    req.attempts = 3
 
-    # try to get inverse kinecmatics for at least 3 times
-    for i in range(3):
-        resp = arm_ik(req)
-        if resp.error_code.val == resp.error_code.SUCCESS:
-            break
+    resp = arm_ik(req)
 
     # report sucess or return None on error
+    result = []
     if resp.error_code.val == resp.error_code.SUCCESS:
-        result = list(resp.solution.joint_state.position)
+        for name, position in zip(list(resp.solution.joint_state.name),
+                                  list(resp.solution.joint_state.position)):
+            if name in msg.joint_names:
+                result.append(position)
         return result
 
 
@@ -148,18 +152,59 @@ def calculate_ik(pose, arm_ik, seed=[0.7, -1.6, 4.4, 0.5, 1.2, 1.5, 3.0]):
             #print 'Found IK @ %s' % joint_positions
             break
 
-    else:
-        print "--> ERROR no IK solution was found..."
     return joint_positions, via_home
 
+def lookat(pose, torso_ik):
+    '''
+    query arm_ik server for joint_position which put arm_7_link to pose
 
-def get_cb_pose_head(listener, base_frame):
+    @param arm_ik: arm_ik service proxy
+    @param t: translation
+    @param q: rotation as quaternion
+    @param link: frame in which pose (t, q) is defined
+    @param seed: initial joint positions for ik calculation, in None current joint pos of arm is used.
+
+    @return: tuple of joint_positions or None if ik was not found
+    '''
+
+    # get joint names for arm from parameter server
+    t=pose[0]
+    q = pose[1]
+
+    # create and send ik request
+    req = GetPositionIKRequest()
+    req.timeout = rospy.Duration(1.0)
+    req.ik_request.ik_link_name = "lookat_focus_frame"
+    req.ik_request.pose_stamped.header.frame_id = 'base_link'
+    req.ik_request.pose_stamped.pose.position.x = t[0]
+    req.ik_request.pose_stamped.pose.position.y = t[1]
+    req.ik_request.pose_stamped.pose.position.z = t[2]
+    req.ik_request.pose_stamped.pose.orientation.x = q[0]
+    req.ik_request.pose_stamped.pose.orientation.y = q[1]
+    req.ik_request.pose_stamped.pose.orientation.z = q[2]
+    req.ik_request.pose_stamped.pose.orientation.w = q[3]
+
+    # try to get inverse kinecmatics for at least 3 times
+    for i in range(3):
+        resp = torso_ik(req)
+        if resp.error_code.val == resp.error_code.SUCCESS:
+            break
+
+    # report sucess or return None on error
+    if resp.error_code.val == resp.error_code.SUCCESS:
+        result = list(resp.solution.joint_state.position)
+        return result
+
+
+def get_cb_pose_center(listener, base_frame):
     return listener.lookupTransform(base_frame, '/chessboard_center', rospy.Time(0))
 
 
 def get_cb_pose(listener, base_frame):
     return listener.lookupTransform(base_frame, '/chessboard_position_link', rospy.Time(0))
 
+def get_position(listener, tip):
+    return listener.lookupTransform('/base_link', tip, rospy.Time(0))
 
 def main():
     rospy.init_node(NODE)
@@ -170,7 +215,8 @@ def main():
     print 'chessboard_pose publisher activated'
     listener = tf.TransformListener()
     rospy.sleep(1.5)
-    arm_ik = rospy.ServiceProxy('/cob_ik_wrapper/arm/get_ik', GetPositionIK)
+    arm_ik = rospy.ServiceProxy('/compute_ik', GetPositionIKMoveit)
+    torso_ik = rospy.ServiceProxy('/lookat_get_ik', GetPositionIK)
     '''
     (t,r)=listener.lookupTransform('/arm_0_link','arm_7_link',rospy.Time(0))
 
@@ -187,6 +233,10 @@ def main():
     sss.recover("base")
     sss.recover("torso")
     sss.recover("head")
+    camera_link = "/cam_reference_link"
+
+    [xhead, yhead, zhead] = get_position(listener, camera_link)[0]
+    print xhead, yhead, zhead
 
     print "--> setup care-o-bot for capture"
     sss.move("head", "back")
@@ -197,49 +247,16 @@ def main():
     nextPose = PoseStamped()
 
     torso = TorsoIK()
-    torso.set_camera_viewfield(rospy.get_param('~camera_view_angle'))
-
-    # lissajous like figure for rotation
-    cb_tip_offset = 3
-    cb_tip_positions = [(0, 0), (1, 0), (0, 1),
-                        (-1, 0), (0, -1)]
-    quaternion = []
-    for cb_tip_p in cb_tip_positions:
-        temp = list(cb_tip_p)
-        temp.append(cb_tip_offset)
-        vector_to = np.matrix(temp)
-        vector_from = np.matrix([0, 0, 1])
-        a = vector_to + vector_from
-        a = a / np.linalg.norm(a)
-        #print a
-        '''
-        #print '*'*20
-        print type(a)
-        print a.T.shape
-        print type(vector_from)
-        print vector_from.T.shape
-        '''
-        w = np.dot(vector_from, a.T)
-        vector_from = vector_from.tolist()[0]
-        a = a.tolist()[0]
-        #print vector_from
-        #print a
-        x = vector_from[1] * a[2] - vector_from[2] * a[1]
-        y = vector_from[2] * a[0] - vector_from[0] * a[2]
-        z = vector_from[0] * a[1] - vector_from[1] * a[0]
-
-        quaternion.append(tuple(tf.transformations.quaternion_multiply(
-            [0, 0, 0, 1], [x, y, z, w]).reshape(1, 4).tolist()[0]))
 
     # define cuboid for positions
     # limits from base_link frame
-    limits = {'x': (-0.5, -1.2),
+    limits = {'x': (-0.4, -1.0),
               'y': (-0.3, 0.3),
-              'z': (0.5, 1.0)}
+              'z': (0.5, 1.5)}
 
-    sample_density = {'x': 5,
-                      'y': 5,
-                      'z': 5}
+    sample_density = {'x': 6,
+                      'y': 6,
+                      'z': 6}
 
     sample_positions = {'x': [],
                         'y': [],
@@ -255,46 +272,86 @@ def main():
             sample_positions[key].append(sample_positions[key][-1] + step)
 
     joint_states = []
+    torso.get_torso_limits()
+
+    cb_links = ["/chessboard_center","/chessboard_lu_corner",
+                "/chessboard_ru_corner", "/chessboard_ll_corner",
+                "/chessboard_rl_corner"]
 
     for x in sample_positions['x']:
         for y in sample_positions['y']:
             for z in sample_positions['z']:
-                for q in quaternion:
+                #for q in quaternion:
+                for cb_link in cb_links:
+                    print "\033[1;34mNew Position\033[1;m"
                     nextPose.header.frame_id = '/base_link'
                     nextPose.pose.position.x = x
                     nextPose.pose.position.y = y
                     nextPose.pose.position.z = z
 
                     # (0,0,0,1) for cob3-6
+                    nextPose.pose.orientation.x = 0
+                    nextPose.pose.orientation.y = 0
+                    nextPose.pose.orientation.z = 0
+                    nextPose.pose.orientation.w = 1
+
+                    chessboard_pose.publish(nextPose)
+                    rospy.sleep(0.2)
+                    transformation_base_cb = get_position(
+                        listener, '/chessboard_center')
+                    [x1, y1, z1] = transformation_base_cb[0]
+                    (dx, dy, dz) = (x1 - xhead, y1 - yhead, z1 - zhead)
+                    roll = 0
+                    pitch = math.atan2(dz, -dx)
+                    yaw = -math.atan2(dy, -dx)
+                    '''
+                    Add noise to roll pitch and yaw values of cb
+                    '''
+                    std_dev = 0.3
+                    roll = np.random.normal(roll,std_dev,1)[0]
+                    pitch = np.random.normal(pitch,std_dev,1)[0]
+                    yaw = np.random.normal(yaw,std_dev,1)[0]
+
+                    q=tf.transformations.quaternion_from_euler(roll, pitch, yaw)
+                    #print q
                     nextPose.pose.orientation.x = q[0]
                     nextPose.pose.orientation.y = q[1]
                     nextPose.pose.orientation.z = q[2]
                     nextPose.pose.orientation.w = q[3]
-
                     chessboard_pose.publish(nextPose)
                     rospy.sleep(0.2)
-                    (t, r) = get_cb_pose_head(
-                        listener, '/head_color_camera_l_link')
-                    angles = calculate_angles(t)
-                    if not torso.in_range(angles):
-                        continue
+                    transformation_base_cb = get_position(
+                        listener, cb_link)
+
+
+                    #if not torso.in_range(angles):
+                        #continue
                     #print t
+                    try:
+                        torso_js = lookat(transformation_base_cb ,torso_ik)[:len(torso.limits)]
+                    except:
+                        break
+
+                    if torso_js[0] is None:
+                        break
+                    if not torso.valid_ik(torso_js):
+                        break
+                    print '\033[1;33mTorso solution found\033[1;m'
+
 
                     #(t, r) = get_cb_pose(listener, '/head_cam3d_link')
 
-                    #print t
-                    (t, r) = get_cb_pose(listener, '/arm_0_link')
+                    (t, r) = get_cb_pose(listener, '/base_link')
                     js = calculate_ik((
                         t, r), arm_ik, calibration_seed[0])
                     if js[0] is not None:
-                        print 'IK solution found'
-                    else:
-                        continue
-                    torso_state = [-a for a in torso.calculate_ik(angles)]
-                    for torso_js in [torso_state, [0] * len(torso_state)]:
-                        joint_states.append({'joint_position': js[
-                                            0], 'torso_position': list(torso_js)})
+                        joint_states.append({'joint_position': js[0]
+                                            , 'torso_position': list(torso_js)})
                         print joint_states[-1]
+
+                        print '\033[1;32mIK solution found\033[1;m'
+                    else:
+                        print '\033[1;31mNo solution found\033[1;m'
 
     path = rospy.get_param('~output_path', None)
     directory = os.path.dirname(path)

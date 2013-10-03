@@ -11,10 +11,10 @@ further:
                 topic: /stereo/right/image_raw
                 file_prefix: right_
                 calibration_data_file: right.yaml
-                frame_id: /head_color_camera_l_link
+                frame_id: /head_color_camera_r_link
                 property: cam_r_
        -        name: cam3d
                 topic: /cam3d/rgb/image_color
                 file_prefix: kinect_
                 frame_id: /head_cam3d_link
-                property: cam3d
+                property: cam3d_

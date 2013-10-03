@@ -1,0 +1,10 @@
+reference:
+        name: cam
+        topic: /stereo/right/image_raw
+        file_prefix: right
+        calibration_data_file: right.yaml
+        frame_id: /head_color_camera_r_link
+        property: head_color_camera_r      # in calibration_data
+
+further:
+        -

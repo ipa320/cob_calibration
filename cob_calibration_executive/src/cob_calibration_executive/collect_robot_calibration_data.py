@@ -66,6 +66,7 @@ from cob_calibration_srvs.srv import Visible, Capture
 from cob_calibration_msgs.msg import Progress
 import yaml
 import tf
+from cob_srvs.srv import SetJointStiffnessRequest, SetJointStiffness
 
 
 def capture_loop(positions, sss, visible, capture_kinematics, capture_image):
@@ -134,27 +135,30 @@ def main():
     rospy.init_node(NODE)
     print "==> %s started " % NODE
 
+
+
     rospy.sleep(4)
     # service client
     checkerboard_checker_name = "/image_capture/visibility_check"
     visible = rospy.ServiceProxy(checkerboard_checker_name, Visible)
-    rospy.wait_for_service(checkerboard_checker_name, 2)
+    rospy.wait_for_service(checkerboard_checker_name, 6)
     print "--> service client for for checking for chessboards initialized"
 
     kinematics_capture_service_name = "/collect_data/capture"
     capture_kinematics = rospy.ServiceProxy(
         kinematics_capture_service_name, Capture)
-    rospy.wait_for_service(kinematics_capture_service_name, 2)
+    rospy.wait_for_service(kinematics_capture_service_name, 6)
     print "--> service client for capture robot_states initialized"
 
     image_capture_service_name = "/image_capture/capture"
     capture_image = rospy.ServiceProxy(image_capture_service_name, Capture)
-    rospy.wait_for_service(image_capture_service_name, 2)
+    rospy.wait_for_service(image_capture_service_name, 6)
     print "--> service client for capture images initialized"
 
     # init
     print "--> initializing sss"
     sss = simple_script_server()
+    '''
     sss.init("base")
     sss.init("torso")
     sss.init("head")
@@ -162,6 +166,17 @@ def main():
     sss.recover("torso")
     sss.recover("head")
 
+    print "-> set joint_stiffness to 2000"
+    stiffnessM = SetJointStiffnessRequest()
+    #print stiffnessM.joint_stiffness
+
+    stiffnessM.joint_stiffness = [1500]*7
+
+    jointstiffness_srv = rospy.ServiceProxy("/arm_controller/set_joint_stiffness",SetJointStiffness)
+    rospy.wait_for_service("/arm_controller/set_joint_stiffness",2)
+    print stiffnessM.joint_stiffness
+    print jointstiffness_srv(stiffnessM)
+    '''
     print "--> setup care-o-bot for capture"
     sss.move("head", "back")
 

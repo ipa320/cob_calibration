@@ -94,11 +94,12 @@ class SingleChainCalc:
                                  for transform_name in self._config_dict["before_chain"]]
         self._after_chain_Ts = [robot_params.transforms[transform_name]
                                 for transform_name in self._config_dict["after_chain"]]
+        self._chain = robot_params.dh_chains[self._config_dict["chain_id"]]
 
-    def fk(self, transformation):
+    def fk(self, joint_states):
         pose = matrix(numpy.eye(4))
-        trans = transformation.translation
-        rot = transformation.rotation
+        #trans = transformation.translation
+        #rot = transformation.rotation
 
         # Apply the 'before chain' transforms
         for before_chain_T in self._before_chain_Ts:
@@ -106,11 +107,14 @@ class SingleChainCalc:
 
         # Apply the Chain
 
-        euler = tf.transformations.euler_from_quaternion(rot)
-        mat = tf.transformations.compose_matrix(
-            translate=trans, angles=euler)
+        #euler = tf.transformations.euler_from_quaternion(rot)
+        #mat = tf.transformations.compose_matrix(
+            #translate=trans, angles=euler)
 
-        pose = pose * mat
+        #pose = pose * mat
+        #pose
+        pose *= self._chain.fk(joint_states)
+
 
         # Apply the 'after chain' transforms
         for after_chain_T in self._after_chain_Ts:
@@ -142,12 +146,9 @@ class FullChainCalcBlock:
         # Apply the Chain
 
         for chain in self._chains:
-            for transformation in m_chain:
-                if transformation.chain_id == chain._config_dict["chain_id"]:
-                    t = transformation
-            mat = chain.fk(t)
-            pose = pose * mat
-
+            for joint_state in m_chain:
+                if joint_state.header.frame_id == chain._config_dict["chain_id"]:
+                    pose *= chain.fk(joint_state)
         # Apply the 'after chain' transforms
         for after_chain_T in self._after_chain_Ts:
             pose = pose * after_chain_T.transform

@@ -61,7 +61,34 @@ import rospy
 
 import numpy as np
 import tf
-from cob_camera_calibration import Checkerboard, CheckerboardDetector, StereoCalibrator, CalibrationData, CalibrationUrdfUpdater
+from cob_camera_calibration import Checkerboard, CheckerboardDetector, StereoCalibrator, CalibrationData#, CalibrationUrdfUpdater
+from cob_calibration_urdf_update.calibration_urdf_updater import CalibrationUrdfUpdater
+class kinematic_utils():
+    def __init__(self):
+        self.t = tf.TransformListener()
+        rospy.sleep(2)
+    def get_parent(self, tip):
+        #print t.getFrameStrings()
+        frames = {}
+        for f_descr in self.t.allFramesAsString().split("\n"):
+            f_pair = f_descr.split(" exists with parent ")
+            try:
+                f_pair[0] = f_pair[0][6:]
+                f_pair[1] = f_pair[1][:-1]
+                frames[f_pair[0]]=f_pair[1]
+
+            except:
+                pass
+        self.parent=frames[tip]
+
+    def get_tf_to_parent(self, reference_link):
+        (T,R) = self.t.lookupTransform(reference_link,self.parent, rospy.Time(0))
+        R = tf.transformations.quaternion_matrix(R)
+        T = tf.transformations.translation_matrix(T)
+        M = tf.transformations.concatenate_matrices(R,T)
+
+        return M
+
 
 
 class StereoCalibrationNode():
@@ -103,22 +130,19 @@ class StereoCalibrationNode():
         self.camera_names_dep = []
         self.frame_ids_dep = []
         self.output_files_dep = []
+        self.baseline_prop_prefixes_dep = []
         for cam in self.cameras["further"]:
             self.image_prefixes_dep.append(cam.get("file_prefix", None))
             self.camera_names_dep.append(cam.get("name", None))
             self.frame_ids_dep.append(cam.get("frame_id", None))
             self.output_files_dep.append(
                 self.output_path + cam.get("calibration_data_file", None) if "calibration_data_file" in cam else None)
+            self.baseline_prop_prefixes_dep.append(cam.get("property", None))
 
-        self.calibration_urdf_in = rospy.get_param(
-            '~calibration_urdf_in', "")
-        self.calibration_urdf_out = rospy.get_param(
-            '~calibration_urdf_out', "")
-
-        self.baseline_prop_prefixes_dep = [rospy.get_param(
-            '~baseline_prop_prefix', "cam_r_"),
-            rospy.get_param('~baseline_prop_prefix', "cam3d_"),
-            rospy.get_param('~baseline_prop_prefix', "cam3d_ir_")]
+        self.calibration_offset_urdf = rospy.get_param(
+            '~calibration_offset_urdf', "")
+        self.calibration_default_urdf = rospy.get_param(
+            '~calibration_default_urdf', "")
 
         self.alpha = rospy.get_param(
             '~alpha', 0.0)
@@ -137,8 +161,12 @@ class StereoCalibrationNode():
         board = Checkerboard(self.pattern_size, self.pattern["square_size"])
         detector = CheckerboardDetector(board)
         attributes2update = {}
+        output = ""
+        camera_ref_saved = False;
         for image_prefix_dep, camera_name_dep, frame_id_dep, output_file_dep, baseline_prop_prefix in zip(self.image_prefixes_dep, self.camera_names_dep, self.frame_ids_dep, self.output_files_dep, self.baseline_prop_prefixes_dep):
             if image_prefix_dep is not None:
+                print "Calibrating %s: \n\t Frame: %s \n\t Output File: %s \n\t Baseline Prefix: %s"%(camera_name_dep,frame_id_dep,output_file_dep, baseline_prop_prefix)
+                output += self.camera_name_ref +" -> " + camera_name_dep + ": \n"
                 calibrator = StereoCalibrator(board, detector, self.folder,
                                               self.image_prefix_ref, image_prefix_dep)
 
@@ -148,7 +176,9 @@ class StereoCalibrationNode():
                     camera_matrix_ref, dist_coeffs_ref, rectification_matrix_ref, projection_matrix_ref,
                     camera_matrix_dep, dist_coeffs_dep, rectification_matrix_dep, projection_matrix_dep,
                     ((h_ref, w_ref), (h_dep, w_dep)), R, T) = calibrator.calibrate_stereo_camera(self.alpha)
-                print "==> successfully calibrated, stereo reprojection RMS (in pixels):", rms_stereo
+                output +=  "==> successfully calibrated, stereo reprojection RMS (in pixels): "
+                output += str(rms_stereo)
+                output += "\n\n"
 
                 # create CalibrationData object with results
                 camera_info_ref = CalibrationData(
@@ -168,17 +198,35 @@ class StereoCalibrationNode():
                 if output_file_dep is not None:
 
                     # save results
-                    camera_info_ref.save_camera_yaml_file(self.output_file_ref)
-                    print "==> saved left results to:", self.output_file_ref
+                    if not camera_ref_saved:
+                        camera_info_ref.save_camera_yaml_file(self.output_file_ref)
+                        print "==> saved left results to:", self.output_file_ref
+                        camera_ref_saved = True
+                        #output += "==> saved left results to:", self.output_file_ref
 
                     camera_info_dep.save_camera_yaml_file(output_file_dep)
                     print "==> saved " + camera_name_dep + " results to:", output_file_dep
+                    #output += "==> saved " + camera_name_dep + " results to:", output_file_dep
 
                 # convert baseline (invert transfrom as T and R bring right frame into left
                 # and we need transform from left to right for urdf!)
+
                 M = np.matrix(np.vstack((np.hstack(
                     (R, T)), [0.0, 0.0, 0.0, 1.0])))  # 4x4 homogeneous matrix
+
+                # TODO: tests with real hardware samples
+                # compute transformation from reference to parent frame of camera
+                # k_u = kinematic_utils()
+                # k_u.get_parent(frame_id_dep)
+                # M_parent = np.matrix(k_u.get_tf_to_parent(self.frame_id_ref))
+
+                # # resulting transformation
                 M_inv = M.I
+                # M_result = M_inv * M_parent
+                # # urdf specifies origin -> inverse
+                # M_inv = M_result.I
+
+
                 T_inv = np.array(
                     M_inv[:3, 3]).flatten().tolist()  # T as list (x, y, z)
                 R_inv = list(tf.transformations.euler_from_matrix(
@@ -190,35 +238,43 @@ class StereoCalibrationNode():
                 attributes2update[baseline_prop_prefix + 'roll'] = R_inv[0]
                 attributes2update[baseline_prop_prefix + 'pitch'] = R_inv[1]
                 attributes2update[baseline_prop_prefix + 'yaw'] = R_inv[2]
+
+                #verbose mode
+                if self.verbose:
+                    print "--> results:"
+                    np.set_printoptions(suppress=1)
+                    print "left\n----"
+                    print "rms left monocular calibration:", rms_ref
+                    print "camera matrix:\n", camera_matrix_ref
+                    print "distortion coefficients:\n", dist_coeffs_ref
+                    print "rectification matrix:\n", rectification_matrix_ref
+                    print "projection matrix:\n", projection_matrix_ref
+                    print
+                    print "right\n-----"
+                    print "rms right monocular calibration:", rms_dep
+                    print "camera matrix:\n", camera_matrix_dep
+                    print "distortion coefficients:\n", dist_coeffs_dep
+                    print "rectification matrix:\n", rectification_matrix_dep
+                    print "projection matrix:\n", projection_matrix_dep
+                    print
+                    print "baseline (transform from left to right camera)\n--------"
+                    print "R (in rpy):\n", R_inv
+                    print "T (in xyz):\n", T_inv
         # save baseline
-        if (self.calibration_urdf_in != "" and self.calibration_urdf_out != ""):
-            urdf_updater = CalibrationUrdfUpdater(self.calibration_urdf_in, self.calibration_urdf_out, self.verbose)
+        if (self.calibration_offset_urdf != "" and self.calibration_default_urdf != ""):
+            for p in attributes2update.iteritems():
+                print "%s: %s"%p
+            urdf_updater = CalibrationUrdfUpdater(self.calibration_offset_urdf,
+                                                  self.calibration_offset_urdf,
+                                                  debug = self.verbose,
+                                                  urdf_default=self.calibration_default_urdf)
             urdf_updater.update(attributes2update)
-            print "==> updated baseline in:", self.calibration_urdf_out
+            print "==> updated baseline in:", self.calibration_offset_urdf
         else:
             print "==> NOT saving baseline to urdf file! Parameters 'calibration_urdf_in' and/or 'calibration_urdf_out' are empty..."
 
-        # verbose mode
-        if self.verbose:
-            print "--> results:"
-            np.set_printoptions(suppress=1)
-            print "left\n----"
-            print "rms left monocular calibration:", rms_ref
-            print "camera matrix:\n", camera_matrix_ref
-            print "distortion coefficients:\n", dist_coeffs_ref
-            print "rectification matrix:\n", rectification_matrix_ref
-            print "projection matrix:\n", projection_matrix_ref
-            print
-            print "right\n-----"
-            print "rms right monocular calibration:", rms_dep
-            print "camera matrix:\n", camera_matrix_dep
-            print "distortion coefficients:\n", dist_coeffs_dep
-            print "rectification matrix:\n", rectification_matrix_dep
-            print "projection matrix:\n", projection_matrix_dep
-            print
-            print "baseline (transform from left to right camera)\n--------"
-            print "R (in rpy):\n", R_inv
-            print "T (in xyz):\n", T_inv
+
+        print output
 
 if __name__ == '__main__':
     node = StereoCalibrationNode()

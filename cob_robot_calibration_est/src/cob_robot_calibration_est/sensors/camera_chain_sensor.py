@@ -41,16 +41,18 @@
 #       checkerboard
 
 
-from numpy import matrix, reshape, array, zeros, real, float64, asarray, diag
+from numpy import matrix, reshape, array, zeros, real, float64, asarray, diag, ones
 
 import roslib
 roslib.load_manifest('cob_robot_calibration_est')
 import rospy
 from cob_robot_calibration_est.full_chain import FullChainRobotParams
-from cob_robot_calibration_est.ChainMessage import ChainMessage
+from cob_robot_calibration_est.sensors.chain_sensor import ChainBundler, ChainSensor
+#from cob_robot_calibration_est.ChainMessage import ChainMessage
 import yaml
 import cv
 #import code
+from copy import deepcopy
 
 
 class CameraChainBundler:
@@ -87,11 +89,10 @@ class CameraChainBundler:
         sensors = []
         for cur_config in self._valid_configs:
             if cur_config["camera_id"] in [x.camera_id for x in M_robot.M_cam]:
-                if all([chain in [x.chain_id for x in M_robot.M_chain] for chain in cur_config["chain"]["chains"]]):
-#                    print "if cur_config[chain][chain_id]: ", cur_config["chain"]["chain_id"]
+                if all([chain in [x.header.frame_id for x in M_robot.M_chain] for chain in cur_config["chain"]["chains"]]):
                     M_cam = M_robot.M_cam[[x.camera_id for x in M_robot.M_cam]
                                           .index(cur_config["camera_id"])]
-                    M_chain = M_robot.M_chain
+                    M_chain = [c for c in M_robot.M_chain if c.header.frame_id in cur_config["chain"]["chains"]]
                 else:
                     print "else cur_config[chain][chain_id]: ", cur_config["chain"]["chain_id"]
                     break
@@ -103,7 +104,7 @@ class CameraChainBundler:
         return sensors
 
 
-class CameraChainSensor:
+class CameraChainSensor():
     def __init__(self, config_dict, M_cam, M_chain, config):
         """
         Generates a single sensor block for a single configuration
@@ -131,7 +132,7 @@ class CameraChainSensor:
         with open(path) as f:
             self._yaml = yaml.load(f)
         self._distortion = self._yaml['distortion_coefficients']['data']
-        self._camera_matrix = self._yaml['projection_matrix']['data']
+        self._camera_matrix = self._yaml['camera_matrix']['data']
 
         self.terms_per_sample = 2
 
@@ -182,17 +183,16 @@ class CameraChainSensor:
         import scipy.linalg
         cov = self.compute_cov(target_pts)
         gamma = matrix(zeros(cov.shape))
-        num_pts = self.get_residual_length() / 2
+        num_pts = self.get_residual_length()/2
 
         for k in range(num_pts):
             #print "k=%u" % k
-            first = 2 * k
-            last = 2 * k + 2
+            first = 2*k
+            last = 2*k+2
             sub_cov = matrix(cov[first:last, first:last])
             sub_gamma_sqrt_full = matrix(scipy.linalg.sqrtm(sub_cov.I))
             sub_gamma_sqrt = real(sub_gamma_sqrt_full)
-            assert(scipy.linalg.norm(
-                sub_gamma_sqrt_full - sub_gamma_sqrt) < 1e-6)
+            assert(scipy.linalg.norm(sub_gamma_sqrt_full - sub_gamma_sqrt) < 1e-6)
             gamma[first:last, first:last] = sub_gamma_sqrt
         return gamma
 
@@ -207,7 +207,7 @@ class CameraChainSensor:
         """
         cm = cv.CreateMat(3, 3, cv.CV_32F)
         cv.Set(cm, 0)
-        cm_t = reshape(matrix(self._camera_matrix, float64), (3, 4))[:3, :3]
+        cm_t = reshape(matrix(self._camera_matrix, float64), (3, 3))[:3, :3]
         for x in range(3):
             for y in range(3):
                 cm[x, y] = cm_t[x, y]
@@ -217,12 +217,8 @@ class CameraChainSensor:
 
         camera_pix = cv.fromarray(float64(
             [[[pt.x, pt.y]] for pt in self._M_cam.image_points]))
-        #print asarray(camera_pix)
-        #print asarray(cm)
-        #print asarray(dc)
         dst = cv.CreateMat(camera_pix.rows, camera_pix.cols, camera_pix.type)
         cv.UndistortPoints(camera_pix, dst, cm, dc, P=cm)
-        #print asarray(dst)
 
         return asarray(dst)
 
@@ -235,7 +231,7 @@ class CameraChainSensor:
         if self._M_chain is not None:
             return self._compute_expected(target_pts)
         else:
-            return self._compute_expected(None, target_pts)
+            return self._compute_expected(target_pts, None)
 
     def _compute_expected(self, target_pts, M_chain=None):
         """
@@ -288,40 +284,8 @@ class CameraChainSensor:
         Input:
          - target_pts: 4xN matrix, storing N feature points of the target, in homogeneous coords
         '''
-        epsilon = 1e-8
-        #print "camera chain sensor"
-        #code.interact(local=locals())
-        if self._M_chain is not None:
-            M_chain = [chain for chain in self._M_chain if chain.chain_id in self._config_dict["chain"]["chains"]]
-            cm = ChainMessage()
-            inertial = cm.deflate(M_chain)
-            num_params = len(inertial)
-            #num_joints = len(self._M_chain.chain_state.position)
-            Jt = zeros([num_params, self.get_residual_length()])
-
-            #x = JointState()
-            #x.position = self._M_chain.chain_state.position[:]
-
-            ## Compute the Jacobian from the chain's joint angles to pixel residuals
-            #f0 = reshape(array(self._compute_expected(x, target_pts)), [-1])
-            f0 = reshape(array(self._compute_expected(
-                target_pts, cm.inflate(inertial))), [-1])
-            for i in range(num_params):
-                x = inertial[:]
-                #x.position = [
-                    #cur_pos for cur_pos in self._M_chain.chain_state.position]
-                x[i] += epsilon
-                #fTest = reshape(
-                      #array(self._compute_expected(x, target_pts)), [-1])
-                fTest = reshape(array(
-                    self._compute_expected(target_pts, cm.inflate(x))), [-1])
-                Jt[i] = (fTest - f0) / epsilon
-            #cov_angles = [x * x for x in self._chain.calc_block._chain._cov_dict['joint_angles']]
-            cov_angles = [0.01] * num_params
-
-            ## Transform the chain's covariance from joint angle space into pixel space using the just calculated jacobian
-            chain_cov = matrix(Jt).T * matrix(diag(cov_angles)) * matrix(Jt)
-
+        #chain cov
+        chain_cov = self.compute_chain_cov(target_pts)
         cam_cov = matrix(
             zeros([self.get_residual_length(), self.get_residual_length()]))
 
@@ -338,7 +302,45 @@ class CameraChainSensor:
         else:
             cov = cam_cov
         return cov
+    def compute_chain_cov(self, target_pts):
 
+        _ones = ones([7, self.get_residual_length()])
+        cov = matrix(diag([0.01] * self.get_residual_length()))
+
+        epsilon = 1e-8
+
+
+
+        chain_cov = None
+        if self._M_chain is not None:
+            i_joints = []
+            num_joints = 0
+            for i,c in enumerate(self._M_chain):
+                l = len(c.actual.positions)
+                i_joints.extend([i] * l)
+                num_joints+=l
+
+            #num_joints = sum(num_joints)
+            #num_joints = len(self._M_chain.actual.position)
+            Jt = zeros([num_joints, self.get_residual_length()])
+
+            x = deepcopy(self._M_chain)
+            # Compute the Jacobian from the chain's joint angles to pixel residuals
+            f0 = reshape(array(self._compute_expected(target_pts, x)), [-1])
+            for i in range(num_joints):
+                x[i_joints[i]].header.frame_id = self._M_chain[i_joints[i]].header.frame_id
+                x[i_joints[i]].actual.positions = list(self._M_chain[i_joints[i]].actual.positions[:])
+                x[i_joints[i]].actual.positions[i] += epsilon
+                fTest = reshape(array(self._compute_expected(target_pts, x)), [-1])
+                Jt[i] = (fTest - f0)/epsilon
+            cov_angles = []
+
+            for c in self._chain.calc_block._chains:
+                cov_angles.extend([ x * x for x in c._chain._cov_dict])
+
+            # Transform the chain's covariance from joint angle space into pixel space using the just calculated jacobian
+            chain_cov = matrix(Jt).T * matrix(diag(cov_angles)) * matrix(Jt)
+        return chain_cov
     def build_sparsity_dict(self):
         """
         Build a dictionary that defines which parameters will in fact affect this measurement.
@@ -370,13 +372,15 @@ class CameraChainSensor:
             sparsity['transforms'][cur_transform_name] = [1, 1, 1, 1, 1, 1]
 
         sparsity['dh_chains'] = {}
-        #if self._M_chain is not None:
-            #chain_id = self._config_dict['chain']['chain_id']
-            #num_links = self._chain.calc_block._chain._M
+        chain_ids = self._config_dict["chain"]['chains']
+        for chain in self._chain.calc_block._chains:
+            chain_id = chain._config_dict["chain_id"]
+            num_links = chain._chain._M
+            #num_links = self._full_chain.calc_block._chains._M
             #assert(num_links == len(self._M_chain.chain_state.position))
-            #sparsity['dh_chains'][chain_id] = {}
-            #sparsity['dh_chains'][chain_id]['dh'] = [[1, 1, 1, 1]] * num_links
-            #sparsity['dh_chains'][chain_id]['gearing'] = [1] * num_links
+            sparsity['dh_chains'][chain_id] = {}
+            sparsity['dh_chains'][chain_id]['dh'] = [[1, 1, 1, 1,1,1]] * num_links
+            sparsity['dh_chains'][chain_id]['gearing'] = [1] * num_links
 
         sparsity['rectified_cams'] = {}
         sparsity['rectified_cams'][self.sensor_id] = dict(

@@ -1,1 +1,2 @@
-calibration: [[2.356, -3.1415, 1.5707, 0.0, 1.5707, 3.4906]]
+####### define manually for every robot ####### 
+calibration: [[0,0,0,0,0,0]]
