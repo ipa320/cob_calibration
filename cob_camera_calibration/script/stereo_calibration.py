@@ -60,6 +60,7 @@ roslib.load_manifest(PKG)
 import rospy
 
 import numpy as np
+import cv2
 import tf
 from cob_camera_calibration import Checkerboard, CheckerboardDetector, StereoCalibrator, CalibrationData#, CalibrationUrdfUpdater
 from cob_calibration_urdf_update.calibration_urdf_updater import CalibrationUrdfUpdater
@@ -131,6 +132,7 @@ class StereoCalibrationNode():
         self.frame_ids_dep = []
         self.output_files_dep = []
         self.baseline_prop_prefixes_dep = []
+        self.is_part_of_stereo_system = []
         for cam in self.cameras["further"]:
             self.image_prefixes_dep.append(cam.get("file_prefix", None))
             self.camera_names_dep.append(cam.get("name", None))
@@ -138,6 +140,7 @@ class StereoCalibrationNode():
             self.output_files_dep.append(
                 self.output_path + cam.get("calibration_data_file", None) if "calibration_data_file" in cam else None)
             self.baseline_prop_prefixes_dep.append(cam.get("property", None))
+            self.is_part_of_stereo_system.append(cam.get("is_part_of_stereo_system", False))
 
         self.calibration_offset_urdf = rospy.get_param(
             '~calibration_offset_urdf', "")
@@ -163,7 +166,17 @@ class StereoCalibrationNode():
         attributes2update = {}
         output = ""
         camera_ref_saved = False;
-        for image_prefix_dep, camera_name_dep, frame_id_dep, output_file_dep, baseline_prop_prefix in zip(self.image_prefixes_dep, self.camera_names_dep, self.frame_ids_dep, self.output_files_dep, self.baseline_prop_prefixes_dep):
+        for image_prefix_dep,\
+                camera_name_dep,\
+                frame_id_dep,\
+                output_file_dep,\
+                baseline_prop_prefix,\
+                is_part_of_stereo_system in zip(self.image_prefixes_dep,
+                                                self.camera_names_dep,
+                                                self.frame_ids_dep,
+                                                self.output_files_dep,
+                                                self.baseline_prop_prefixes_dep,
+                                                self.is_part_of_stereo_system):
             if image_prefix_dep is not None:
                 print "Calibrating %s: \n\t Frame: %s \n\t Output File: %s \n\t Baseline Prefix: %s"%(camera_name_dep,frame_id_dep,output_file_dep, baseline_prop_prefix)
                 output += self.camera_name_ref +" -> " + camera_name_dep + ": \n"
@@ -196,6 +209,15 @@ class StereoCalibrationNode():
                 camera_info_dep.distortion_coefficients = dist_coeffs_dep
 
                 if output_file_dep is not None:
+                    if not is_part_of_stereo_system:
+                        # TODO: compute new projectionmatrix
+
+                        (projection_matrix, _) = cv2.getOptimalNewCameraMatrix(
+                            camera_matrix_dep, dist_coeffs_dep, (w_dep, h_dep),0 )
+                        camera_info_dep.projection_matrix = np.array(np.hstack((
+                            projection_matrix, np.matrix([0, 0, 0]).reshape(3, 1))))
+                        camera_info_dep.rectification_matrix=[1,0,0, 0,1,0, 0,0,1]
+
 
                     # save results
                     if not camera_ref_saved:
