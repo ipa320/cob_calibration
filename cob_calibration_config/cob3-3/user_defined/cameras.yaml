@@ -13,8 +13,10 @@ further:
                 calibration_data_file: right.yaml
                 frame_id: /head_color_camera_r_link
                 property: cam_r_
-       -        name: cam3d
+                is_part_of_stereo_system: True
+       -        name: rgb_A00366909204046A
                 topic: /cam3d/rgb/image_color
                 file_prefix: kinect_
+                calibration_data_file: kinect_rgb.yaml
                 frame_id: /head_cam3d_link
                 property: cam3d_
