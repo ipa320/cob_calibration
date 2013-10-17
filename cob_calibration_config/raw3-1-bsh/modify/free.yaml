@@ -1,0 +1,42 @@
+####### Use this file as template for free_0.yaml - free_2.yaml. #######
+checkerboards:
+  cb_9x6: {corners_x: 0, corners_y: 0, spacing_x: 0, spacing_y: 0}
+dh_chains:
+  arm_chain:
+    cov: [0, 0, 0]
+    dh:
+    - name: arm_shoulder_pan_joint
+      type: rot
+      xyzrpy: [0, 0, 0, 0, 0, 0]
+    - name: arm_shoulder_lift_joint
+      type: rot
+      xyzrpy: [0, 0, 0, 0, 0, 0]
+    - name: arm_elbow_joint
+      type: rot
+      xyzrpy: [0, 0, 0, 0, 0, 0]
+    gearing: [0, 0, 0]
+rectified_cams:
+  kinect_rgb:
+    baseline_shift: 0
+    cov: {u: 0, v: 0}
+    cx_shift: 0
+    cy_shift: 0
+    f_shift: 0
+  left:
+    baseline_shift: 0
+    cov: {u: 0, v: 0}
+    cx_shift: 0
+    cy_shift: 0
+    f_shift: 0
+  right:
+    baseline_shift: 0
+    cov: {u: 0, v: 0}
+    cx_shift: 0
+    cy_shift: 0
+    f_shift: 0
+transforms:
+  '***': [0, 0, 0, 0, 0, 0]
+  arm_base_link: [0, 0, 0, 0, 0, 0]
+  arm_cb: [0, 0, 0, 0, 0, 0]
+  arm_forearm_link: [0, 0, 0, 0, 0, 0]
+  head_cam3d_link: [0, 0, 0, 0, 0, 0]

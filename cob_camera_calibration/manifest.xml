@@ -13,8 +13,14 @@
 
   <depend package="cv_bridge"/>
   <depend package="tf"/>
+  <depend package="rospy"/>
+    <depend package="rosbag"/>
+    <depend package="cob_calibration_msgs"/>
+    <depend package="cob_calibration_urdf_update"/>
+    
 
   <rosdep name="opencv2"/>
+  <depend package="cob_calibration_srvs"/>
 
 </package>
 

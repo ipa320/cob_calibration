@@ -73,11 +73,16 @@ class TestSingleTransform(unittest.TestCase):
         self.assertAlmostEqual(numpy.linalg.norm(st.transform-expected), 0.0, 6)
 
     def test_deflate(self):
-        st = SingleTransform([0, 0, 0, 0, 0, 0])
-        p = reshape( matrix([1, 0, 0, 0, 0, 0], float), (-1,1) )
-        st.inflate(p)
-        result = st.deflate()
-        self.assertAlmostEqual(numpy.linalg.norm(p-result), 0.0, 6)
+
+        st = SingleTransform([0, 0, 0, 0, 1, 0])
+        for i in range(5):
+            print "next test_deflate"
+            p = numpy.random.rand(6,1)
+            st.inflate(p)
+            result = st.deflate()
+            print result
+            print p
+            self.assertAlmostEqual(numpy.linalg.norm(p-result), 0.0, 6)
 
     def test_params_to_config(self):
         st = SingleTransform()
@@ -85,6 +90,19 @@ class TestSingleTransform(unittest.TestCase):
         config = st.params_to_config(p)
         self.assertAlmostEqual( config[0], 1, 6)
         self.assertAlmostEqual( config[1], 0, 6)
+
+    def test_equality(self):
+        st = SingleTransform()
+        for i in range(5):
+            print "------next-------"
+            p = numpy.random.rand(6,1)
+            new = st.inflate(p,True)
+            old = st.inflate_old(p)
+            print new
+            print old
+            print "diff: "
+            print old - new
+            self.assertAlmostEqual(numpy.linalg.norm(old-new),0.0,6)
 
 
     def test_easy_trans_1(self):
@@ -152,6 +170,24 @@ class TestSingleTransform(unittest.TestCase):
             expected_result.shape = 4,4
 
             self.assertAlmostEqual(numpy.linalg.norm(st.transform-expected_result), 0.0, 4, "Failed on %s" % params_filename)
+    def test_inflate_old_vs_new_1(self):
+        p=[0,0,0,0,0,0]
+        st=SingleTransform(p)
+        self.assertAlmostEqual(numpy.linalg.norm(st.transform-st.inflate_old(p)), 0.0,4)
+
+    def test_inflate_old_vs_new_2(self):
+        p=[19,0,0,0,numpy.pi/2,0]
+        st=SingleTransform(p)
+        self.assertAlmostEqual(numpy.linalg.norm(st.transform-st.inflate_old(p)), 0.0,4)
+    def test_inflate_old_vs_new_3(self):
+        p=[0,12,0,0,0,numpy.pi/3]
+        st=SingleTransform(p)
+        self.assertAlmostEqual(numpy.linalg.norm(st.transform-st.inflate_old(p)), 0.0,4)
+    def test_inflate_old_vs_new_4(self):
+        p=[0,0,1,numpy.pi/5,0,0]
+        st=SingleTransform(p)
+        self.assertAlmostEqual(numpy.linalg.norm(st.transform-st.inflate_old(p)), 0.0,4)
+
 
 if __name__ == '__main__':
     import rostest

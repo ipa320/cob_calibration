@@ -1,0 +1,4 @@
+float32 Percent_done
+int32 Samples_left
+int32 Camera_samples
+int32 Kinematic_samples

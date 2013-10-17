@@ -1,0 +1,10 @@
+reference:
+    name: cam3d
+    topic: /cam3d/rgb/image_color
+    file_prefix: kinect_
+    frame_id: /head_cam3d_link
+    property: cam3d
+
+#don't specify an empty "further", due to marshalling error
+#further:
+

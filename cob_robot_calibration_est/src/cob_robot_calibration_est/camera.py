@@ -31,7 +31,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import numpy
-from numpy import matrix, array, vsplit, sin, cos, reshape, ones
+from numpy import matrix, array, vsplit, sin, cos, reshape, ones, append
 import rospy
 
 
@@ -84,7 +84,8 @@ class RectifiedCamera:
         N = pts.shape[1]
 
         # Reshape P_list into an actual matrix
-        P = reshape( matrix(P_list, float), (3,4) )
+        P = reshape( matrix(P_list, float), (3,3) )
+        P = append(P.T, [[0,0,0]], axis=0).T
 
         # Update the baseline by the "baseline_shift"
         P[0,3] = P[0,3] + self._config['baseline_shift']

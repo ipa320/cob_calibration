@@ -41,9 +41,10 @@
 #      /
 #   root
 
-from sensor_msgs.msg import JointState
+#from sensor_msgs.msg import JointState
 from numpy import matrix
 import numpy
+import tf.transformations
 
 
 class FullChainRobotParams:
@@ -54,46 +55,100 @@ class FullChainRobotParams:
     #   - chain_id: Chain ID for the dh_chain
     #   - dh_link_num: Specifies which dh elem should be the last one to apply.
     #   - after_chain: List of transform ids to apply after the chain
-    def __init__(self, config_dict):
+    def __init__(self, config_dict, configuration):
         self._config_dict = config_dict
         self.calc_block = FullChainCalcBlock()
+        self._full_config = configuration
+        self.build_chains(self._config_dict["chains"])
+
+    def build_chains(self, chain_ids):
+        self.chains = [None] * len(chain_ids)
+        for chain in self._full_config["chains"]:
+            if chain["chain_id"] in chain_ids:
+                idx = chain_ids.index(chain["chain_id"])
+                self.chains[idx] = SingleChainCalc(chain)
 
     def update_config(self, robot_params):
         # for transform_name in self._config_dict["before_chain"]:
         #     print "transform_name: ", transform_name
         # for transform_name2 in robot_params.transforms:
         #     print "transform_name2: ", transform_name2
-        before_chain_Ts = [robot_params.transforms[transform_name] for transform_name in self._config_dict["before_chain"]]
-#        if self._config_dict["chain_id"] == 'NULL':
-        if self._config_dict["chain_id"] == None:
-            chain = None
-            dh_link_num = None
-        else:
-#            print "self._config_dict[chain_id] ", self._config_dict["chain_id"]
-            chain           = robot_params.dh_chains[ self._config_dict["chain_id"] ]
-            dh_link_num     = self._config_dict["dh_link_num"]
-        after_chain_Ts  = [robot_params.transforms[transform_name] for transform_name in self._config_dict["after_chain"]]
-        self.calc_block.update_config(before_chain_Ts, chain, dh_link_num, after_chain_Ts)
+        for c in self.chains:
+            c.update_config(robot_params)
 
-class FullChainCalcBlock:
-    def update_config(self, before_chain_Ts, chain, dh_link_num, after_chain_Ts):
-        self._before_chain_Ts = before_chain_Ts
-        self._chain = chain
-        self._dh_link_num = dh_link_num
-        self._after_chain_Ts = after_chain_Ts
+        before_chain_Ts = [robot_params.transforms[transform_name]
+                           for transform_name in self._config_dict["before_chain"]]
+        after_chain_Ts = [robot_params.transforms[transform_name]
+                          for transform_name in self._config_dict["after_chain"]]
 
-    def fk(self, chain_state):
+        self.calc_block.update_config(
+            self.chains, before_chain_Ts, after_chain_Ts)
+
+
+class SingleChainCalc:
+    def __init__(self, config_dict):
+        self._config_dict = config_dict
+
+    def update_config(self, robot_params):
+        self._before_chain_Ts = [robot_params.transforms[transform_name]
+                                 for transform_name in self._config_dict["before_chain"]]
+        self._after_chain_Ts = [robot_params.transforms[transform_name]
+                                for transform_name in self._config_dict["after_chain"]]
+        self._chain = robot_params.dh_chains[self._config_dict["chain_id"]]
+
+    def fk(self, joint_states):
         pose = matrix(numpy.eye(4))
+        #trans = transformation.translation
+        #rot = transformation.rotation
 
         # Apply the 'before chain' transforms
         for before_chain_T in self._before_chain_Ts:
             pose = pose * before_chain_T.transform
 
-        # Apply the DH Chain
-        if self._chain is not None:
-            dh_T = self._chain.fk(chain_state, self._dh_link_num)
-            pose = pose * dh_T
+        # Apply the Chain
 
+        #euler = tf.transformations.euler_from_quaternion(rot)
+        #mat = tf.transformations.compose_matrix(
+            #translate=trans, angles=euler)
+
+        #pose = pose * mat
+        #pose
+        pose *= self._chain.fk(joint_states)
+
+
+        # Apply the 'after chain' transforms
+        for after_chain_T in self._after_chain_Ts:
+            pose = pose * after_chain_T.transform
+
+        return pose
+
+    def __getitem__(self, key):
+        return self._config_dict[key]
+
+
+class FullChainCalcBlock:
+    def update_config(self, chains, before_chain_Ts, after_chain_Ts):
+        self._before_chain_Ts = before_chain_Ts
+        self._after_chain_Ts = after_chain_Ts
+        self._chains = chains
+        self._chain_ids = [c['chain_id'] for c in self._chains]
+
+        #print "before: ", self._before_chain_Ts
+        #print "chains: ", self._chain_ids
+        #print "after: ", self._after_chain_Ts
+
+    def fk(self, m_chain):
+        pose = matrix(numpy.eye(4))
+
+        # Apply the 'before chain' transforms
+        for before_chain_T in self._before_chain_Ts:
+            pose = pose * before_chain_T.transform
+        # Apply the Chain
+
+        for chain in self._chains:
+            for joint_state in m_chain:
+                if joint_state.header.frame_id == chain._config_dict["chain_id"]:
+                    pose *= chain.fk(joint_state)
         # Apply the 'after chain' transforms
         for after_chain_T in self._after_chain_Ts:
             pose = pose * after_chain_T.transform

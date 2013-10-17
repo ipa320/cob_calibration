@@ -1,0 +1,8 @@
+pattern_size: 9x6
+square_size: 0.03
+checkerboards:
+  cb_9x6:
+    corners_x: 9
+    corners_y: 6
+    spacing_x: 0.03
+    spacing_y: 0.03

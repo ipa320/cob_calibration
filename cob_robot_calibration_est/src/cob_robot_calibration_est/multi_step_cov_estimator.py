@@ -42,7 +42,6 @@ import numpy
 import rosbag
 import yaml
 import os.path
-import numpy
 
 import stat
 import os
@@ -132,6 +131,9 @@ def load_requested_sensors(all_sensors_dict, requested_sensors):
     '''
     all_sensor_types = list(set([x['sensor_type'] for x in all_sensors_dict.values()]))
     cur_sensors = dict([(x,[]) for x in all_sensor_types])
+    for k,sensor in all_sensors_dict.iteritems():
+        if sensor['sensor_type']=='chains':
+            requested_sensors+=[k]
     for requested_sensor_id in requested_sensors:
         # We need to now find requested_sensor_id in our library of sensors
         if requested_sensor_id in all_sensors_dict.keys():

@@ -36,6 +36,7 @@ from cob_robot_calibration_est.sensors import chain_sensor, camera_chain_sensor
 from numpy import concatenate
 from numpy import zeros, cumsum, matrix, array
 
+
 def block_diag(m_list):
     '''
     Given a list of matricies.  Combine into a larger, block diagonal matrix. This really should
@@ -44,13 +45,14 @@ def block_diag(m_list):
     # Must be square
     for m in m_list:
         assert(m.shape[0] == m.shape[1])
-    m_sizes = [m.shape[0] for m in m_list ]
-    end_ind   = list(cumsum(m_sizes))
+    m_sizes = [m.shape[0] for m in m_list]
+    end_ind = list(cumsum(m_sizes))
     start_ind = [0] + end_ind[0:-1]
-    result = zeros( [end_ind[-1], end_ind[-1] ] )
+    result = zeros([end_ind[-1], end_ind[-1]])
     for first, last, m in zip(start_ind, end_ind, m_list):
         result[first:last, first:last] = m
     return matrix(result)
+
 
 class MultiSensor:
     '''
@@ -61,21 +63,24 @@ class MultiSensor:
         self._sensor_configs = sensor_configs
         self.sensors = []
         self.checkerboard = "NONE"
+        #print "in MultiSensor"
+        #print self._sensor_configs
 
     def sensors_from_message(self, msg):
         sensors = []
 
-#        sensor_type = 'tilting_lasers'
-#        if sensor_type in self._sensor_configs.keys():
-#            cur_bundler = tilting_laser_sensor.TiltingLaserBundler( self._sensor_configs[sensor_type] )
-#            cur_sensors = cur_bundler.build_blocks(msg)
-#            sensors.extend(cur_sensors)
-#        else:
-#            print "[%s] section doesn't exist. Skipping"
+       #sensor_type = 'tilting_lasers'
+       #if sensor_type in self._sensor_configs.keys():
+           #cur_bundler = tilting_laser_sensor.TiltingLaserBundler( self._sensor_configs[sensor_type] )
+           #cur_sensors = cur_bundler.build_blocks(msg)
+           #sensors.extend(cur_sensors)
+       #else:
+           #print "[%s] section doesn't exist. Skipping"
 
-        sensor_type = 'chains'
+        sensor_type = 'sensor_chains'
         if sensor_type in self._sensor_configs.keys():
-            cur_bundler = chain_sensor.ChainBundler( self._sensor_configs[sensor_type] )
+            cur_bundler = chain_sensor.ChainBundler(
+                self._sensor_configs)
             cur_sensors = cur_bundler.build_blocks(msg)
             sensors.extend(cur_sensors)
         else:
@@ -83,7 +88,8 @@ class MultiSensor:
 
         sensor_type = 'camera_chains'
         if sensor_type in self._sensor_configs.keys():
-            cur_bundler = camera_chain_sensor.CameraChainBundler( self._sensor_configs[sensor_type] )
+            cur_bundler = camera_chain_sensor.CameraChainBundler(
+                self._sensor_configs)
             cur_sensors = cur_bundler.build_blocks(msg)
             sensors.extend(cur_sensors)
         else:
@@ -93,29 +99,35 @@ class MultiSensor:
         self.sensors = sensors
         self.checkerboard = msg.target_id
 
-
     def update_config(self, robot_params):
+        #import code
+        #code.interact(local=locals())
         for sensor in self.sensors:
             sensor.update_config(robot_params)
 
     def compute_residual(self, target_pts):
-        r_list = [sensor.compute_residual(target_pts) for sensor in self.sensors]
+        r_list = [sensor.compute_residual(target_pts)
+                  for sensor in self.sensors]
         if len(r_list) == 0:
             return array([])
 
-        r = concatenate(r_list,0)
+        #import code
+        #code.interact(local=locals())
+        r = concatenate(r_list, 0)
         return r
 
     def compute_residual_scaled(self, target_pts):
-        r_list = [sensor.compute_residual_scaled(target_pts) for sensor in self.sensors]
+        r_list = [sensor.compute_residual_scaled(
+            target_pts) for sensor in self.sensors]
         if len(r_list) == 0:
             return array([])
 
-        r = concatenate(r_list,0)
+        r = concatenate(r_list, 0)
         return r
 
     def compute_marginal_gamma_sqrt(self, target_pts):
-        gamma_sqrt_list = [sensor.compute_marginal_gamma_sqrt(target_pts) for sensor in self.sensors]
+        gamma_sqrt_list = [sensor.compute_marginal_gamma_sqrt(
+            target_pts) for sensor in self.sensors]
         if len(gamma_sqrt_list) == 0:
             return matrix([])
         gamma_sqrt = block_diag(gamma_sqrt_list)
