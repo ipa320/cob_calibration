@@ -1,0 +1,99 @@
+
+<!--
+	This is a copy of the cal_obj.urdf where the the collisions are removed and the colours are made white.
+	Spawn this for verifying the detected calibration object pose.
+-->
+
+<robot name="cal_obj_pose_verification">
+
+	<link name="checkerboard">
+		<visual>
+			<origin xyz="0 0 0.2025" />
+			<geometry>
+				<box size="0.4 0.3 0.005"/>
+			</geometry>
+		</visual>
+		<inertial>
+			<origin xyz="0 0 0.2025" />
+			<mass value="0.5" />
+			<inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0" />
+		</inertial>
+	</link>
+	<gazebo reference="checkerboard">
+		<material>Gazebo/White</material>
+		<turnGravityOff>true</turnGravityOff>
+	</gazebo>
+
+	<joint name="cylinder_1_joint" type="fixed">
+		<parent link="checkerboard" />
+		<child link="cylinder_1" />
+		<origin xyz="0 0 0" />
+	</joint>
+
+	<link name="cylinder_1">
+		<visual>
+			<origin xyz="0.1732 0 0.1" />
+			<geometry>
+				<cylinder length="0.2" radius="0.09" />
+			</geometry>
+		</visual>
+		<inertial>
+			<origin xyz="0.1732 0 0.1" />
+			<mass value="1" />
+			<inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0" />
+		</inertial>
+	</link>
+	<gazebo reference="cylinder_1">
+		<material>Gazebo/White</material>
+		<turnGravityOff>true</turnGravityOff>
+	</gazebo>
+
+	<joint name="cylinder_2_joint" type="fixed">
+		<parent link="checkerboard" />
+		<child link="cylinder_2" />
+		<origin xyz="0 0 0" />
+	</joint>
+
+	<link name="cylinder_2">
+		<visual>
+			<origin xyz="-0.1732 0.2 0.1" />
+			<geometry>
+				<cylinder length="0.2" radius="0.06" />
+			</geometry>
+		</visual>
+		<inertial>
+			<origin xyz="-0.1732 0.2 0.1" />
+			<mass value="1" />
+			<inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0" />
+		</inertial>
+	</link>
+	<gazebo reference="cylinder_2">
+		<material>Gazebo/White</material>
+		<turnGravityOff>true</turnGravityOff>
+	</gazebo>
+
+	<joint name="cylinder_3_joint" type="fixed">
+		<parent link="checkerboard" />
+		<child link="cylinder_3" />
+		<origin xyz="0 0 0" />
+	</joint>
+
+	<link name="cylinder_3">		
+		<visual>
+			<origin xyz="-0.1732 -0.2 0.1" />
+			<geometry>
+				<cylinder length="0.2" radius="0.03" />
+			</geometry>
+		</visual>
+		<inertial>
+			<origin xyz="-0.1732 -0.2 0.1" />
+			<mass value="1" />
+			<inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0" />
+		</inertial>
+	</link>
+	<gazebo reference="cylinder_3">
+		<material>Gazebo/White</material>
+		<turnGravityOff>true</turnGravityOff>
+	</gazebo>
+
+</robot>

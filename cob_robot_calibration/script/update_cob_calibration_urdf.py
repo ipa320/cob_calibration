@@ -102,7 +102,7 @@ class UpdateCobCalibrationUrdf():
         # and updated in the urdf] and their corresponding property name prefixes as used in calibration.urdf.xarco
         self.tfs2update = {'arm_0_link':                        'offset_arm_',
                            'torso_base_link':                      'offset_torso_',
-                           'cam_reference_link':          'offset_cam_l_'
+                           'head_cam_reference_link':          'offset_cam_reference_'
                            #'head_color_camera_r_joint':          'cam_r_',
                             #'head_cam3d_link': 'offset_cam3d_'
         }

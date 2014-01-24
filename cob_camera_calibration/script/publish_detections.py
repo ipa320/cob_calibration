@@ -17,31 +17,41 @@ from colorsys import hsv_to_rgb
 
 class Cb_marker_publish():
 
-    def __init__(self, cb):
+    def __init__(self):
         rospy.init_node(NODE)
-        self.cb = cb
+        pattern = rospy.get_param(
+            '~calibration_pattern')
+        self.cameras = rospy.get_param(
+            '~cameras')
+        pattern_string = pattern["pattern_size"].split("x")
+        pattern_size = (int(pattern_string[0]), int(pattern_string[1]))
+        cb =Checkerboard(pattern_size, pattern["square_size"])
+
         self.detector = CheckerboardDetector(cb)
 
         self.bridge = CvBridge()
 
         self.pub = rospy.Publisher("cb_detections", MarkerArray)
-        self.topics = ["/stereo/left/image_raw",
-                       "/stereo/right/image_raw", "/cam3d/rgb/image_color"]
+        self.topics = [self.cameras["reference"]["topic"]]
+        for camera in self.cameras["further"]:
+            self.topics.append(camera["topic"])
 
         self.info_topics = [t.replace("image_raw","camera_info") for t in self.topics]
         self.info_topics = [t.replace("image_color","camera_info") for t in self.info_topics]
+        print self.topics
         print self.info_topics
 
         self.images = dict.fromkeys(self.topics)
         self.camera_infos = dict.fromkeys(self.topics)
         self.colors = [ColorRGBA() for i in range(len(self.topics))]
         hue_values = np.linspace(0, 1, len(self.topics)+1)
-        for c, hue in zip(self.colors, hue_values):
+        for c, hue, topic in zip(self.colors, hue_values, self.topics):
             c.a = 1
             (c.r, c.g, c.b) = hsv_to_rgb(hue, 1, 1)
+            print "Listening to: %s - Color RGB: (%d, %d, %d)"%(topic, c.r*255, c.g*255, c.b*255)
 
         self.points = []
-        for point in self.cb.get_pattern_points():
+        for point in cb.get_pattern_points():
             p = Point()
             p.x = point[0]
             p.y = point[1]
@@ -71,6 +81,8 @@ class Cb_marker_publish():
 
     def run(self):
         rate = rospy.Rate(10)
+        br = tf.TransformBroadcaster()
+        print "Everything up and running"
 
         while not rospy.is_shutdown():
             # put code here
@@ -113,10 +125,15 @@ class Cb_marker_publish():
                     msg.color = c
                     msg.points = self.points
                     msgs.markers.append(msg)
+                    br.sendTransform(p[1],
+                     q,
+                     rospy.Time.now(),
+                     "cb",
+                     msg.header.frame_id)
             self.pub.publish(msgs)
 
             rate.sleep()
 
 if __name__ == "__main__":
-    node = Cb_marker_publish(Checkerboard((9, 6), 0.03))
+    node = Cb_marker_publish()
     node.run()

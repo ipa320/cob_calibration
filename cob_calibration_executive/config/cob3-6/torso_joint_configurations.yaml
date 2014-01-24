@@ -1,0 +1,20 @@
+#joint_names: ["torso_lower_neck_tilt_joint","torso_pan_joint","torso_upper_neck_tilt_joint"]
+
+# calibration positions
+calib_home: [[0.0,0.0,0.0]]
+calib_left: [[0.0,-0.1,0.0]]
+calib_right: [[0.0,0.1,0.0]]
+calib_left2: [[0.0,-0.125,0.0]]
+calib_right2: [[0.0,0.125,0.0]]
+
+calib_back: [[0.075,0.0,0.125]]
+calib_back_left: [[0.075,-0.1,0.125]]
+calib_back_right: [[0.075,0.1,0.125]]
+calib_back_left2: [[0.075,-0.125,0.125]]
+calib_back_right2: [[0.075,0.125,0.125]]
+
+calib_front: [[-0.075,0.0,-0.1]]
+calib_front_left: [[-0.075,-0.1,-0.1]]
+calib_front_right: [[-0.075,0.1,-0.1]]
+calib_front_left2: [[-0.075,-0.125,-0.1]]
+calib_front_right2: [[-0.075,0.125,-0.1]]
