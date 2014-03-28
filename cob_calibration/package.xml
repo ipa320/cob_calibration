@@ -1,0 +1,36 @@
+<package>
+  <name>cob_calibration</name>
+  <version>0.5.0</version>
+  <description>This is a repository for Care-O-bot calibration packages.</description>
+  <license>BSD</license>
+  <license>LGPL</license>
+
+  <url type="website">http://ros.org/wiki/cob_calibration</url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <author>Sebastian Haug</author>
+  <author>Jannik Abbenseth</author>
+  <author>Daniel Maeki</author>
+  <author email="fmw@ipa.fhg.de">Florian Weisshardt</author>
+  <author email="fxm@ipa.fhg.de">Felix Messmer</author>
+  <maintainer email="fxm@ipa.fhg.de">Felix Messmer</maintainer>
+
+  
+  <buildtool_depend>catkin</buildtool_depend>
+  <run_depend>cob_calibration_config</run_depend>
+  <run_depend>cob_calibration_executive</run_depend>
+  <run_depend>cob_calibration_msgs</run_depend>
+  <run_depend>cob_calibration_urdf_update</run_depend>
+  <run_depend>cob_camera_calibration</run_depend>
+  <run_depend>cob_image_capture</run_depend>
+  <run_depend>cob_laser_calibration</run_depend>
+  <run_depend>cob_robot_calibration</run_depend>
+  <run_depend>cob_robot_calibration_est</run_depend>
+  <run_depend>cob_torso_calibration</run_depend>
+  <run_depend>urdf_parser_py</run_depend>
+
+
+  <export>
+    <metapackage/>
+  </export>
+</package>
