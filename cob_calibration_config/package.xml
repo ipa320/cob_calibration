@@ -1,0 +1,21 @@
+<package>
+  <name>cob_calibration_config</name>
+  <version>0.5.0</version>
+  <description>cob_calibration_config</description>
+
+  <license>BSD</license>
+
+  <url type="website">http://ros.org/wiki/cob_calibration_config</url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <maintainer email="fxm@ipa.fhg.de">Felix Messmer</maintainer>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <!--run_depend>cob_calibration_data</run_depend-->
+
+
+  <export>
+
+  </export>
+</package>
+
