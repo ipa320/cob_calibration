@@ -1,0 +1,38 @@
+<package>
+  <name>cob_robot_calibration_est</name>
+  <version>0.5.0</version>
+  <description>
+    The cob_robot_calibration_est package is adapted from the electric version of
+    pr2_calibration_estimation. It runs optimizations to estimate kinematic parameters
+    of Care-O-bot.
+  </description>
+
+  <license>LGPL</license>
+
+  <url type="website">http://ros.org/wiki/cob_robot_calibration_est</url>
+  <!-- <url type="bugtracker"></url> -->
+  
+  <author>Vijay Pradeep, Sebastian Haug</author>
+  <maintainer email="fxm@ipa.fhg.de">Felix Messmer</maintainer>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  
+  <run_depend>rospy</run_depend>
+  <run_depend>rostest</run_depend>
+
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>kinematics_msgs</run_depend>
+  <run_depend>visualization_msgs</run_depend>
+
+  <run_depend>cob_calibration_msgs</run_depend>
+
+  <run_depend>python-scipy</run_depend>
+
+
+  <export>
+
+  </export>
+</package>
+
+
+
