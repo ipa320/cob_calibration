@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+
+  <node name="$(anon rviz)" pkg="rviz" type="rviz" respawn="false" args="-d $(find cob_calibration_executive)/verify_calibration.rviz" output="screen"/>
+
+</launch>
