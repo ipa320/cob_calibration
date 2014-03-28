@@ -27,7 +27,7 @@
   <run_depend>pr2_controllers_msgs</run_depend>
 
   <run_depend>cob_script_server</run_depend>
-  <run_depend>cob_calibration_data'/>
+  <run_depend>cob_calibration_data</run_depend>
 
   <run_depend>cob_calibration_msgs</run_depend>
   <run_depend>cob_camera_calibration</run_depend>

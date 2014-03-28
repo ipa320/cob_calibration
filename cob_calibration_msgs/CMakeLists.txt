@@ -33,7 +33,7 @@ find_package(catkin REQUIRED COMPONENTS message_generation std_msgs geometry_msg
  add_message_files(DIRECTORY msg
    FILES
    CalibrationPattern.msg
-   CameraMeassurement.msg
+   CameraMeasurement.msg
    ChainMeasurement.msg
    ImagePoint.msg
    Progress.msg
