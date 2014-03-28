@@ -1,0 +1,36 @@
+<package>
+  <name>cob_calibration_msgs</name>
+  <version>0.5.0</version>
+  <description>
+    This package is a slightly modified version of the electric version of calibration_msgs.
+    It contains message definitions for storing calibration samples and was created
+    because the calibration_msgs api in electric is unstable.
+  </description>
+
+  <license>BSD</license>
+
+  <url type="website">http://ros.org/wiki/cob_calibration_msgs</url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <author>Vijay Pradeep, Sebastian Haug</author>
+  <maintainer email="fxm@ipa.fhg.de">Felix Messmer</maintainer>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>message_generation</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>pr2_controllers_msgs</build_depend>
+
+  <run_depend>message_runtime</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>pr2_controllers_msgs</run_depend>
+
+  <export>
+
+  </export>
+</package>
+
+
