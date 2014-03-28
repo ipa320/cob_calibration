@@ -1,8 +1,10 @@
 <package>
   <name>cob_calibration</name>
   <version>0.5.0</version>
-  <description>This is a repository for Care-O-bot calibration packages.</description>
-  <license>BSD</license>
+  <description>
+    This is a repository for Care-O-bot calibration packages.
+  </description>
+
   <license>LGPL</license>
 
   <url type="website">http://ros.org/wiki/cob_calibration</url>

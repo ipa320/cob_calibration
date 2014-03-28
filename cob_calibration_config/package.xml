@@ -1,9 +1,11 @@
 <package>
   <name>cob_calibration_config</name>
   <version>0.5.0</version>
-  <description>cob_calibration_config</description>
+  <description>
+    This package contains all required configuration files for running the calibration.
+  </description>
 
-  <license>BSD</license>
+  <license>LGPL</license>
 
   <url type="website">http://ros.org/wiki/cob_calibration_config</url>
   <!-- <url type="bugtracker"></url> -->
