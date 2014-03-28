@@ -9,6 +9,6 @@ catkin_package()
 
 
 ###install tags
-install(DIRECTORY launch
-  DESTINATIN ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
+#install(DIRECTORY launch
+  #DESTINATIN ${CATKIN_PACKAGE_SHARE_DESTINATION}
+#)

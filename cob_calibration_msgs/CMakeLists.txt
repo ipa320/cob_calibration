@@ -50,12 +50,12 @@ find_package(catkin REQUIRED COMPONENTS message_generation std_msgs geometry_msg
 
 # Generate added messages and services with any dependencies listed here
  generate_messages(
-   DEPENDENCIES std_msgs geometry_msgs sensor_msgs pr2_controller_msgs
+   DEPENDENCIES std_msgs geometry_msgs sensor_msgs pr2_controllers_msgs
  )
 
 
 catkin_package(
-    CATKIN_DEPENDS message_runtime std_msgs geometry_msgs sensor_msgs pr2_controller_msgs
+    CATKIN_DEPENDS message_runtime std_msgs geometry_msgs sensor_msgs pr2_controllers_msgs
     DEPENDS # TODO
     INCLUDE_DIRS # TODO
     LIBRARIES # TODO
