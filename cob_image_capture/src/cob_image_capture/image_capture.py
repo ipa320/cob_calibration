@@ -61,7 +61,7 @@ import rospy
 
 import cv
 from sensor_msgs.msg import Image
-from cob_calibration_srvs.srv import Capture, CaptureResponse
+from cob_calibration_msgs.srv import Capture, CaptureResponse
 from cv_bridge import CvBridge, CvBridgeError
 
 

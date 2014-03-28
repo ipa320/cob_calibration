@@ -62,7 +62,7 @@ roslib.load_manifest(PKG)
 import rospy
 
 from simple_script_server import simple_script_server
-from cob_calibration_srvs.srv import Visible, Capture
+from cob_calibration_msgs.srv import Visible, Capture
 from cob_calibration_msgs.msg import Progress
 import yaml
 import tf

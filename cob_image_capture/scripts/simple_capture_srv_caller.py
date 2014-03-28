@@ -58,7 +58,7 @@ NODE = 'simple_capture_srv_caller'
 import roslib; roslib.load_manifest(PKG)
 import rospy
 
-from cob_calibration_srvs.srv import Capture
+from cob_calibration_msgs.srv import Capture
 
 SERVICE="/image_capture/capture"
 

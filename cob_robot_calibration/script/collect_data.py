@@ -66,7 +66,7 @@ from sensor_msgs.msg import Image
 from cob_calibration_msgs.msg import RobotMeasurement, ChainMeasurement, CameraMeasurement, ImagePoint
 from cv_bridge import CvBridge
 
-from cob_calibration_srvs.srv import Capture, CaptureResponse
+from cob_calibration_msgs.srv import Capture, CaptureResponse
 from cob_camera_calibration import Checkerboard, CheckerboardDetector, cv2util
 
 from pr2_controllers_msgs.msg import JointTrajectoryControllerState

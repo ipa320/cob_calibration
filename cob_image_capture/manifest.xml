@@ -15,7 +15,7 @@
   <depend package="sensor_msgs"/>
   <depend package="message_filters"/>
 
-  <depend package="cob_calibration_srvs"/>
+  <depend package="cob_calibration_msgs"/>
 
   <rosdep name="opencv2"/>
 </package>

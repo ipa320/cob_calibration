@@ -59,7 +59,7 @@ import roslib; roslib.load_manifest(PKG)
 import rospy
 
 from simple_script_server import simple_script_server
-from cob_calibration_srvs.srv import Capture
+from cob_calibration_msgs.srv import Capture
 
 def main():
     rospy.init_node(NODE)

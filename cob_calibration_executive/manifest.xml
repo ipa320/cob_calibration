@@ -24,7 +24,7 @@
   <depend package='cob_camera_calibration'/>
   <depend package='cob_robot_calibration_est'/>
   
-  <depend package='cob_calibration_srvs'/>
+  <depend package='cob_calibration_msgs'/>
   <depend package='urdf_parser_py'/>
 
 

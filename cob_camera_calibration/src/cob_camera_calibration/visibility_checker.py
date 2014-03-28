@@ -61,7 +61,7 @@ import rospy
 
 from cob_camera_calibration import Checkerboard, CheckerboardDetector, cv2util
 from sensor_msgs.msg import Image
-from cob_calibration_srvs.srv import *
+from cob_calibration_msgs.srv import *
 from cv_bridge import CvBridge, CvBridgeError
 
 
