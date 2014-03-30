@@ -14,10 +14,10 @@ catkin_package()
 #)
 
 install(DIRECTORY launch
-  DESTINATIN ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
-install(PROGRAMS src/chessboard_positions_broadcast.py
+install(PROGRAMS src/chessboard_position_broadcast.py
                  src/collect_robot_calibration_data.py
                  src/collect_stereo_data.py
                  src/generate_positions.py
@@ -35,7 +35,7 @@ install(PROGRAMS test/pan_tilt_angle_test.py
 install(PROGRAMS src/utils/generate_calibration_positions.py
                  src/utils/joint_state_listener_arm.py
                  src/utils/joint_state_listener_torso.py
-                 src/kinematics.py
+                 src/utils/kinematics.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}/src/utils
 )
 

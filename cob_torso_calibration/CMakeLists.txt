@@ -10,7 +10,7 @@ catkin_package()
 
 ###install tags
 install(DIRECTORY launch
-  DESTINATIN ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
 install(PROGRAMS src/calibration_lower_upper_neck.py

@@ -10,5 +10,5 @@ catkin_package()
 
 ###install tags
 install(PROGRAMS examples/display_urdf
-  DESTINATIN ${CATKIN_PACKAGE_BIN_DESTINATION}/examples
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}/examples
 )

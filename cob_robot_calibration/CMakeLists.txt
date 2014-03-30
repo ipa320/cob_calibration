@@ -10,7 +10,7 @@ catkin_package()
 
 ###install tags
 install(DIRECTORY launch
-  DESTINATIN ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
 
 #install(DIRECTORY config
@@ -30,5 +30,5 @@ install(PROGRAMS test/test_calibration_urdf_updater.py
 )
 
 install(DIRECTORY test/data
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATiON}/test
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/test
 )

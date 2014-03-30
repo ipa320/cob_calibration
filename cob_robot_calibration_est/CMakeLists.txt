@@ -11,7 +11,7 @@ catkin_package()
 ###install tags
 install(PROGRAMS src/multi_step_cov_estimator.py
                  src/multi_step_estimator.py
-  DESTINATIN ${CATKIN_PACKAGE_BIN_DESTINATION}/src
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}/src
 )
 
 install(PROGRAMS test/camera_chain_sensor_unittest.py
@@ -28,7 +28,7 @@ install(PROGRAMS test/camera_chain_sensor_unittest.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}/test
 )
 
-install(DIRECTROY test/data
+install(DIRECTORY test/data
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/test
 )
 
