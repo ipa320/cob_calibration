@@ -27,9 +27,9 @@ install(PROGRAMS src/chessboard_positions_broadcast.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}/src
 )
 
-install(PROGRAMS src/test/pan_tilt_angle_test.py
-                 src/torso_ik_test.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}/src/test
+install(PROGRAMS test/pan_tilt_angle_test.py
+                 test/torso_ik_test.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}/test
 )
 
 install(PROGRAMS src/utils/generate_calibration_positions.py
