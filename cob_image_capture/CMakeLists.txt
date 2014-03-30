@@ -9,6 +9,12 @@ catkin_package()
 
 
 ###install tags
-#install(DIRECTORY launch
-  #DESTINATIN ${CATKIN_PACKAGE_SHARE_DESTINATION}
-#)
+install(DIRECTORY launch
+  DESTINATIN ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
+install(PROGRAMS src/image_capture.py
+                 src/simple_capture_srv_caller.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}/src
+)
+
