@@ -69,7 +69,7 @@ from cob_camera_calibration import Checkerboard, CheckerboardDetector, cv2util
 from cv_bridge import CvBridge
 from simple_script_server import simple_script_server
 
-from torso_state_calculation import TorsoState
+from cob_torso_calibration import TorsoState
 
 
 def prettyprint(array):

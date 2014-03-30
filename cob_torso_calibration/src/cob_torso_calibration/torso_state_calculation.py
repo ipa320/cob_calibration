@@ -54,92 +54,91 @@
 #
 #################################################################
 PKG = 'cob_torso_calibration'
-NODE = 'update_cob_torso_calibration_urdf'
+NODE = 'torso_state_calculation'
 import roslib
 roslib.load_manifest(PKG)
 import rospy
-#import tf
-#import numpy
+import numpy as np
+
+from pr2_controllers_msgs.msg import JointTrajectoryControllerState
 
 
-#import sys
-#import yaml
-#from math import pi
-#from xml.dom import minidom, Node
-
-
-from cob_robot_calibration import calibration_urdf_updater
-from torso_state_calculation import JointState
-
-
- # Default values for files and debug output
-DEFAULT_CALIB_URDF_XACRO_IN = "/tmp/cal/calibration.urdf.xacro"
-DEFAULT_CALIB_URDF_XACRO_OUT = "/tmp/cal/calibration.urdf.xacro_updated"
-ENABLE_DEBUG_OUTPUT = True
-
-
-class UpdateCobTorsoCalibrationUrdf():
+class TorsoState():
     '''
     @summary: Updates calibration urdf file with calibration results
 
     The results of the cob calibration process are read from the calibrated_system yaml
     file and propagated to the urdf robot calibration file.
     '''
+    maxcounter = 100
+    counter = maxcounter
+    armcounter = maxcounter
 
     def __init__(self):
         '''
         Get file locations from parameter server (or use defaults) and setup dictionary
         which specifies which values are updated.
         '''
-        rospy.init_node(NODE)
-        print "==> started " + NODE
+        self.torsoPositions = None
+        rospy.Subscriber("/torso_controller/state",
+                         JointTrajectoryControllerState, self.torso_callback)
 
-        # get file names from parameter server
-        self.file_urdf_in = rospy.get_param(
-            '~urdf_in', DEFAULT_CALIB_URDF_XACRO_IN)
-        self.file_urdf_out = rospy.get_param(
-            '~urdf_out', DEFAULT_CALIB_URDF_XACRO_OUT)
-        self.debug = rospy.get_param(
-            '~debug', ENABLE_DEBUG_OUTPUT)
+        self.armPositions = None
+        rospy.Subscriber("/arm_controller/state",
+                         JointTrajectoryControllerState, self.arm_callback)
 
-        self.ts = JointState()
-
-    def run(self):
+    def arm_callback(self, data):
         '''
-        Start the update process. Values are calculated from torso joint state. Therefore the actual torso jointstate copied to the output file
+        called when message in topic /torso_controller/state is received
         '''
+        if self.armPositions is None:
+            self.armPositions = np.array([list(data.actual.positions)])
+            return
 
-        attributes2update = {}
-        torso, arm = self.ts.calc_references(self.debug)
-        if not torso is None:
-            (X, Y, Z) = torso
-            attributes2update["def_torso_lower_neck_tilt_ref"] = X
-            attributes2update["def_torso_pan_ref"] = Y
-            attributes2update["def_torso_upper_neck_tilt_ref"] = Z
+        if self.armcounter < self.maxcounter:
 
-        if not arm is None:
-            (a1, a2, a3, a4, a5, a6, a7) = arm
-            attributes2update["arm_1_ref"] = a1
-            attributes2update["arm_2_ref"] = a2
-            attributes2update["arm_3_ref"] = a3
-            attributes2update["arm_4_ref"] = a4
-            attributes2update["arm_5_ref"] = a5
-            attributes2update["arm_6_ref"] = a6
-            attributes2update["arm_7_ref"] = a7
-        if self.debug:
-            print attributes2update
-        # update calibration xml based on attributes2update dict
-        urdf_updater = calibration_urdf_updater.CalibrationUrdfUpdater(
-            self.file_urdf_in, self.file_urdf_out, True)
-        urdf_updater.update_references(attributes2update)
+            self.armPositions = np.append(
+                self.armPositions, [list(data.actual.positions)], axis=0)
 
+            self.armcounter += 1
 
-if __name__ == "__main__":
-    # start main
-    print 'Saving results'
-    updateUrdf = UpdateCobTorsoCalibrationUrdf()
-    updateUrdf.run()
+    def torso_callback(self, data):
+        '''
+        called when message in topic /torso_controller/state is received
+        '''
+        if self.torsoPositions is None:
+            self.torsoPositions = np.array([list(data.actual.positions)])
+            return
 
-    # shutdown
-    rospy.signal_shutdown(rospy.Time.now())
-    print "==> done! exiting..."
+        if self.counter < self.maxcounter:
+            self.torsoPositions = np.append(
+                self.torsoPositions, [list(data.actual.positions)], axis=0)
+
+            self.counter += 1
+
+    def calc_references(self, debug=False):
+        '''
+        Wait for enough samples and calculate mean
+        '''
+        self.counter = 0
+        self.armcounter = 0
+        while self.counter < self.maxcounter:#or self.armcounter < self.maxcounter:
+            rospy.sleep(0.1)
+            print "waiting for samples", self.armcounter, self.counter
+
+        #if debug:
+            #print "Std Deviation for lower_neck_tilt is ", numpy.std(self.tlntr)
+            #print "Std Deviation for pan is ", numpy.std(self.tpr)
+            #print "Std Deviation for upper_neck_tilt is ", numpy.std(self.tuntr)
+
+        try:
+            arm=np.average(self.armPositions,0)
+        except:
+            arm=None
+        try:
+            torso=np.average(self.torsoPositions,0)
+        except:
+            torso=None
+        print torso, arm
+
+        return torso, arm
