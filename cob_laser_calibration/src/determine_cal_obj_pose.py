@@ -13,9 +13,9 @@ import rospy
 import tf
 from math import pi
 from sensor_msgs.msg import LaserScan
-from visualize_laser_scan import Get_laserscan, Visualize_laserscan
-from detect_cylinders import Detect_calibration_object
-from pose_to_checkerboard_points import Convert_cal_obj_pose
+from cob_laser_calibration import Get_laserscan, Visualize_laserscan
+from cob_laser_calibration import Detect_calibration_object
+from cob_laser_calibration import Convert_cal_obj_pose
 
 ### GLOBAL VARIABLES ###
 scanner_location = 'front'												# Specify 'front' or 'rear' for the location of the laser scanner
