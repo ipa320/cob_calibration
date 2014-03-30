@@ -2,7 +2,7 @@
 <launch>
 
   <!-- run stereo calibration of left and right camera -->
-  <node type="stereo_calibration.py" pkg="cob_camera_calibration" name="$(anon mono_calibration)" output="screen">
+  <node type="stereo_calibration.py" pkg="cob_camera_calibration" name="$(anon stereo_calibration)" output="screen">
     <param name="folder" value="/tmp/cal/intrinsic" />
     <rosparam param="calibration_pattern" file="$(find cob_calibration_config)/$(env ROBOT)/user_defined/calibration_pattern.yaml"/>
 
