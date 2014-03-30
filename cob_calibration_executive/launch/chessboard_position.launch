@@ -3,12 +3,8 @@
 
     <!-- run stereo calibration of left and right camera -->
     <node type="chessboard_position_broadcast.py" pkg="cob_calibration_executive" name="$(anon chessboard_broadcast)" output="screen">
-
-
         <param name="pattern_size"          value="9x6" />
         <param name="square_size"           value="0.03" />
-
-       
     </node>
 
 </launch>
