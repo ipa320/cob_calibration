@@ -60,7 +60,7 @@ roslib.load_manifest(PKG)
 import rospy
 import numpy as np
 
-from pr2_controllers_msgs.msg import JointTrajectoryControllerState
+from control_msgs.msg import JointTrajectoryControllerState
 
 
 class TorsoState():

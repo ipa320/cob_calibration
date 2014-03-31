@@ -24,7 +24,7 @@
   <run_depend>tf</run_depend>
   <run_depend>cv_bridge</run_depend>
   <run_depend>sensor_msgs</run_depend>
-  <run_depend>pr2_controllers_msgs</run_depend>
+  <run_depend>control_msgs</run_depend>
 
   <run_depend>cob_script_server</run_depend>
   <run_depend>cob_calibration_data</run_depend>
@@ -34,7 +34,7 @@
   <run_depend>cob_robot_calibration_est</run_depend>
   <run_depend>tf_conversions</run_depend>
 
-  <run_depend>pr2_controllers_msgs</run_depend>
+  <run_depend>control_msgs</run_depend>
   <run_depend>urdf_parser_py</run_depend>
   <run_depend>cob_calibration_urdf_update</run_depend>
 

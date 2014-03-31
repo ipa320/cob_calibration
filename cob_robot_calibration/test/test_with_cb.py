@@ -129,7 +129,7 @@ class IK():
             print "Can't get planning scene!"
 
     def callIK(self,pose_stamped, link):
-        from pr2_controllers_msgs.msg import JointTrajectoryControllerState
+        from control_msgs.msg import JointTrajectoryControllerState
 	msg=rospy.wait_for_message("/arm_controller/state", JointTrajectoryControllerState)
         req = GetPositionIKRequest()
         req.timeout = rospy.Duration(5)

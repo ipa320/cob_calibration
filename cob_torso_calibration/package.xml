@@ -21,7 +21,7 @@
   <run_depend>cob_camera_calibration</run_depend>
   <run_depend>cob_script_server</run_depend>
   <run_depend>cob_robot_calibration</run_depend>
-  <run_depend>pr2_controllers_msgs</run_depend>
+  <run_depend>control_msgs</run_depend>
 
 
   <export>

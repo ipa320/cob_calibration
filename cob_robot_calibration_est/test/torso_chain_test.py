@@ -12,7 +12,7 @@ from sensor_msgs.msg import JointState
 from cob_robot_calibration_est.full_chain import FullChainCalcBlock, FullChainRobotParams
 from cob_robot_calibration_est.robot_params import RobotParams
 import yaml
-from pr2_controllers_msgs.msg import JointTrajectoryControllerState
+from control_msgs.msg import JointTrajectoryControllerState
 import tf
 
 from numpy import *

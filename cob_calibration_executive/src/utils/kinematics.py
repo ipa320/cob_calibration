@@ -14,7 +14,7 @@ from std_msgs.msg import Header
 
 import tf
 
-from pr2_controllers_msgs.msg import JointTrajectoryControllerState
+from control_msgs.msg import JointTrajectoryControllerState
 
 
 

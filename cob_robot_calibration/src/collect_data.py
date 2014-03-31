@@ -69,7 +69,7 @@ from cv_bridge import CvBridge
 from cob_calibration_msgs.srv import Capture, CaptureResponse
 from cob_camera_calibration import Checkerboard, CheckerboardDetector, cv2util
 
-from pr2_controllers_msgs.msg import JointTrajectoryControllerState
+from control_msgs.msg import JointTrajectoryControllerState
 
 import tf
 CHECKERBOARD_NAME = "cb_9x6"

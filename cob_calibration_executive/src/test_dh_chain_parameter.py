@@ -64,7 +64,7 @@ import rospy
 from simple_script_server import simple_script_server
 import yaml
 from sensor_msgs.msg import JointState
-from pr2_controllers_msgs.msg import JointTrajectoryControllerState
+from control_msgs.msg import JointTrajectoryControllerState
 import tf
 import tf.transformations as tft
 from cob_robot_calibration_est.dh_chain import DhChain

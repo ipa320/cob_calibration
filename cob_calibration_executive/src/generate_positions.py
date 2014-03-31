@@ -62,7 +62,7 @@ import rospy
 
 from kinematics_msgs.srv import GetPositionIK, GetPositionIKRequest
 from geometry_msgs.msg import PoseStamped
-from pr2_controllers_msgs.msg import JointTrajectoryControllerState
+from control_msgs.msg import JointTrajectoryControllerState
 from moveit_msgs.msg import PositionIKRequest
 from moveit_msgs.srv import GetPositionIK as GetPositionIKMoveit
 

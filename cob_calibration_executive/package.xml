@@ -21,7 +21,7 @@
   <run_depend>sensor_msgs</run_depend> 
   <run_depend>kinematics_msgs</run_depend>
   <run_depend>geometry_msgs</run_depend>
-  <run_depend>pr2_controllers_msgs</run_depend>
+  <run_depend>control_msgs</run_depend>
   <run_depend>cob_calibration_msgs</run_depend>
   
   <run_depend>urdf_parser_py</run_depend>
