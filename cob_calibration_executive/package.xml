@@ -1,0 +1,42 @@
+<package>
+  <name>cob_calibration_executive</name>
+  <version>0.5.0</version>
+  <description>
+    The cob_calibration_executive package provides scripts to prepare Care-O-bot and to collect samples for the calibration steps.
+  </description>
+
+  <license>LGPL</license>
+
+  <url type="website">http://ros.org/wiki/cob_calibration_executive</url>
+  <!-- <url type="bugtracker"></url> -->
+  
+  <author>Sebastian Haug</author>
+  <author>Jannik Abbenseth</author>
+  <maintainer email="fxm@ipa.fhg.de">Felix Messmer</maintainer>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <run_depend>rospy</run_depend>
+  
+  <run_depend>sensor_msgs</run_depend> 
+  <run_depend>kinematics_msgs</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>control_msgs</run_depend>
+  <run_depend>cob_calibration_msgs</run_depend>
+  
+  <run_depend>urdf_parser_py</run_depend>
+  <run_depend>tf</run_depend>
+
+  <run_depend>cob_script_server</run_depend>
+  <run_depend>cob_default_robot_config</run_depend>
+
+  <run_depend>cob_camera_calibration</run_depend>
+  <run_depend>cob_robot_calibration_est</run_depend>
+  
+
+
+  <export>
+
+  </export>
+</package>
+

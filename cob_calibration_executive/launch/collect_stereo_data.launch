@@ -5,6 +5,6 @@
 	<include file="$(find cob_calibration_executive)/launch/upload_params.launch"/>
 	
 	<!-- node that collects stereo data -->
-  	<node type="collect_stereo_data.py" pkg="cob_calibration_executive" name="$(anon collect_stereo_data)" output="screen" />
-	
+	<node type="collect_stereo_data.py" pkg="cob_calibration_executive" name="$(anon collect_stereo_data)" output="screen" />
+
 </launch>

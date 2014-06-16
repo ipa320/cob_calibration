@@ -1,0 +1,51 @@
+<package>
+  <name>cob_robot_calibration</name>
+  <version>0.5.0</version>
+  <description>
+    The cob_robot_calibration package contains necessary configuration files, scripts 
+    and launch files to perform  automatic kinematic calibration of Care-O-bot.
+    The cob_robot_calibration_est package is used to perform the estimation steps.
+  </description>
+
+  <license>LGPL</license>
+
+  <url type="website">http://ros.org/wiki/cob_robot_calibration</url>
+  <!-- <url type="bugtracker"></url> -->
+  
+  <author>Sebastian Haug</author>
+  <maintainer email="fxm@ipa.fhg.de">Felix Messmer</maintainer>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  
+  <run_depend>rospy</run_depend>
+  <run_depend>rostest</run_depend>
+  <run_depend>rosbag</run_depend>
+  <run_depend>nodelet</run_depend>
+  <run_depend>tf</run_depend>
+  <run_depend>cv_bridge</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>control_msgs</run_depend>
+
+  <run_depend>cob_script_server</run_depend>
+  <run_depend>cob_calibration_data</run_depend>
+
+  <run_depend>cob_calibration_msgs</run_depend>
+  <run_depend>cob_camera_calibration</run_depend>
+  <run_depend>cob_robot_calibration_est</run_depend>
+  <run_depend>tf_conversions</run_depend>
+
+  <run_depend>control_msgs</run_depend>
+  <run_depend>urdf_parser_py</run_depend>
+  <run_depend>cob_calibration_urdf_update</run_depend>
+
+
+
+  <export>
+
+  </export>
+</package>
+
+
+
+
+

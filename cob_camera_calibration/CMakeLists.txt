@@ -1,36 +1,31 @@
 cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+project(cob_camera_calibration)
 
-# Set the build type.  Options are:
-#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
-#  Debug          : w/ debug symbols, w/o optimization
-#  Release        : w/o debug symbols, w/ optimization
-#  RelWithDebInfo : w/ debug symbols, w/ optimization
-#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-#set(ROS_BUILD_TYPE RelWithDebInfo)
+find_package(catkin REQUIRED COMPONENTS)
 
-rosbuild_init()
+catkin_python_setup()
 
-#set the default path for built executables to the "bin" directory
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-#set the default path for built libraries to the "lib" directory
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+catkin_package()
 
-#uncomment if you have defined messages
-#rosbuild_genmsg()
-#uncomment if you have defined services
-#rosbuild_gensrv()
+###install tags
+install(DIRECTORY launch
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
 
-rosbuild_add_pyunit(${PROJECT_SOURCE_DIR}/test/test_calibration_data.py)
-rosbuild_add_pyunit(${PROJECT_SOURCE_DIR}/test/test_calibration_object.py)
-rosbuild_add_pyunit(${PROJECT_SOURCE_DIR}/test/test_calibration_object_detector.py)
+install(PROGRAMS src/mono_calibration.py
+                 src/publish_detections.py
+                 src/stereo_calibration.py
+                 src/test_bagfile.py
+                 src/visibility_checker.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}/src
+)
 
-rosbuild_add_roslaunch_check(launch ROBOT=cob3-3)
+install(PROGRAMS test/test_calibration_data.py
+                 test/test_calibration_object_detector.py
+                 test/test_calibration_object.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}/test
+)
 
-#common commands for building c++ executables and libraries
-#rosbuild_add_library(${PROJECT_NAME} src/example.cpp)
-#target_link_libraries(${PROJECT_NAME} another_library)
-#rosbuild_add_boost_directories()
-#rosbuild_link_boost(${PROJECT_NAME} thread)
-#rosbuild_add_executable(example examples/example.cpp)
-#target_link_libraries(example ${PROJECT_NAME})
+install(DIRECTORY test/data
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/test
+)

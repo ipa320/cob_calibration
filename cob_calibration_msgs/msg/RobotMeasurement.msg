@@ -4,4 +4,4 @@ string target_id    # Defines the target that we were sensing.
 string chain_id     # Defines where this target was attached
 
 CameraMeasurement[] M_cam
-pr2_controllers_msgs/JointTrajectoryControllerState[] M_chain 
+control_msgs/JointTrajectoryControllerState[] M_chain 

@@ -48,7 +48,7 @@ roslib.load_manifest('cob_robot_calibration_est')
 import rospy
 from cob_robot_calibration_est.full_chain import FullChainRobotParams
 #from cob_robot_calibration_est.ChainMessage import ChainMessage
-from pr2_controllers_msgs.msg import JointTrajectoryControllerState
+from control_msgs.msg import JointTrajectoryControllerState
 from copy import deepcopy
 #import code
 

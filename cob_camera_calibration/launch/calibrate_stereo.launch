@@ -1,23 +1,19 @@
 <?xml version="1.0"?>
 <launch>
 
-    <!-- run stereo calibration of left and right camera -->
-    <node type="stereo_calibration.py" pkg="cob_camera_calibration" name="$(anon mono_calibration)" output="screen">
+  <!-- run stereo calibration of left and right camera -->
+  <node type="stereo_calibration.py" pkg="cob_camera_calibration" name="$(anon stereo_calibration)" output="screen">
+    <param name="folder" value="/tmp/cal/intrinsic" />
+    <rosparam param="calibration_pattern" file="$(find cob_calibration_config)/$(env ROBOT)/user_defined/calibration_pattern.yaml"/>
 
-	    <param name="folder"
-		    value="/tmp/cal/intrinsic" />
-        <rosparam param="calibration_pattern" file="$(find cob_calibration_config)/$(env ROBOT)/user_defined/calibration_pattern.yaml"/>
+    <rosparam param="cameras" file="$(find cob_calibration_config)/$(env ROBOT)/user_defined/cameras.yaml"/>
+    <param name="output_file_path" value="$(find cob_calibration_data)/$(env ROBOT)/calibration/cameras/" />
 
-	<rosparam param="cameras" file="$(find
-        cob_calibration_config)/$(env ROBOT)/user_defined/cameras.yaml"/>
-        <param name="output_file_path"         value="$(find cob_calibration_data)/$(env ROBOT)/calibration/cameras/" />
+    <param name="calibration_offset_urdf" value="$(find cob_calibration_data)/$(env ROBOT)/calibration/calibration_offset.urdf.xacro" />
+    <param name="calibration_default_urdf" value="$(find cob_hardware_config)/$(env ROBOT)/urdf/calibration_default.urdf.xacro" />
 
-        <param name="calibration_offset_urdf"  value="$(find cob_calibration_data)/$(env ROBOT)/calibration/calibration_offset.urdf.xacro" />
-        <param name="calibration_default_urdf" value="$(find cob_hardware_config)/$(env ROBOT)/urdf/calibration_default.urdf.xacro" />
-
-        <param name="alpha"                 value="0.0" />
-        <param name="verbose"               value="True" />
-
-    </node>
+    <param name="alpha" value="0.0" />
+    <param name="verbose" value="True" />
+  </node>
 
 </launch>

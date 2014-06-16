@@ -1,21 +1,18 @@
 <?xml version="1.0"?>
 <launch>
   
-  	<!-- node that collects and publishes to robot_measurement -->
-  	<node type="collect_data.py" pkg="cob_robot_calibration" name="$(anon collect_data)" output="screen">
-	<param name="sensors_yaml" value="$(find
-        cob_calibration_config)/$(env ROBOT)/user_defined/sensors.yaml" />
-	<rosparam param="cameras" file="$(find
-        cob_calibration_config)/$(env ROBOT)/user_defined/cameras.yaml" />  
-	<rosparam param="calibration_pattern" file="$(find
-        cob_calibration_config)/$(env ROBOT)/user_defined/calibration_pattern.yaml" />  
-	</node>
-	<!-- record bagfile -->
- 	<node type="record" pkg="rosbag" name="record" output="screen"
-	args="--output-name /tmp/cal/cal_measurements /robot_measurement /tf /robot_description">
-    	<!-- Hack to create the directory -->
-    	<param name="mkdir_tmp" command="mkdir -m 777 -p /tmp/cal" />
- 	</node>
+  <!-- node that collects and publishes to robot_measurement -->
+  <node type="collect_data.py" pkg="cob_robot_calibration" name="$(anon collect_data)" output="screen">
+    <param name="sensors_yaml" value="$(find cob_calibration_config)/$(env ROBOT)/user_defined/sensors.yaml" />
+    <rosparam param="cameras" file="$(find cob_calibration_config)/$(env ROBOT)/user_defined/cameras.yaml" />  
+    <rosparam param="calibration_pattern" file="$(find cob_calibration_config)/$(env ROBOT)/user_defined/calibration_pattern.yaml" />  
+  </node>
+  
+  <!-- record bagfile -->
+  <node type="record" pkg="rosbag" name="record" output="screen" args="--output-name /tmp/cal/cal_measurements /robot_measurement /tf /robot_description">
+      <!-- Hack to create the directory -->
+      <param name="mkdir_tmp" command="mkdir -m 777 -p /tmp/cal" />
+  </node>
  
 </launch>
 

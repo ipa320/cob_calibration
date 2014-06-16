@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-
-	<!-- start arm fk and ik service -->
-	<include file="$(find cob_manipulator)/ros/launch/kdl_solver.launch"/>
-	
-</launch>

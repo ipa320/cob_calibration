@@ -1,0 +1,25 @@
+<package>
+  <name>cob_calibration_urdf_update</name>
+  <version>0.5.0</version>
+  <description>
+    The cob_calibration_executive package provides scripts for updating cob_calibration_data.
+  </description>
+
+  <license>LGPL</license>
+
+  <url type="website">http://ros.org/wiki/cob_calibration_urdf_update</url>
+  <!-- <url type="bugtracker"></url> -->
+  
+  <author>Jannik Abbenseth</author>
+  <maintainer email="fxm@ipa.fhg.de">Felix Messmer</maintainer>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <!--run_depend>rospy</run_depend-->
+  
+  
+  <export>
+
+  </export>
+</package>
+
+

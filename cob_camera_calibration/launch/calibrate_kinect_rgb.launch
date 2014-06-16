@@ -2,9 +2,9 @@
 <launch>
 
     <!-- run mono calibration on kinect -->
-    <node type="mono_calibration.py" pkg="cob_camera_calibration" name="$(anon mono_calibration)" output="screen">
+    <node type="mono_calibration.py" pkg="cob_camera_calibration" name="$(anon kinect_calibration)" output="screen">
 
-         <param name="folder"        value="/tmp/cal/intrinsic" />
+        <param name="folder"        value="/tmp/cal/intrinsic" />
         <param name="pattern_size"  value="9x6" />
         <param name="square_size"   value="0.03" />
 
